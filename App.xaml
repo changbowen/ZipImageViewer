@@ -4,6 +4,26 @@
              xmlns:local="clr-namespace:ZipImageViewer"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <local:RectConverter x:Key="RectConverter"/>
+
+        <CubicEase x:Key="CE_EaseIn" EasingMode="EaseIn"/>
+        <CubicEase x:Key="CE_EaseOut" EasingMode="EaseOut"/>
+        <CubicEase x:Key="CE_EaseInOut" EasingMode="EaseInOut"/>
+        <Storyboard x:Key="SB_ZoomIn">
+            <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleX)"
+                             To="1.1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleY)"
+                             To="1.1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        </Storyboard>
+        <Storyboard x:Key="SB_ZoomOut">
+            <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleX)"
+                             To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleY)"
+                             To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        </Storyboard>
+
+        <Storyboard x:Key="SB_FadeIn" TargetProperty="Opacity">
+            <DoubleAnimation To="1" Duration="0:0:0.5" EasingFunction="{StaticResource CE_EaseOut}"/>
+        </Storyboard>
     </Application.Resources>
 </Application>

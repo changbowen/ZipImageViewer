@@ -6,7 +6,9 @@
         xmlns:local="clr-namespace:ZipImageViewer"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
-    <WrapPanel x:Name="WP1">
-        
-    </WrapPanel>
+    <ScrollViewer>
+        <WrapPanel x:Name="WP1">
+
+        </WrapPanel>
+    </ScrollViewer>
 </Window>

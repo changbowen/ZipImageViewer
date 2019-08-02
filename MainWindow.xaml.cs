@@ -28,7 +28,7 @@ namespace ZipImageViewer
 
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
         {
-            Task.Run(() => AddImages(new [] { @"\\192.168.1.250\hdd_private\Pictures\苏夏妞妞" }));
+            Task.Run(() => AddImages(new [] { @"E:\Pictures\To Do" }));
 
         }
 
@@ -51,6 +51,12 @@ namespace ZipImageViewer
                         Dispatcher.Invoke(() =>
                         {
                             var tn = new Thumbnail(file);
+                            tn.MouseUp += (s, e) => {
+                                if (e.ChangedButton == MouseButton.Left) {
+                                    new ViewWindow {ImagePath = file}.Show();
+                                }
+                                
+                            };
                             WP1.Children.Add(tn);
                         }, System.Windows.Threading.DispatcherPriority.Background);
                         
