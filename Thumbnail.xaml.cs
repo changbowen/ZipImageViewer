@@ -17,16 +17,16 @@ namespace ZipImageViewer
 {
     public partial class Thumbnail : UserControl
     {
-        public string FilePath
+        public object FilePath
         {
-            get { return (string)GetValue(FilePathProperty); }
+            get { return GetValue(FilePathProperty); }
             set { SetValue(FilePathProperty, value); }
         }
         public static readonly DependencyProperty FilePathProperty =
-            DependencyProperty.Register("FilePath", typeof(string), typeof(Thumbnail), new PropertyMetadata(null));
+            DependencyProperty.Register("FilePath", typeof(object), typeof(Thumbnail), new PropertyMetadata(null));
 
 
-        public Thumbnail(string filepath)
+        public Thumbnail(object filepath)
         {
             FilePath = filepath;
             InitializeComponent();

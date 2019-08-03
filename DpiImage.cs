@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -10,7 +6,7 @@ using System.Windows.Media.Imaging;
 
 namespace ZipImageViewer
 {
-    class DpiImage : Image
+    public class DpiImage : Image
     {
         protected override Size MeasureOverride(Size availableSize) {
             Size measureSize = new Size();

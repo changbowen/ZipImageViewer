@@ -4,8 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
+        mc:Ignorable="d" PreviewMouseUp="MainWin_PreviewMouseUp"
+        Title="ZipImageViewer" Height="768" Width="1024" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
     <ScrollViewer>
         <WrapPanel x:Name="WP1">
 
