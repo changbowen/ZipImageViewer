@@ -4,12 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ZipImageViewer"
-             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300"
-             RenderTransformOrigin="0.5,0.5">
-    <UserControl.CacheMode>
-        <BitmapCache/>
-    </UserControl.CacheMode>
-    <UserControl.RenderTransform>
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <!-- <local:FileNameConverter x:Key="FileNameConverter"/> -->
+    </UserControl.Resources>
+    <!--<UserControl.RenderTransform>
         <ScaleTransform/>
     </UserControl.RenderTransform>
     <UserControl.Style>
@@ -26,11 +25,10 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-    </UserControl.Style>
-    <Border BorderThickness="1" BorderBrush="Gray" CornerRadius="4" Margin="2"
-            VerticalAlignment="Center" HorizontalAlignment="Center">
-        <Image Source="{Binding ElementName=TN, Path=FilePath, Mode=OneTime}"
-               Height="200" RenderOptions.BitmapScalingMode="HighQuality">
+    </UserControl.Style>-->
+    <Border CornerRadius="5" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Image Source="{Binding ElementName=TN, Path=Source, Mode=OneWay}"
+               RenderOptions.BitmapScalingMode="HighQuality">
             <Image.Clip>
                 <RectangleGeometry
                     RadiusX="{Binding RelativeSource={RelativeSource AncestorType=Border}, Path=CornerRadius.TopLeft}"
@@ -45,6 +43,7 @@
             </Image.Clip>
         </Image>
     </Border>
+    
     <!--<Border BorderThickness="2" BorderBrush="Gray" CornerRadius="5"
             Height="200" Width="200" Margin="4">
         <Border.Background>
@@ -53,3 +52,6 @@
         </Border.Background>
     </Border>-->
 </UserControl>
+
+
+

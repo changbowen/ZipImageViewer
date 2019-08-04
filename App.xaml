@@ -14,12 +14,20 @@
                              To="1.1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
             <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleY)"
                              To="1.1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)"
+                             To="5" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"
+                             To="15" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
         </Storyboard>
         <Storyboard x:Key="SB_ZoomOut">
             <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleX)"
                              To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
             <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleY)"
                              To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)"
+                             To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"
+                             To="3" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
         </Storyboard>
 
         <Storyboard x:Key="SB_FadeIn" TargetProperty="Opacity">
