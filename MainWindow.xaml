@@ -4,8 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer"
-        mc:Ignorable="d" Background="#FF1F1F1F"
-        Title="ZipImageViewer" Height="640" Width="1024" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
+        mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" SnapsToDevicePixels="True"
+        Title="ZipImageViewer" Height="640" Width="1030" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
     <ScrollViewer>
         <ItemsControl x:Name="LB1" ItemsSource="{Binding ElementName=MainWin, Path=ImageList}">
             <ItemsControl.ItemsPanel>
@@ -16,34 +16,35 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel x:Name="SP1" Margin="5" RenderTransformOrigin="0.5 0.5">
-                        <!--<StackPanel.CacheMode>
-                            <BitmapCache/>
-                        </StackPanel.CacheMode>-->
-                        <local:Thumbnail Source="{Binding ImageSource}" x:Name="TN1" Tag="False" Panel.ZIndex="1"
-                                         RenderTransformOrigin="0.5 0.5"
-                                         Width="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Width}"
-                                         Height="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Height}">
-                            <local:Thumbnail.Effect>
-                                <DropShadowEffect Direction="270" Opacity="0.8" ShadowDepth="1" BlurRadius="3"/>
-                            </local:Thumbnail.Effect>
-                            <local:Thumbnail.RenderTransform>
-                                <ScaleTransform/>
-                            </local:Thumbnail.RenderTransform>
-                            <local:Thumbnail.Style>
-                                <Style TargetType="local:Thumbnail">
-                                    <Style.Triggers>
-                                        <Trigger Property="Tag" Value="True">
-                                            <Trigger.EnterActions>
-                                                <BeginStoryboard Storyboard="{StaticResource SB_ZoomIn}"/>
-                                            </Trigger.EnterActions>
-                                            <Trigger.ExitActions>
-                                                <BeginStoryboard Storyboard="{StaticResource SB_ZoomOut}"/>
-                                            </Trigger.ExitActions>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </local:Thumbnail.Style>
-                        </local:Thumbnail>
+                        <local:DpiDecorator>
+                            <local:Thumbnail x:Name="TN1" Tag="False" Panel.ZIndex="1" RenderTransformOrigin="0.5 0.5"
+                                             ImageInfo="{Binding}"
+                                             Width="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Width}"
+                                             Height="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Height}"
+                                             PreviewMouseLeftButtonUp="TN1_PreviewMouseLeftButtonUp">
+                                <local:Thumbnail.Effect>
+                                    <DropShadowEffect Direction="270" Opacity="0.8" ShadowDepth="1" BlurRadius="3"/>
+                                </local:Thumbnail.Effect>
+                                <local:Thumbnail.RenderTransform>
+                                    <ScaleTransform/>
+                                </local:Thumbnail.RenderTransform>
+                                <local:Thumbnail.Style>
+                                    <Style TargetType="local:Thumbnail">
+                                        <Style.Triggers>
+                                            <Trigger Property="Tag" Value="True">
+                                                <Trigger.EnterActions>
+                                                    <BeginStoryboard Storyboard="{StaticResource SB_ZoomIn}"/>
+                                                </Trigger.EnterActions>
+                                                <Trigger.ExitActions>
+                                                    <BeginStoryboard Storyboard="{StaticResource SB_ZoomOut}"/>
+                                                </Trigger.ExitActions>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </local:Thumbnail.Style>
+                            </local:Thumbnail>
+                        </local:DpiDecorator>
+                        
                         <TextBlock Text="{Binding FileName}" FontSize="10" Foreground="Gray"
                                    HorizontalAlignment="Center" Panel.ZIndex="0"/>
                     </StackPanel>
@@ -65,5 +66,6 @@
             </ItemsControl.ItemContainerStyle>
         </ItemsControl>
     </ScrollViewer>
+    
 </Window>
 

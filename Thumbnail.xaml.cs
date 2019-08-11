@@ -27,43 +27,27 @@ namespace ZipImageViewer
 
     public partial class Thumbnail : UserControl
     {
-        public ImageSource Source
+        public ImageInfo ImageInfo
         {
-            get { return (ImageSource)GetValue(SourceProperty); }
-            set { SetValue(SourceProperty, value); }
+            get { return (ImageInfo)GetValue(ImageInfoProperty); }
+            set { SetValue(ImageInfoProperty, value); }
         }
-        public static readonly DependencyProperty SourceProperty =
-            DependencyProperty.Register("Source", typeof(ImageSource), typeof(Thumbnail), new PropertyMetadata(null));
-
-
-        public string  FileName
-        {
-            get { return (string )GetValue(FileNameProperty); }
-            set { SetValue(FileNameProperty, value); }
-        }
-        public static readonly DependencyProperty FileNameProperty =
-            DependencyProperty.Register("FileName", typeof(string ), typeof(Thumbnail), new PropertyMetadata(null));
-
-        public string FullPath { get; set; }
+        public static readonly DependencyProperty ImageInfoProperty =
+            DependencyProperty.Register("ImageInfo", typeof(ImageInfo), typeof(Thumbnail), new PropertyMetadata(null));
 
 
         public Thumbnail() {
             InitializeComponent();
         }
 
-        public Thumbnail(ImageSource source, string fileName = null) {
-            FileName = fileName;
-            Source = source;
 
-            InitializeComponent();
-        }
-
-        public Thumbnail(string filePath) {
-            FullPath = filePath;
-            FileName = Path.GetFileName(filePath);
-            Source = new ImageSourceConverter().ConvertFromString(filePath) as ImageSource;
-
-            InitializeComponent();
-        }
+//        public Thumbnail(string realPath) {
+//            RealPath = realPath;
+//
+//            DisplayName = Path.GetFileName(filePath);
+//            Source = new ImageSourceConverter().ConvertFromString(filePath) as ImageSource;
+//
+//            InitializeComponent();
+//        }
     }
 }

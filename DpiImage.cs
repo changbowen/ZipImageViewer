@@ -8,7 +8,11 @@ namespace ZipImageViewer
 {
     public class DpiImage : Image
     {
-        protected override Size MeasureOverride(Size availableSize) {
+        public Size RealSize { get; set; }
+
+        protected override Size MeasureOverride(Size constraint) {
+/*
+            //trial 1
             Size measureSize = new Size();
 
             if(Source is BitmapSource bitmapSource)
@@ -21,24 +25,57 @@ namespace ZipImageViewer
                     Vector pixelSize = new Vector(bitmapSource.PixelWidth, bitmapSource.PixelHeight);
                     Vector measureSizeV = fromDevice.Transform(pixelSize);
                     measureSize = new Size(measureSizeV.X, measureSizeV.Y);
+                    
                 }
             }
-
             return measureSize;
-//            var bitmapImage = Source as BitmapImage;
-//            var desiredSize = bitmapImage == null 
-//                ? base.MeasureOverride(availableSize) 
-//                : new Size(bitmapImage.PixelWidth, bitmapImage.PixelHeight);
-//
-//            var dpiScale = MiscUtil.GetDpiScale(this);
-//            desiredSize = new Size(desiredSize.Width / dpiScale.Width, desiredSize.Height / dpiScale.Height);
-//            desiredSize = ImageUtilities.ConstrainWithoutDistorting(desiredSize, availableSize);
-//
-//            if (UseLayoutRounding) {
-//                desiredSize.Width = Math.Round(desiredSize.Width);
-//                desiredSize.Height= Math.Round(desiredSize.Height);
-//            }
-//            return desiredSize;
+*/
+/*
+            //trial 2 (not working)
+            var baseValue = base.MeasureOverride(constraint);
+            var newValue = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformFromDevice
+                .Transform(new Vector(baseValue.Width, baseValue.Height));
+            return newValue.HasValue ? new Size(newValue.Value.X, newValue.Value.Y) : baseValue;
+*/
+            //trial 3
+            var source = Source as BitmapSource;
+            var target = PresentationSource.FromVisual(this)?.CompositionTarget;
+            if (source == null || target == null)
+                return base.MeasureOverride(constraint);
+
+            var desiredSize = new Size(source.PixelWidth, source.PixelHeight);
+            var realVec = target.TransformFromDevice.Transform(new Vector(desiredSize.Width, desiredSize.Height));
+            RealSize = new Size(realVec.X, realVec.Y);
+            
+            Size realSize;
+            if (Stretch == Stretch.Uniform)
+                realSize = Helpers.UniformScaleUp(realVec.X, realVec.Y, constraint.Width, constraint.Height);
+            else
+                realSize = new Size(realVec.X, realVec.Y);
+
+            if (UseLayoutRounding) {
+                realSize.Width = Math.Round(realSize.Width);
+                realSize.Height = Math.Round(realSize.Height);
+            }
+
+            return realSize;
+/*
+            //trial 4
+            var bitmapImage = Source as BitmapImage;
+            var desiredSize = bitmapImage == null 
+                ? base.MeasureOverride(constraint) 
+                : new Size(bitmapImage.PixelWidth, bitmapImage.PixelHeight);
+
+            var dpiScale = MiscUtil.GetDpiScale(this);
+            desiredSize = new Size(desiredSize.Width / dpiScale.Width, desiredSize.Height / dpiScale.Height);
+            desiredSize = ImageUtilities.ConstrainWithoutDistorting(desiredSize, constraint);
+
+            if (UseLayoutRounding) {
+                desiredSize.Width = Math.Round(desiredSize.Width);
+                desiredSize.Height= Math.Round(desiredSize.Height);
+            }
+            return desiredSize;
+*/
         }
 
         protected override Size ArrangeOverride(Size finalSize)

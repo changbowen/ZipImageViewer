@@ -22,18 +22,12 @@ using Size = System.Drawing.Size;
 
 namespace ZipImageViewer
 {
-    public class ImageInfo {
-        public string FileName { get; set; }
-        public string FullPath { get; set; }
-        public ImageSource ImageSource { get; set; }
-    }
-
     public partial class MainWindow : Window {
         private readonly string[] genericPasswords =
             App.config["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => d.KeyName).ToArray();
 
         public ObservableKeyedCollection<string, ImageInfo> ImageList { get; set; } =
-            new ObservableKeyedCollection<string, ImageInfo>(ii => ii.FullPath);
+            new ObservableKeyedCollection<string, ImageInfo>(ii => ii.ImageRealPath);
 
         public MainWindow() {
             InitializeComponent();
@@ -41,7 +35,7 @@ namespace ZipImageViewer
 
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
         {
-//            Task.Run(() => AddImages(new [] { @"D:\Source\Samples\JPEGAutoRotator-master\EXIF Test Files" }));
+            Task.Run(() => LoadFile(@"E:\Pictures\chroma_test_4k.png", ii=>ImageList.Add(ii), App.ThumbnailSize.Width));
         }
 
         private void MainWin_Drop(object sender, DragEventArgs e)
@@ -58,90 +52,114 @@ namespace ZipImageViewer
                     if (info.Attributes.HasFlag(FileAttributes.Directory))
                     {
                         foreach (var file in info.EnumerateFiles("*.*", SearchOption.AllDirectories)) {
-                            LoadFile(file);
+                            LoadFile(file.FullName, ii => ImageList.Add(ii), App.ThumbnailSize.Width);
                         }
                     }
-                    else
-                        LoadFile(info);
+                    else {
+                        LoadFile(info.FullName, ii => ImageList.Add(ii), App.ThumbnailSize.Width);
+                    }
                 }
             });
         }
 
-//        private void AddThumbnail(string filePath, ImageSource source) {
-//            if (source == null) return;
-//            Dispatcher.Invoke(() => {
-//                var tn = new Thumbnail(filePath, source);
-////                            tn.MouseUp += (s, e) => {
-////                                if (e.ChangedButton == MouseButton.Left) {
-////                                    new ViewWindow {ImagePath = file}.Show();
-////                                }
-////                            };
-//                WP1.Children.Add(tn);
-//            }, System.Windows.Threading.DispatcherPriority.Background);
-//        }
-
-        private void LoadFile(FileSystemInfo file) {
-            var ft = Helpers.GetFileType(file.Name);
+        /// <summary>
+        /// Load image based on the type of file and try passwords when possible.
+        /// </summary>
+        private void LoadFile(string filePath, Action<ImageInfo> callback,
+                              int decodeWidth = 0, string[] extractedFileNames = null) {
+            var fileName = Path.GetFileName(filePath);
+            var ft = Helpers.GetFileType(fileName);
             if (ft == App.FileType.Image) {
-                ImageList.Add(new ImageInfo {
-                    FileName = file.Name,
-                    FullPath = file.FullName,
-                    ImageSource = Helpers.GetImageSource(file.FullName, App.ThumbnailSize.Width)
-                });
+                var imgInfo = new ImageInfo {
+                    FileName = fileName,
+                    FilePath = filePath,
+                    FileType = App.FileType.Image,
+                    ImageSource = Helpers.GetImageSource(filePath, decodeWidth)
+                };
+                callback(imgInfo);
             }
             else if (ft == App.FileType.Archive) {
                 while (true) {
                     bool success;
                     //first check if there is a match in saved passwords
-                    var p = App.config["Saved Passwords"][file.Name];
-                    if (p != null) {//matching password found
-                        success = extractZip(file.FullName, p); //return false when there extraction fails
+                    var pwd = App.config["Saved Passwords"][fileName];
+                    if (pwd != null) {
+                        //matching password found
+                        success = extractZip(filePath, callback, decodeWidth, pwd, extractedFileNames); //return null when there extraction fails
                         if (success) break;
                     }
 
                     //then try no password
-                    success = extractZip(file.FullName);
+                    success = extractZip(filePath, callback, decodeWidth, null, extractedFileNames);
                     if (success) break;
 
                     //then try all saved passwords with no filename
                     foreach (var gp in genericPasswords) {
-                        success = extractZip(file.FullName, gp);
+                        success = extractZip(filePath, callback, decodeWidth, gp, extractedFileNames);
                         if (success) break;
                     }
 
                     //if all fails prompt for a generic or dedicated password
                     //then extract with it
+                    //-------------logic needed here-------------
+
+
+                    //exit loop
                     break;
                 }
             }
         }
 
-        private bool extractZip(string path, string pwd = null) {
+        private static bool extractZip(string path, Action<ImageInfo> callback,
+                                       int decodeWidth = 0, string pwd = null, string[] extractedFileNames = null) {
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
-                return extractZip(fs, pwd);
+                return extractZip(fs, path, callback, decodeWidth, pwd, extractedFileNames);
             }
         }
 
-        private bool extractZip(Stream stream, string pwd = null) {
+        private static bool extractZip(Stream stream, string path, Action<ImageInfo> callback,
+                                       int decodeWidth = 0, string pwd = null, string[] extractedFileNames = null) {
             SevenZipExtractor ext = null;
             stream.Position = 0;
             try {
                 ext = new SevenZipExtractor(stream, pwd);
-                for (int i = 0; i < ext.ArchiveFileData.Count; i++) {
-                    //check if file is supported
-                    var imgfile = ext.ArchiveFileData[i];
-                    if (imgfile.IsDirectory || Helpers.GetFileType(imgfile.FileName) != App.FileType.Image) continue;
+                if (extractedFileNames == null || extractedFileNames.Length == 0) {
+                    for (int i = 0; i < ext.ArchiveFileData.Count; i++) {
+                        //check if file is supported
+                        var imgfile = ext.ArchiveFileData[i];
+                        if (imgfile.IsDirectory || Helpers.GetFileType(imgfile.FileName) != App.FileType.Image) continue;
 #if DEBUG
-                    Console.WriteLine("Extracting " + ext.ArchiveFileData[i].FileName);
+                        Console.WriteLine("Extracting " + ext.ArchiveFileData[i].FileName);
 #endif
-                    using (var ms = new MemoryStream()) {
-                        ext.ExtractFile(i, ms);
-                        ImageList.Add(new ImageInfo {
-                            FileName = imgfile.FileName,
-                            ImageSource = Helpers.GetImageSource(ms, App.ThumbnailSize.Width),
-                        });
+                        var imgInfo = new ImageInfo {
+                            FilePath = path,
+                            FileType = App.FileType.Archive,
+                        };
+                        using (var ms = new MemoryStream()) {
+                            ext.ExtractFile(i, ms);
+                            imgInfo.FileName = imgfile.FileName;
+                            imgInfo.ImageSource = Helpers.GetImageSource(ms, decodeWidth);
+                        }
+
+                        callback(imgInfo);
                     }
                 }
+                else {
+                    foreach (var fileName in extractedFileNames) {
+                        var imgInfo = new ImageInfo {
+                            FilePath = path,
+                            FileType = App.FileType.Archive,
+                            FileName = fileName
+                        };
+                        using (var ms = new MemoryStream()) {
+                            ext.ExtractFile(fileName, ms);
+                            imgInfo.ImageSource = Helpers.GetImageSource(ms, decodeWidth);
+                        }
+
+                        callback(imgInfo);
+                    }
+                }
+
                 return true;
             }
             catch (ExtractionFailedException) {
@@ -157,5 +175,11 @@ namespace ZipImageViewer
 //            WP1.Children.Clear();
 //            GC.Collect();
 //        }
+        private void TN1_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
+            var tn = (Thumbnail)sender;
+            var tnInfo = tn.ImageInfo;
+
+            LoadFile(tnInfo.FilePath, ii => new ViewWindow {ImageInfo = ii}.Show(), 0, new[] {tnInfo.FileName});
+        }
     }
 }

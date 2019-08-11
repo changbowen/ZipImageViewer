@@ -92,6 +92,7 @@
     <Compile Include="Converters.cs" />
     <Compile Include="DpiImage.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="ObservableKeyedCollection.cs" />
     <Compile Include="Thumbnail.xaml.cs">
       <DependentUpon>Thumbnail.xaml</DependentUpon>

@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ZipImageViewer"
+             xmlns:local="clr-namespace:ZipImageViewer" UseLayoutRounding="True" SnapsToDevicePixels="True"
              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
         <!-- <local:FileNameConverter x:Key="FileNameConverter"/> -->
@@ -27,7 +27,7 @@
         </Style>
     </UserControl.Style>-->
     <Border CornerRadius="5" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <Image Source="{Binding ElementName=TN, Path=Source, Mode=OneWay}"
+        <Image Source="{Binding ElementName=TN, Path=ImageInfo.ImageSource, Mode=OneWay}"
                RenderOptions.BitmapScalingMode="HighQuality">
             <Image.Clip>
                 <RectangleGeometry
@@ -43,6 +43,7 @@
             </Image.Clip>
         </Image>
     </Border>
+    
     
     <!--<Border BorderThickness="2" BorderBrush="Gray" CornerRadius="5"
             Height="200" Width="200" Margin="4">

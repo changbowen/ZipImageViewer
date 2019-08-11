@@ -9,42 +9,45 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using FontAwesome.WPF;
+using static ZipImageViewer.ExtentionMethods;
 
 namespace ZipImageViewer
 {
     public partial class ViewWindow : Window
     {
-        public object ImagePath
+        public ImageInfo ImageInfo
         {
-            get { return GetValue(ImagePathProperty); }
-            set { SetValue(ImagePathProperty, value); }
+            get { return (ImageInfo)GetValue(ImageInfoProperty); }
+            set { SetValue(ImageInfoProperty, value); }
         }
-        public static readonly DependencyProperty ImagePathProperty =
-            DependencyProperty.Register("ImagePath", typeof(object), typeof(ViewWindow),
-                new PropertyMetadata(ImageAwesome.CreateImageSource(FontAwesomeIcon.Image, Brushes.GhostWhite)));
+        public static readonly DependencyProperty ImageInfoProperty =
+            Thumbnail.ImageInfoProperty.AddOwner(typeof(ViewWindow));
 
+        private bool IsActualSize = true;
 
         public ViewWindow()
         {
             InitializeComponent();
-//            MaxHeight = SystemParameters.WorkArea.Height;
-            Top = 0d;
         }
 
-        private void ViewWin_MouseDown(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton == MouseButton.Left) DragMove();
+        private void ViewWindow_Loaded(object sender, RoutedEventArgs e) {
+//            var rect = NativeMethods.GetMonitorFromWindow(this);
+//            Top = rect.Top;
+//            Left = rect.Left;
+//            Width = rect.Width;
+//            Height = rect.Height;
+            if (double.IsNaN(IM.Width)) IM.Width = IM.ActualWidth;
+            if (double.IsNaN(IM.Height)) IM.Height = IM.ActualHeight;
+
+            SV_PreviewMouseDoubleClick(null, null);
         }
 
         private void ViewWin_MouseUp(object sender, MouseButtonEventArgs e) {
             if (e.ChangedButton == MouseButton.Right) Close();
-        }
-
-        private void ViewWin_MouseWheel(object sender, MouseWheelEventArgs e) {
-            if (e.Delta > 0) {
-            }
         }
 
         Point scrollMousePoint;
@@ -72,5 +75,59 @@ namespace ZipImageViewer
             SV.ReleaseMouseCapture();
         }
 
+        private void SV_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e) {
+            if (IsActualSize) {
+                if (IM.ActualHeight <= SV.ViewportHeight && IM.ActualWidth <= SV.ViewportWidth) return;
+                var newSize = Helpers.UniformScaleUp(IM.ActualWidth, IM.ActualHeight, SV.ViewportWidth, SV.ViewportHeight);
+
+                IM.AnimateDoubleCubicEase(WidthProperty, newSize.Width, 400, EasingMode.EaseOut);
+                IM.AnimateDoubleCubicEase(HeightProperty, newSize.Height, 400, EasingMode.EaseOut);
+                IsActualSize = false;
+            }
+            else {
+                IM.AnimateDoubleCubicEase(WidthProperty, IM.RealSize.Width, 400, EasingMode.EaseOut);
+                IM.AnimateDoubleCubicEase(HeightProperty, IM.RealSize.Height, 400, EasingMode.EaseOut);
+//                SV.ScrollToHorizontalOffset((SV.ViewportWidth - SV.ExtentWidth) / 2);
+//                SV.ScrollToVerticalOffset((SV.ViewportHeight - SV.ExtentHeight) / 2);
+//                SV.UpdateLayout();                              
+                IsActualSize = true;
+            }
+            
+        }
+
+        private void SV_PreviewMouseWheel(object sender, MouseWheelEventArgs e) {
+            IsActualSize = false;
+            var scale = e.Delta > 0 ? 1.2d : 0.8d;
+
+            //prevent zooming out smaller than viewport
+            var newSize = Helpers.UniformScaleDown(IM.ActualWidth * scale, IM.ActualHeight * scale,
+                SV.ViewportWidth, SV.ViewportHeight);
+
+            IM.AnimateDoubleCubicEase(WidthProperty, newSize.Width, 100, EasingMode.EaseOut);
+            IM.AnimateDoubleCubicEase(HeightProperty, newSize.Height, 100, EasingMode.EaseOut);
+
+            e.Handled = true;
+//            IM.Width *= scale;
+//            IM.Height *= scale;
+//
+//            var mousePos = e.GetPosition(SV);
+//            var scale = e.Delta > 0 ? 0.1d : -0.1d;
+////            Console.WriteLine(mousePos.X / SV.ViewportWidth);
+////            SV.ScrollToHorizontalOffset(SV.ExtentWidth * mousePos.X / SV.ViewportWidth);
+////            SV.ScrollToVerticalOffset(SV.ExtentHeight * mousePos.Y / SV.ViewportHeight);
+//            var st = (ScaleTransform)IM.LayoutTransform;
+//            st.CenterX = IM.ActualWidth * mousePos.X / SV.ViewportWidth;
+//            st.CenterY = IM.ActualHeight * mousePos.Y / SV.ViewportHeight;
+//            st.ScaleX += scale;
+//            st.ScaleY += scale;
+
+//            var mousePos = e.GetPosition(SV);
+//            var scale = e.Delta > 0 ? 0.1d : -0.1d;
+//            var st = (ScaleTransform)IM.LayoutTransform;
+//            st.ScaleX += scale;
+//            st.ScaleY += scale;
+        }
+
+       
     }
 }

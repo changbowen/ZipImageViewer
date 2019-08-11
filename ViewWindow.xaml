@@ -4,32 +4,61 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d" 
-        WindowStyle="None" AllowsTransparency="True" WindowState="Maximized"
-        Title="ViewWindow" Height="600" Width="800" ResizeMode="CanResizeWithGrip"
-        MouseDown="ViewWin_MouseDown" MouseUp="ViewWin_MouseUp" MouseWheel="ViewWin_MouseWheel"
-        Opacity="0" SnapsToDevicePixels="True">
+        Title="ViewWindow" Height="600" Width="800" WindowState="Maximized"
+        MouseUp="ViewWin_MouseUp" Loaded="ViewWindow_Loaded"
+        Opacity="0" SnapsToDevicePixels="True" UseLayoutRounding="True">
     <Window.Triggers>
         <EventTrigger RoutedEvent="Image.Loaded">
             <BeginStoryboard Storyboard="{StaticResource SB_FadeIn}"/>
         </EventTrigger>
     </Window.Triggers>
-    <ScrollViewer x:Name="SV" Background="#FF464646"
-                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                  PreviewMouseLeftButtonDown="SV_PreviewMouseLeftButtonDown"
-                  PreviewMouseLeftButtonUp="SV_PreviewMouseLeftButtonUp"
-                  PreviewMouseMove="SV_PreviewMouseMove">
-        <Grid>
-            <local:DpiImage x:Name="IM" Source="{Binding ElementName=ViewWin, Path=ImagePath, Mode=OneWay}"
-                   RenderOptions.BitmapScalingMode="HighQuality">
-                <local:DpiImage.Effect>
-                    <DropShadowEffect Direction="270" BlurRadius="30" ShadowDepth="15" Color="#FF2E2E2E"/>
-                </local:DpiImage.Effect>
-            </local:DpiImage>
-            <TextBlock Text="{Binding ElementName=ViewWin, Path=ImagePath, Mode=OneWay}"
-                       Margin="4" Foreground="Gray"/>
-        </Grid>
-    </ScrollViewer>
+
+    <Grid>
+        <ScrollViewer x:Name="SV" Background="#FF464646"
+                      HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"
+                      PreviewMouseLeftButtonDown="SV_PreviewMouseLeftButtonDown"
+                      PreviewMouseLeftButtonUp="SV_PreviewMouseLeftButtonUp"
+                      PreviewMouseMove="SV_PreviewMouseMove"
+                      PreviewMouseDoubleClick="SV_PreviewMouseDoubleClick"
+                      PreviewMouseWheel="SV_PreviewMouseWheel">
+                <local:DpiImage x:Name="IM" RenderOptions.BitmapScalingMode="HighQuality"
+                                VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="None"
+                                Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay}">
+                    <local:DpiImage.CacheMode>
+                        <BitmapCache/>
+                    </local:DpiImage.CacheMode>
+                    <!--<local:DpiImage.Effect>
+                        <DropShadowEffect Direction="270" BlurRadius="30" ShadowDepth="15" Color="#FF4C4C4C"/>
+                    </local:DpiImage.Effect>-->
+                    <!--<local:DpiImage.LayoutTransform>
+                        <ScaleTransform/>
+                    </local:DpiImage.LayoutTransform>-->
+                </local:DpiImage>
+                <!--<Image x:Name="IM" RenderOptions.BitmapScalingMode="HighQuality"
+                       Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay}">
+                    <Image.CacheMode>
+                        <BitmapCache/>
+                    </Image.CacheMode>
+                    <Image.Effect>
+                        <DropShadowEffect Direction="270" BlurRadius="30" ShadowDepth="15" Color="#FF4C4C4C"/>
+                    </Image.Effect>
+                </Image>-->
+        </ScrollViewer>
+        <TextBlock Text="{Binding ElementName=ViewWin, Path=ImageInfo.FileName, Mode=OneWay}"
+                   HorizontalAlignment="Left" VerticalAlignment="Top"
+                   Margin="4" Foreground="Gray"/>
+    </Grid>
+
+    
 </Window>
+
+
+
+
+
+
+
+
 
 
 
