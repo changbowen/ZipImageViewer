@@ -36,18 +36,26 @@ namespace ZipImageViewer
             DependencyProperty.Register("ImageInfo", typeof(ImageInfo), typeof(Thumbnail), new PropertyMetadata(null));
 
 
+//        public new double Width {
+//            get => PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice
+//                .Transform(new Point((double) GetValue(WidthProperty), 0)).X;
+//            set => SetValue(WidthProperty, value);
+////            set => SetValue(DpiSizeProperty,
+////                PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.Transform(new Point(value, 0)));
+//        }
+//
+//        public new double Height {
+//            get => PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice
+//                .Transform(new Point((double) GetValue(HeightProperty), 0)).X;
+//            set => SetValue(HeightProperty, value);
+////            set => SetValue(DpiSizeProperty,
+////                PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.Transform(new Point(value, 0)));
+//        }
+
+
         public Thumbnail() {
             InitializeComponent();
         }
 
-
-//        public Thumbnail(string realPath) {
-//            RealPath = realPath;
-//
-//            DisplayName = Path.GetFileName(filePath);
-//            Source = new ImageSourceConverter().ConvertFromString(filePath) as ImageSource;
-//
-//            InitializeComponent();
-//        }
     }
 }

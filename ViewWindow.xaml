@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d" 
         Title="ViewWindow" Height="600" Width="800" WindowState="Maximized"
         MouseUp="ViewWin_MouseUp" Loaded="ViewWindow_Loaded"
-        Opacity="0" SnapsToDevicePixels="True" UseLayoutRounding="True">
+        Opacity="0" SnapsToDevicePixels="True" UseLayoutRounding="True" Background="#FF464646">
     <Window.Triggers>
         <EventTrigger RoutedEvent="Image.Loaded">
             <BeginStoryboard Storyboard="{StaticResource SB_FadeIn}"/>

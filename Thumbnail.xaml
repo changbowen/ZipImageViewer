@@ -4,10 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ZipImageViewer" UseLayoutRounding="True" SnapsToDevicePixels="True"
-             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300">
-    <UserControl.Resources>
-        <!-- <local:FileNameConverter x:Key="FileNameConverter"/> -->
-    </UserControl.Resources>
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" >
     <!--<UserControl.RenderTransform>
         <ScaleTransform/>
     </UserControl.RenderTransform>
@@ -26,10 +23,12 @@
             </Style.Triggers>
         </Style>
     </UserControl.Style>-->
+
     <Border CornerRadius="5" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <Image Source="{Binding ElementName=TN, Path=ImageInfo.ImageSource, Mode=OneWay}"
-               RenderOptions.BitmapScalingMode="HighQuality">
-            <Image.Clip>
+        <local:DpiImage Source="{Binding ElementName=TN, Path=ImageInfo.ImageSource, Mode=OneWay}"
+                        RenderOptions.BitmapScalingMode="HighQuality"
+                        VerticalAlignment="Center" HorizontalAlignment="Center">
+            <local:DpiImage.Clip>
                 <RectangleGeometry
                     RadiusX="{Binding RelativeSource={RelativeSource AncestorType=Border}, Path=CornerRadius.TopLeft}"
                     RadiusY="{Binding RelativeSource={RelativeSource AncestorType=Border}, Path=CornerRadius.BottomRight}">
@@ -40,18 +39,9 @@
                         </MultiBinding>
                     </RectangleGeometry.Rect>
                 </RectangleGeometry>
-            </Image.Clip>
-        </Image>
+            </local:DpiImage.Clip>
+        </local:DpiImage>
     </Border>
-    
-    
-    <!--<Border BorderThickness="2" BorderBrush="Gray" CornerRadius="5"
-            Height="200" Width="200" Margin="4">
-        <Border.Background>
-            <ImageBrush ImageSource="{Binding ElementName=TN, Path=FilePath, Mode=OneTime}"
-                        RenderOptions.BitmapScalingMode="HighQuality" Stretch="Uniform"/>
-        </Border.Background>
-    </Border>-->
 </UserControl>
 
 

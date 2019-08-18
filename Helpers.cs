@@ -127,22 +127,23 @@ namespace ZipImageViewer
     {
         public DpiDecorator()
         {
-            Loaded += (s, e) =>
-            {
-                var m = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice;
-                if (!m.HasValue) return;
-                var dpiTransform = new ScaleTransform(1 / m.Value.M11, 1 / m.Value.M22);
-                if (dpiTransform.CanFreeze) dpiTransform.Freeze();
-                LayoutTransform = dpiTransform;
-            };
+            Loaded += OnLoaded;
+            Unloaded -= OnLoaded;
         }
 
-        //        protected override Size MeasureOverride(Size constraint) {
-        //            var b = base.MeasureOverride(constraint);
-        //            var c = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformFromDevice
-        //                .Transform(new Vector(b.Width, b.Height));
-        //            return c.HasValue ? new Size(Math.Round(c.Value.X), Math.Round(c.Value.Y)) : b;
-        //        }
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            if (null != e) e.Handled = true;
+
+            var source = PresentationSource.FromVisual(this);
+            if (source?.CompositionTarget != null)
+            {
+                var matrix = source.CompositionTarget.TransformToDevice;
+                var dpiTransform = new ScaleTransform(1 / matrix.M11, 1 / matrix.M22);
+                if (dpiTransform.CanFreeze) dpiTransform.Freeze();
+                LayoutTransform = dpiTransform;
+            }
+        }
     }
 
     public class ImageInfo

@@ -28,7 +28,7 @@ namespace ZipImageViewer
 @"
 [App Config]
 SevenZipDllPath=C:\Program Files\7-Zip\7z.dll
-ThumbnailSize=200x200
+ThumbnailSize=300x200
 
 ;Saved passwords for zipped files. Format:
 ;password=file_full_path
