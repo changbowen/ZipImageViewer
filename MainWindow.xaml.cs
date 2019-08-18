@@ -127,7 +127,8 @@ namespace ZipImageViewer
                     for (int i = 0; i < ext.ArchiveFileData.Count; i++) {
                         //check if file is supported
                         var imgfile = ext.ArchiveFileData[i];
-                        if (imgfile.IsDirectory || Helpers.GetFileType(imgfile.FileName) != App.FileType.Image) continue;
+                        if (imgfile.IsDirectory || Helpers.GetFileType(imgfile.FileName) != App.FileType.Image)
+                            continue;
 #if DEBUG
                         Console.WriteLine("Extracting " + ext.ArchiveFileData[i].FileName);
 #endif
@@ -163,6 +164,9 @@ namespace ZipImageViewer
                 return true;
             }
             catch (ExtractionFailedException) {
+                return false;
+            }
+            catch (SevenZipArchiveException) {
                 return false;
             }
             finally {

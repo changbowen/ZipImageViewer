@@ -9,10 +9,117 @@ using System.Windows.Media.Imaging;
 
 namespace ZipImageViewer
 {
-    public static class ExtentionMethods {
-        public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp, double toVal, int ms, EasingMode ease) {
+    /*public class MatrixAnimation : MatrixAnimationBase
+    {
+        public Matrix? From
+        {
+            set { SetValue(FromProperty, value); }
+            get { return (Matrix)GetValue(FromProperty); }
+        }
+
+        public static DependencyProperty FromProperty =
+            DependencyProperty.Register("From", typeof(Matrix?), typeof(MatrixAnimation),
+                new PropertyMetadata(null));
+
+        public Matrix? To
+        {
+            set { SetValue(ToProperty, value); }
+            get { return (Matrix)GetValue(ToProperty); }
+        }
+
+        public static DependencyProperty ToProperty =
+            DependencyProperty.Register("To", typeof(Matrix?), typeof(MatrixAnimation),
+                new PropertyMetadata(null));
+
+        public IEasingFunction EasingFunction
+        {
+            get { return (IEasingFunction)GetValue(EasingFunctionProperty); }
+            set { SetValue(EasingFunctionProperty, value); }
+        }
+
+        public static readonly DependencyProperty EasingFunctionProperty =
+            DependencyProperty.Register("EasingFunction", typeof(IEasingFunction), typeof(MatrixAnimation),
+                new UIPropertyMetadata(null));
+
+        public MatrixAnimation()
+        {
+        }
+
+        public MatrixAnimation(Matrix toValue, Duration duration)
+        {
+            To = toValue;
+            Duration = duration;
+        }
+
+        public MatrixAnimation(Matrix toValue, Duration duration, FillBehavior fillBehavior)
+        {
+            To = toValue;
+            Duration = duration;
+            FillBehavior = fillBehavior;
+        }
+
+        public MatrixAnimation(Matrix fromValue, Matrix toValue, Duration duration)
+        {
+            From = fromValue;
+            To = toValue;
+            Duration = duration;
+        }
+
+        public MatrixAnimation(Matrix fromValue, Matrix toValue, Duration duration, FillBehavior fillBehavior)
+        {
+            From = fromValue;
+            To = toValue;
+            Duration = duration;
+            FillBehavior = fillBehavior;
+        }
+
+        protected override Freezable CreateInstanceCore()
+        {
+            return new MatrixAnimation();
+        }
+
+        protected override Matrix GetCurrentValueCore(Matrix defaultOriginValue, Matrix defaultDestinationValue, AnimationClock animationClock)
+        {
+            if (animationClock.CurrentProgress == null)
+            {
+                return Matrix.Identity;
+            }
+
+            var normalizedTime = animationClock.CurrentProgress.Value;
+            if (EasingFunction != null)
+            {
+                normalizedTime = EasingFunction.Ease(normalizedTime);
+            }
+
+            var from = From ?? defaultOriginValue;
+            var to = To ?? defaultDestinationValue;
+
+            var newMatrix = new Matrix(
+                    ((to.M11 - from.M11) * normalizedTime) + from.M11,
+                    ((to.M12 - from.M12) * normalizedTime) + from.M12,
+                    ((to.M21 - from.M21) * normalizedTime) + from.M21,
+                    ((to.M22 - from.M22) * normalizedTime) + from.M22,
+                    ((to.OffsetX - from.OffsetX) * normalizedTime) + from.OffsetX,
+                    ((to.OffsetY - from.OffsetY) * normalizedTime) + from.OffsetY);
+
+            return newMatrix;
+        }
+    }*/
+
+
+
+    public static class ExtentionMethods
+    {
+        public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp, double toVal, int ms, EasingMode ease)
+        {
             var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)))
-                {EasingFunction = new CubicEase {EasingMode = ease}};
+            { EasingFunction = new CubicEase { EasingMode = ease } };
+            target.BeginAnimation(propdp, anim);
+        }
+        public static void AnimateDoubleCubicEase(this Animatable target, DependencyProperty propdp, double toVal, int ms, EasingMode ease)
+        {
+            var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)))
+            { EasingFunction = new CubicEase { EasingMode = ease } };
             target.BeginAnimation(propdp, anim);
         }
     }
@@ -30,15 +137,16 @@ namespace ZipImageViewer
             };
         }
 
-//        protected override Size MeasureOverride(Size constraint) {
-//            var b = base.MeasureOverride(constraint);
-//            var c = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformFromDevice
-//                .Transform(new Vector(b.Width, b.Height));
-//            return c.HasValue ? new Size(Math.Round(c.Value.X), Math.Round(c.Value.Y)) : b;
-//        }
+        //        protected override Size MeasureOverride(Size constraint) {
+        //            var b = base.MeasureOverride(constraint);
+        //            var c = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformFromDevice
+        //                .Transform(new Vector(b.Width, b.Height));
+        //            return c.HasValue ? new Size(Math.Round(c.Value.X), Math.Round(c.Value.Y)) : b;
+        //        }
     }
 
-    public class ImageInfo {
+    public class ImageInfo
+    {
         /// <summary>
         /// For archives, relative path of the file inside the archive. Otherwise name of the file.
         /// </summary>
@@ -66,7 +174,8 @@ namespace ZipImageViewer
         /// </summary>
         /// <param name="fileName">A full or not full path of the file.</param>
         /// <returns></returns>
-        public static App.FileType GetFileType(string fileName) {
+        public static App.FileType GetFileType(string fileName)
+        {
             var ft = App.FileType.Unknown;
             var extension = Path.GetExtension(fileName)?.TrimStart('.').ToLowerInvariant();
             if (extension?.Length == 0) return ft;
@@ -76,13 +185,16 @@ namespace ZipImageViewer
             return ft;
         }
 
-        public static BitmapSource GetImageSource(string path, int decodeWidth = 0) {
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
+        public static BitmapSource GetImageSource(string path, int decodeWidth = 0)
+        {
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
                 return GetImageSource(fs, decodeWidth);
             }
         }
 
-        public static BitmapSource GetImageSource(Stream stream, int decodeWidth = 0) {
+        public static BitmapSource GetImageSource(Stream stream, int decodeWidth = 0)
+        {
             stream.Position = 0;
             var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
 
@@ -90,7 +202,7 @@ namespace ZipImageViewer
             if ((frame.Metadata as BitmapMetadata)?.GetQuery("/app1/ifd/{ushort=274}") is ushort u)
                 orien = u;
             frame = null;
-//            var size = new Size(frame.PixelWidth, frame.PixelHeight);
+            //            var size = new Size(frame.PixelWidth, frame.PixelHeight);
 
             stream.Position = 0;
             var bi = new BitmapImage();
@@ -106,9 +218,10 @@ namespace ZipImageViewer
             var tb = new TransformedBitmap();
             tb.BeginInit();
             tb.Source = bi;
-            switch (orien) {
-//              case 1:
-//                  break;
+            switch (orien)
+            {
+                //              case 1:
+                //                  break;
                 case 2:
                     tb.Transform = new ScaleTransform(-1d, 1d);
                     break;
@@ -118,24 +231,25 @@ namespace ZipImageViewer
                 case 4:
                     tb.Transform = new ScaleTransform(1d, -1d);
                     break;
-                case 5: {
-                    var tg = new TransformGroup();
-                    tg.Children.Add(new RotateTransform(90d));
-                    tg.Children.Add(new ScaleTransform(-1d, 1d));
-                    tb.Transform = tg;
-                    break;
-                }
+                case 5:
+                    {
+                        var tg = new TransformGroup();
+                        tg.Children.Add(new RotateTransform(90d));
+                        tg.Children.Add(new ScaleTransform(-1d, 1d));
+                        tb.Transform = tg;
+                        break;
+                    }
                 case 6:
                     tb.Transform = new RotateTransform(90d);
                     break;
                 case 7:
-                {
-                    var tg = new TransformGroup();
-                    tg.Children.Add(new RotateTransform(90d));
-                    tg.Children.Add(new ScaleTransform(1d, -1d));
-                    tb.Transform = tg;
-                    break;
-                }
+                    {
+                        var tg = new TransformGroup();
+                        tg.Children.Add(new RotateTransform(90d));
+                        tg.Children.Add(new ScaleTransform(1d, -1d));
+                        tb.Transform = tg;
+                        break;
+                    }
                 case 8:
                     tb.Transform = new RotateTransform(270d);
                     break;
@@ -145,13 +259,16 @@ namespace ZipImageViewer
             return tb;
         }
 
-        public static Size UniformScaleUp(double oldW, double oldH, double maxW, double maxH) {
+        public static Size UniformScaleUp(double oldW, double oldH, double maxW, double maxH)
+        {
             var ratio = oldW / oldH;
-            if (oldW > maxW) {
+            if (oldW > maxW)
+            {
                 oldW = maxW;
                 oldH = oldW / ratio;
             }
-            if (oldH > maxH) {
+            if (oldH > maxH)
+            {
                 oldH = maxH;
                 oldW = oldH * ratio;
             }
@@ -159,21 +276,25 @@ namespace ZipImageViewer
             return new Size(oldW, oldH);
         }
 
-        public static Size UniformScaleDown(double oldW, double oldH, double minW, double minH) {
-            if (oldW < minW && oldH < minH) {
+        public static Size UniformScaleDown(double oldW, double oldH, double minW, double minH)
+        {
+            if (oldW < minW && oldH < minH)
+            {
                 var oldRatio = oldW / oldH;
                 var minRatio = minW / minH;
-                if (oldRatio > minRatio) {
+                if (oldRatio > minRatio)
+                {
                     oldW = minW;
                     oldH = oldW / oldRatio;
                 }
-                else {
+                else
+                {
                     oldH = minH;
                     oldW = oldH * oldRatio;
                 }
             }
 
             return new Size(oldW, oldH);
-        } 
+        }
     }
 }

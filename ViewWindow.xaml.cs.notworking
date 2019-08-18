@@ -49,6 +49,9 @@ namespace ZipImageViewer
 
         private double Scale = 1d;
 
+        private bool IsRealSize =>
+            IM.RealSize.Width.Equals(IM.ActualWidth * Scale) && IM.RealSize.Height.Equals(IM.ActualHeight * Scale);
+
         public ViewWindow()
         {
             InitializeComponent();
@@ -60,8 +63,8 @@ namespace ZipImageViewer
 //            Left = rect.Left;
 //            Width = rect.Width;
 //            Height = rect.Height;
-            if (double.IsNaN(IM.Width)) IM.Width = IM.ActualWidth;
-            if (double.IsNaN(IM.Height)) IM.Height = IM.ActualHeight;
+//            if (double.IsNaN(IM.Width)) IM.Width = IM.ActualWidth;
+//            if (double.IsNaN(IM.Height)) IM.Height = IM.ActualHeight;
 
             SwitchRealSize();
         }
@@ -70,27 +73,31 @@ namespace ZipImageViewer
             if (e.ChangedButton == MouseButton.Right) Close();
         }
 
-        private void Transform(int ms, Size? newSize = null, Point? transPoint = null) {
-            if (newSize.HasValue) {
-                IM.AnimateDoubleCubicEase(WidthProperty, newSize.Value.Width, ms, EasingMode.EaseOut);
-                IM.AnimateDoubleCubicEase(HeightProperty, newSize.Value.Height, ms, EasingMode.EaseOut);
-                Scale = newSize.Value.Width / IM.RealSize.Width;
-                BM.Show($"{Scale:P0}");
-            }
-            if (transPoint.HasValue) {
-                IM_TT.AnimateDoubleCubicEase(TranslateTransform.XProperty, transPoint.Value.X, ms, EasingMode.EaseOut);
-                IM_TT.AnimateDoubleCubicEase(TranslateTransform.YProperty, transPoint.Value.Y, ms, EasingMode.EaseOut);
-            }
-
+        private void Transform(int ms, Size newSize, Point center, Matrix? fromMatrix = null) {
+            Transform(ms, newSize.Width / IM.RealSize.Width, center, fromMatrix);
         }
 
-        private void SwitchRealSize() {
-            if (IM.IsRealSize) {
-                if (IM.ActualHeight <= CA.ActualHeight && IM.ActualWidth <= CA.ActualWidth) return;
+
+        private void Transform(int ms, double scale, Point center, Matrix? fromMatrix = null) {
+            var matrix = fromMatrix ?? IM_RT.Matrix;
+            matrix.ScaleAtPrepend(scale, scale, center.X, center.Y);
+            var anim = new MatrixAnimation(IM_RT.Value, matrix, new Duration(TimeSpan.FromMilliseconds(ms)));
+            IM_RT.BeginAnimation(MatrixTransform.MatrixProperty, anim);
+            Scale *= scale;
+            BM.Show($"{Scale:P0}");
+        }
+
+        private void SwitchRealSize(Point? mousePosition = null) {
+            if (IsRealSize) {
+                if (IM.ActualHeight * Scale <= CA.ActualHeight && IM.ActualWidth * Scale <= CA.ActualWidth) return;
                 var newSize = Helpers.UniformScaleUp(IM.ActualWidth, IM.ActualHeight, CA.ActualWidth, CA.ActualHeight);
                 Transform(400, newSize, new Point(0, 0));
             }
-            else Transform(400, IM.RealSize);
+            else {
+                if (!mousePosition.HasValue)
+                    mousePosition = new Point(IM.ActualWidth / 2d, IM.ActualHeight / 2d);
+                Transform(400, 1d, mousePosition.Value);
+            }
         }
 
         /*Point scrollMousePoint;
@@ -176,11 +183,11 @@ namespace ZipImageViewer
         private void CA_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             if (e.ClickCount == 1) {
                 mouseCapturePoint = e.GetPosition(CA);
-                existingTranslate = IM_TT.Value;
+                existingTranslate = IM_RT.Matrix;
                 CA.CaptureMouse();
             }
             else if (e.ClickCount == 2) {
-                SwitchRealSize();
+                SwitchRealSize(e.GetPosition(IM));
             }
         }
 
@@ -189,10 +196,10 @@ namespace ZipImageViewer
             if (CA.IsMouseCaptured)
             {
 //                Console.WriteLine(mouseCapturePoint.X - e.GetPosition(CA).X);
-                IM_TT.BeginAnimation(TranslateTransform.XProperty, null);
-                IM_TT.X = existingTranslate.OffsetX + (e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d;
-                IM_TT.BeginAnimation(TranslateTransform.YProperty, null);
-                IM_TT.Y = existingTranslate.OffsetY + (e.GetPosition(CA).Y- mouseCapturePoint.Y) * Scale * 2d;
+                IM_RT.BeginAnimation(MatrixTransform.MatrixProperty, null);
+                IM_RT.Matrix.Translate(
+                    existingTranslate.OffsetX + (e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d,
+                    existingTranslate.OffsetY + (e.GetPosition(CA).Y - mouseCapturePoint.Y) * Scale * 2d);
             }
         }
 
@@ -208,11 +215,13 @@ namespace ZipImageViewer
             //prevent zooming out smaller than viewport
             var maxSize = new Size(Math.Min(IM.RealSize.Width, CA.ActualWidth), Math.Min(IM.RealSize.Height, CA.ActualHeight));
             var newSize = Helpers.UniformScaleDown(IM.ActualWidth * scale, IM.ActualHeight * scale, maxSize.Width, maxSize.Height);
-            //resize
-//            var position = e.GetPosition(IM);
-//            var matrix = IM_TT.Value;
-//            matrix.ScaleAt(scale, scale, position.X, position.Y);
-            Transform(100, newSize);
+            //resize and move according to mouse position
+            var position = e.GetPosition(IM);
+            var transform = IM.RenderTransform as MatrixTransform;
+            var matrix = transform.Matrix;
+            matrix.ScaleAtPrepend(scale, scale, position.X, position.Y);
+            transform.Matrix = matrix;
+//            Transform(100, newSize, new Point(e.GetPosition(CA).X * (scale - 1d), e.GetPosition(CA).Y * (scale - 1d)));
         }
 
     }

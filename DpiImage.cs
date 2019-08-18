@@ -8,7 +8,13 @@ namespace ZipImageViewer
 {
     public class DpiImage : Image
     {
+        /// <summary>
+        /// The value to set if you want to avoid DPI scaling.
+        /// </summary>
         public Size RealSize { get; set; }
+
+        public bool IsRealSize => RealSize.Width.Equals(ActualWidth) && RealSize.Height.Equals(ActualHeight);
+
 
         protected override Size MeasureOverride(Size constraint) {
 /*

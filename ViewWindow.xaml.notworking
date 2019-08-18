@@ -72,7 +72,8 @@
                     </MultiBinding>
                 </Canvas.Top>
                 <local:DpiImage.RenderTransform>
-                    <TranslateTransform x:Name="IM_TT"/>
+                    <MatrixTransform x:Name="IM_RT"/>
+                    <!-- <TranslateTransform x:Name="IM_TT"/> -->
                 </local:DpiImage.RenderTransform>
             </local:DpiImage>
         </Canvas>

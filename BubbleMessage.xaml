@@ -1,0 +1,15 @@
+﻿<UserControl x:Class="ZipImageViewer.BubbleMessage" x:Name="BM"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
+             d:DesignHeight="50" d:DesignWidth="150" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Grid>
+        <Rectangle RadiusY="10" RadiusX="10" Fill="Gray">
+        </Rectangle>
+        <TextBlock x:Name="TB" Margin="15" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   FontSize="14" FontWeight="Bold"
+                   Text="{Binding ElementName=BM, Path=Message}" Foreground="White" />
+    </Grid>
+</UserControl>
