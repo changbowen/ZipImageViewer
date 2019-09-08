@@ -47,6 +47,16 @@ namespace ZipImageViewer
         public static readonly DependencyProperty ImageInfoProperty =
             Thumbnail.ImageInfoProperty.AddOwner(typeof(ViewWindow));
 
+
+        public bool Transforming
+        {
+            get { return (bool)GetValue(TransformingProperty); }
+            set { SetValue(TransformingProperty, value); }
+        }
+        public static readonly DependencyProperty TransformingProperty =
+            DependencyProperty.Register("Transforming", typeof(bool), typeof(ViewWindow), new PropertyMetadata(false));
+
+
         private double Scale = 1d;
 
         public ViewWindow()
@@ -82,6 +92,10 @@ namespace ZipImageViewer
                 IM_TT.AnimateDoubleCubicEase(TranslateTransform.YProperty, transPoint.Value.Y, ms, EasingMode.EaseOut);
             }
 
+            var animBool = new BooleanAnimationUsingKeyFrames();
+            animBool.KeyFrames.Add(new DiscreteBooleanKeyFrame(true, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+            animBool.KeyFrames.Add(new DiscreteBooleanKeyFrame(false, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms + 10))));
+            BeginAnimation(TransformingProperty, animBool);
         }
 
         private void SwitchRealSize() {
@@ -203,17 +217,16 @@ namespace ZipImageViewer
 
 
         private void CA_PreviewMouseWheel(object sender, MouseWheelEventArgs e) {
+            if (Transforming) return;
             var scale = e.Delta > 0 ? 1.2d : 1d / 1.2d;
+            scaleImage(scale, 50);
+        }
 
+        private void scaleImage(double scale, int ms) {
             //prevent zooming out smaller than viewport
             var maxSize = new Size(Math.Min(IM.RealSize.Width, CA.ActualWidth), Math.Min(IM.RealSize.Height, CA.ActualHeight));
             var newSize = Helpers.UniformScaleDown(IM.ActualWidth * scale, IM.ActualHeight * scale, maxSize.Width, maxSize.Height);
-            //resize
-//            var position = e.GetPosition(IM);
-//            var matrix = IM_TT.Value;
-//            matrix.ScaleAt(scale, scale, position.X, position.Y);
-            Transform(100, newSize);
+            Transform(ms, newSize);
         }
-
     }
 }
