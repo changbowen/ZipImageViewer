@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d" 
         Title="ViewWindow" Height="600" Width="800" WindowState="Maximized"
         MouseUp="ViewWin_MouseUp" Loaded="ViewWindow_Loaded"
-        Opacity="0" SnapsToDevicePixels="True" UseLayoutRounding="True" Background="#FF464646">
+        Opacity="0" UseLayoutRounding="True" Background="#FF464646"
+        PreviewKeyUp="CA_PreviewKeyUp">
     <Window.Triggers>
         <EventTrigger RoutedEvent="Image.Loaded">
             <BeginStoryboard Storyboard="{StaticResource SB_FadeIn}"/>
@@ -16,6 +17,35 @@
         <local:CenterConterter x:Key="CenterConterter"/>
     </Window.Resources>
 
+    <Grid x:Name="GR">
+        <Canvas x:Name="CA" Background="Transparent"
+                PreviewMouseLeftButtonDown="CA_PreviewMouseLeftButtonDown"
+                PreviewMouseWheel="CA_PreviewMouseWheel"
+                PreviewMouseMove="CA_PreviewMouseMove"
+                PreviewMouseLeftButtonUp="CA_PreviewMouseLeftButtonUp">
+            <local:DpiImage x:Name="IM" Stretch="None"
+                            RenderOptions.BitmapScalingMode="HighQuality"
+                            Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay, NotifyOnTargetUpdated=True}"
+                            Binding.TargetUpdated="IM_TargetUpdated">
+                <Canvas.Left>
+                    <MultiBinding Converter="{StaticResource CenterConterter}">
+                        <Binding ElementName="CA" Path="ActualWidth" />
+                        <Binding ElementName="IM" Path="ActualWidth" />
+                    </MultiBinding>
+                </Canvas.Left>
+                <Canvas.Top>
+                    <MultiBinding Converter="{StaticResource CenterConterter}">
+                        <Binding ElementName="CA" Path="ActualHeight" />
+                        <Binding ElementName="IM" Path="ActualHeight" />
+                    </MultiBinding>
+                </Canvas.Top>
+                <local:DpiImage.RenderTransform>
+                    <TranslateTransform x:Name="IM_TT"/>
+                </local:DpiImage.RenderTransform>
+            </local:DpiImage>
+        </Canvas>
+        <local:BubbleMessage x:Name="BM"/>
+    </Grid>
     <!--<Grid>
         <ScrollViewer x:Name="SV" Background="#FF464646"
                       HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"
@@ -51,34 +81,6 @@
                    HorizontalAlignment="Left" VerticalAlignment="Top"
                    Margin="4" Foreground="Gray"/>
     </Grid>-->
-    <Grid x:Name="GR">
-        <Canvas x:Name="CA"
-                PreviewMouseLeftButtonDown="CA_PreviewMouseLeftButtonDown"
-                PreviewMouseWheel="CA_PreviewMouseWheel"
-                PreviewMouseMove="CA_PreviewMouseMove"
-                PreviewMouseLeftButtonUp="CA_PreviewMouseLeftButtonUp">
-            <local:DpiImage x:Name="IM" RenderOptions.BitmapScalingMode="HighQuality" Stretch="None"
-                            Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay}">
-                <Canvas.Left>
-                    <MultiBinding Converter="{StaticResource CenterConterter}">
-                        <Binding ElementName="CA" Path="ActualWidth" />
-                        <Binding ElementName="IM" Path="ActualWidth" />
-                    </MultiBinding>
-                </Canvas.Left>
-                <Canvas.Top>
-                    <MultiBinding Converter="{StaticResource CenterConterter}">
-                        <Binding ElementName="CA" Path="ActualHeight" />
-                        <Binding ElementName="IM" Path="ActualHeight" />
-                    </MultiBinding>
-                </Canvas.Top>
-                <local:DpiImage.RenderTransform>
-                    <TranslateTransform x:Name="IM_TT"/>
-                </local:DpiImage.RenderTransform>
-            </local:DpiImage>
-        </Canvas>
-        <local:BubbleMessage x:Name="BM"/>
-    </Grid>
-    
 </Window>
 
 

@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer"
-        mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" SnapsToDevicePixels="True"
+        mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True"
         Title="ZipImageViewer" Height="640" Width="1030" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
     <ScrollViewer>
         <ItemsControl x:Name="LB1" ItemsSource="{Binding ElementName=MainWin, Path=ImageList}">
@@ -15,7 +15,8 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel x:Name="SP1" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" >
+                    <StackPanel x:Name="SP1" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                UseLayoutRounding="True">
                         <local:Thumbnail x:Name="TN1" Tag="False" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1"
                                          ImageInfo="{Binding}" Margin="10"
                                          PreviewMouseLeftButtonUp="TN1_PreviewMouseLeftButtonUp">

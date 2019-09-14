@@ -50,19 +50,19 @@ namespace ZipImageViewer
                 return base.MeasureOverride(constraint);
 
             var desiredSize = new Size(source.PixelWidth, source.PixelHeight);
-            var realVec = target.TransformFromDevice.Transform(new Vector(desiredSize.Width, desiredSize.Height));
-            RealSize = new Size(realVec.X, realVec.Y);
+            var matrix = target.TransformFromDevice;
+            RealSize = new Size(Math.Round(desiredSize.Width * matrix.M11, 3), Math.Round(desiredSize.Height * matrix.M22, 3));
             
             Size realSize;
             if (Stretch == Stretch.Uniform)
-                realSize = Helpers.UniformScaleUp(realVec.X, realVec.Y, constraint.Width, constraint.Height);
+                realSize = Helpers.UniformScaleUp(RealSize.Width, RealSize.Height, constraint.Width, constraint.Height);
             else
-                realSize = new Size(realVec.X, realVec.Y);
+                realSize = RealSize;
 
-            if (UseLayoutRounding) {
-                realSize.Width = Math.Round(realSize.Width);
-                realSize.Height = Math.Round(realSize.Height);
-            }
+//            if (UseLayoutRounding) {
+//                realSize.Width = Math.Round(realSize.Width);
+//                realSize.Height = Math.Round(realSize.Height);
+//            }
 
             return realSize;
 /*
@@ -86,7 +86,8 @@ namespace ZipImageViewer
 
         protected override Size ArrangeOverride(Size finalSize)
         {
-            return new Size(Math.Round(DesiredSize.Width), Math.Round(DesiredSize.Height));
+            return new Size(DesiredSize.Width, DesiredSize.Height);
+//            return new Size(Math.Round(DesiredSize.Width), Math.Round(DesiredSize.Height));
         }
     }
 }

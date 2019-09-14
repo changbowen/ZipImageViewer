@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.IO;
 using System.Linq;
@@ -114,13 +115,13 @@ namespace ZipImageViewer
         {
             var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)))
             { EasingFunction = new CubicEase { EasingMode = ease } };
-            target.BeginAnimation(propdp, anim);
+            target.BeginAnimation(propdp, anim, HandoffBehavior.Compose);
         }
         public static void AnimateDoubleCubicEase(this Animatable target, DependencyProperty propdp, double toVal, int ms, EasingMode ease)
         {
             var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)))
             { EasingFunction = new CubicEase { EasingMode = ease } };
-            target.BeginAnimation(propdp, anim);
+            target.BeginAnimation(propdp, anim, HandoffBehavior.Compose);
         }
     }
     public class DpiDecorator : Decorator
@@ -166,6 +167,9 @@ namespace ZipImageViewer
         public ImageSource ImageSource { get; set; }
 
         public string ImageRealPath => FileType == App.FileType.Archive ? FilePath + @"\" + FileName : FilePath;
+
+//        public HashSet<string> ImageSet { get; set; }
+        public string Password { get; set; }
     }
 
     public class Helpers

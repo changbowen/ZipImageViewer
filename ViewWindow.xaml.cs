@@ -59,6 +59,9 @@ namespace ZipImageViewer
 
         private double Scale = 1d;
 
+        public Point CenterPoint =>
+            new Point((CA.ActualWidth - IM.ActualWidth) / 2, (CA.ActualHeight - IM.ActualHeight) / 2);
+
         public ViewWindow()
         {
             InitializeComponent();
@@ -70,6 +73,14 @@ namespace ZipImageViewer
 //            Left = rect.Left;
 //            Width = rect.Width;
 //            Height = rect.Height;
+
+//            var center = CenterPoint;
+//            Canvas.SetLeft(IM, center.X);
+//            Canvas.SetTop(IM, center.Y);
+        }
+
+        private void IM_TargetUpdated(object sender, DataTransferEventArgs e) {
+            if (!IsLoaded) return; //avoid firing twice the first time
             if (double.IsNaN(IM.Width)) IM.Width = IM.ActualWidth;
             if (double.IsNaN(IM.Height)) IM.Height = IM.ActualHeight;
 
@@ -90,6 +101,8 @@ namespace ZipImageViewer
             if (transPoint.HasValue) {
                 IM_TT.AnimateDoubleCubicEase(TranslateTransform.XProperty, transPoint.Value.X, ms, EasingMode.EaseOut);
                 IM_TT.AnimateDoubleCubicEase(TranslateTransform.YProperty, transPoint.Value.Y, ms, EasingMode.EaseOut);
+//                IM.AnimateDoubleCubicEase(Canvas.LeftProperty, transPoint.Value.X, ms, EasingMode.EaseOut);
+//                IM.AnimateDoubleCubicEase(Canvas.TopProperty, transPoint.Value.Y, ms, EasingMode.EaseOut);
             }
 
             var animBool = new BooleanAnimationUsingKeyFrames();
@@ -102,7 +115,7 @@ namespace ZipImageViewer
             if (IM.IsRealSize) {
                 if (IM.ActualHeight <= CA.ActualHeight && IM.ActualWidth <= CA.ActualWidth) return;
                 var newSize = Helpers.UniformScaleUp(IM.ActualWidth, IM.ActualHeight, CA.ActualWidth, CA.ActualHeight);
-                Transform(400, newSize, new Point(0, 0));
+                Transform(400, newSize, new Point(0d, 0d));
             }
             else Transform(400, IM.RealSize);
         }
@@ -185,12 +198,15 @@ namespace ZipImageViewer
 //            st.ScaleY += scale;
         }*/
         private Point mouseCapturePoint;
+//        private Point currentPosition;
         private Matrix existingTranslate;
+
 
         private void CA_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             if (e.ClickCount == 1) {
                 mouseCapturePoint = e.GetPosition(CA);
                 existingTranslate = IM_TT.Value;
+//                currentPosition = new Point(Canvas.GetLeft(IM), Canvas.GetTop(IM));
                 CA.CaptureMouse();
             }
             else if (e.ClickCount == 2) {
@@ -202,11 +218,25 @@ namespace ZipImageViewer
         {
             if (CA.IsMouseCaptured)
             {
-//                Console.WriteLine(mouseCapturePoint.X - e.GetPosition(CA).X);
+                //Console.WriteLine(mouseCapturePoint.X - e.GetPosition(CA).X);
+//                var newX = currentPosition.X + (e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d;
+//                if (newX > -currentPosition.X) newX = -currentPosition.X;
+//                newX = Math.Round(newX);
+//                Canvas.SetLeft(IM, newX);
+
+//                var newY = currentPosition.Y + (e.GetPosition(CA).Y - mouseCapturePoint.Y) * Scale * 2d;
+//                if (newY > -currentPosition.Y) newY = -currentPosition.Y;
+//                newY = Math.Round(newY);
+//                Canvas.SetTop(IM, newY);
+
+//                blury after render transform might be size and zooming?
                 IM_TT.BeginAnimation(TranslateTransform.XProperty, null);
                 IM_TT.X = existingTranslate.OffsetX + (e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d;
                 IM_TT.BeginAnimation(TranslateTransform.YProperty, null);
                 IM_TT.Y = existingTranslate.OffsetY + (e.GetPosition(CA).Y- mouseCapturePoint.Y) * Scale * 2d;
+#if DEBUG
+//                Console.WriteLine(new Point(newX, newY));
+#endif
             }
         }
 
@@ -228,5 +258,20 @@ namespace ZipImageViewer
             var newSize = Helpers.UniformScaleDown(IM.ActualWidth * scale, IM.ActualHeight * scale, maxSize.Width, maxSize.Height);
             Transform(ms, newSize);
         }
+
+        private void CA_PreviewKeyUp(object sender, KeyEventArgs e) {
+            switch (e.Key) {
+                case Key.Space:
+                    var ii = ImageInfo;
+                    var il = App.MainWin.ImageList;
+                    var i = il.IndexOf(il[ii.ImageRealPath]) + 1;
+                    if (i > -1 && i < il.Count) {
+                        var next = il[i];
+                        App.MainWin.LoadFile(next.FilePath, nii => ImageInfo = nii, 0, new[] { next.FileName });
+                    }
+                    break;
+            }
+        }
+
     }
 }
