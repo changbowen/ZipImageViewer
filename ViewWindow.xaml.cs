@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using FontAwesome.WPF;
 using static ZipImageViewer.ExtentionMethods;
 
@@ -65,26 +66,32 @@ namespace ZipImageViewer
         public ViewWindow()
         {
             InitializeComponent();
+            IM.Opacity = 0d;
         }
 
         private void ViewWindow_Loaded(object sender, RoutedEventArgs e) {
-//            var rect = NativeMethods.GetMonitorFromWindow(this);
-//            Top = rect.Top;
-//            Left = rect.Left;
-//            Width = rect.Width;
-//            Height = rect.Height;
-
-//            var center = CenterPoint;
-//            Canvas.SetLeft(IM, center.X);
-//            Canvas.SetTop(IM, center.Y);
+            var uniSize = Helpers.UniformScaleUp(IM.RealSize.Width, IM.RealSize.Height, CA.ActualWidth, CA.ActualHeight);
+            IM.Width = uniSize.Width;
+            IM.Height = uniSize.Height;
+            IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
+//            Task.Run(() => {
+//                Thread.Sleep(100);
+//                Dispatcher.Invoke(() => {
+//                    
+//                }, DispatcherPriority.ApplicationIdle);
+//            });
         }
 
-        private void IM_TargetUpdated(object sender, DataTransferEventArgs e) {
+        /*private void IM_TargetUpdated(object sender, DataTransferEventArgs e) {
             if (!IsLoaded) return; //avoid firing twice the first time
-            if (double.IsNaN(IM.Width)) IM.Width = IM.ActualWidth;
-            if (double.IsNaN(IM.Height)) IM.Height = IM.ActualHeight;
+        }*/
 
-            SwitchRealSize();
+        private void ScaleToCanvas() {
+            var uniSize = Helpers.UniformScaleUp(IM.RealSize.Width, IM.RealSize.Height, CA.ActualWidth, CA.ActualHeight);
+            if (Dispatcher.CheckAccess())
+                Transform(400, uniSize, new Point(0d, 0d));
+            else
+                Dispatcher.Invoke(() => Transform(400, uniSize, new Point(0d, 0d)));
         }
 
         private void ViewWin_MouseUp(object sender, MouseButtonEventArgs e) {
@@ -96,28 +103,48 @@ namespace ZipImageViewer
                 IM.AnimateDoubleCubicEase(WidthProperty, newSize.Value.Width, ms, EasingMode.EaseOut);
                 IM.AnimateDoubleCubicEase(HeightProperty, newSize.Value.Height, ms, EasingMode.EaseOut);
                 Scale = newSize.Value.Width / IM.RealSize.Width;
-                BM.Show($"{Scale:P0}");
+                BM.Show($"{Scale:P1}");
             }
             if (transPoint.HasValue) {
                 IM_TT.AnimateDoubleCubicEase(TranslateTransform.XProperty, transPoint.Value.X, ms, EasingMode.EaseOut);
                 IM_TT.AnimateDoubleCubicEase(TranslateTransform.YProperty, transPoint.Value.Y, ms, EasingMode.EaseOut);
-//                IM.AnimateDoubleCubicEase(Canvas.LeftProperty, transPoint.Value.X, ms, EasingMode.EaseOut);
-//                IM.AnimateDoubleCubicEase(Canvas.TopProperty, transPoint.Value.Y, ms, EasingMode.EaseOut);
             }
 
-            var animBool = new BooleanAnimationUsingKeyFrames();
-            animBool.KeyFrames.Add(new DiscreteBooleanKeyFrame(true, KeyTime.FromTimeSpan(TimeSpan.Zero)));
-            animBool.KeyFrames.Add(new DiscreteBooleanKeyFrame(false, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms + 10))));
-            BeginAnimation(TransformingProperty, animBool);
+            if (ms > 0) {
+                var animBool = new BooleanAnimationUsingKeyFrames();
+                animBool.KeyFrames.Add(new DiscreteBooleanKeyFrame(true, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+                animBool.KeyFrames.Add(new DiscreteBooleanKeyFrame(false, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms))));
+                BeginAnimation(TransformingProperty, animBool);
+            }
         }
 
-        private void SwitchRealSize() {
-            if (IM.IsRealSize) {
-                if (IM.ActualHeight <= CA.ActualHeight && IM.ActualWidth <= CA.ActualWidth) return;
-                var newSize = Helpers.UniformScaleUp(IM.ActualWidth, IM.ActualHeight, CA.ActualWidth, CA.ActualHeight);
-                Transform(400, newSize, new Point(0d, 0d));
+        private void SwitchRealSize(int ms = 400, bool? overRide = null) {
+            bool toRealSize;
+            if (overRide.HasValue) toRealSize = overRide.Value;
+            else toRealSize = !IM.IsRealSize;
+
+            var rs = IM.RealSize;
+            Size? tgtSize = null;
+            Point? tgtPoint = null;
+            if (toRealSize)
+                tgtSize = rs;
+            else {
+//                if (IM.ActualHeight <= CA.ActualHeight && IM.ActualWidth <= CA.ActualWidth) return;
+                tgtSize = Helpers.UniformScaleUp(rs.Width, rs.Height, CA.ActualWidth, CA.ActualHeight);
+                tgtPoint = new Point(0d, 0d);
             }
-            else Transform(400, IM.RealSize);
+
+            //use different animation when image is large to reduce stutter
+            if (rs.Width / CA.ActualWidth < 1.8d && rs.Height / CA.ActualHeight < 1.8d)
+                Transform(ms, tgtSize, tgtPoint);
+            else
+                Task.Run(() => {
+                    Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 0.001d, 100, EasingMode.EaseOut));
+                    Thread.Sleep(100);
+                    Dispatcher.Invoke(() => Transform(0, tgtSize, tgtPoint));
+                    //Thread.Sleep(100);
+                    Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 200, EasingMode.EaseOut), DispatcherPriority.Background);
+                });
         }
 
         /*Point scrollMousePoint;
@@ -261,14 +288,30 @@ namespace ZipImageViewer
 
         private void CA_PreviewKeyUp(object sender, KeyEventArgs e) {
             switch (e.Key) {
+                case Key.Left:
+                case Key.Right:
                 case Key.Space:
                     var ii = ImageInfo;
                     var il = App.MainWin.ImageList;
-                    var i = il.IndexOf(il[ii.ImageRealPath]) + 1;
+                    var i = il.IndexOf(il[ii.ImageRealPath]) + (e.Key == Key.Left ? -1 : 1);
                     if (i > -1 && i < il.Count) {
-                        var next = il[i];
-                        App.MainWin.LoadFile(next.FilePath, nii => ImageInfo = nii, 0, new[] { next.FileName });
+                        //fade animation
+                        IM.AnimateDoubleCubicEase(OpacityProperty, 0d, 200, EasingMode.EaseOut);
+
+                        //load next or previous image
+                        Task.Run(() => {
+                            var next = il[i];
+                            App.MainWin.LoadFile(next.FilePath,
+                                nii => Dispatcher.Invoke(() => ImageInfo = nii),
+                                0, new[] {next.FileName});
+                            Dispatcher.Invoke(() => {
+                                IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
+                                ScaleToCanvas();
+                            }, DispatcherPriority.ApplicationIdle);
+                        });
                     }
+                    else
+                        BM.Show("No more!");
                     break;
             }
         }

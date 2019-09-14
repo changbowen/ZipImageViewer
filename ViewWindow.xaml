@@ -25,8 +25,7 @@
                 PreviewMouseLeftButtonUp="CA_PreviewMouseLeftButtonUp">
             <local:DpiImage x:Name="IM" Stretch="None"
                             RenderOptions.BitmapScalingMode="HighQuality"
-                            Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay, NotifyOnTargetUpdated=True}"
-                            Binding.TargetUpdated="IM_TargetUpdated">
+                            Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay}">
                 <Canvas.Left>
                     <MultiBinding Converter="{StaticResource CenterConterter}">
                         <Binding ElementName="CA" Path="ActualWidth" />

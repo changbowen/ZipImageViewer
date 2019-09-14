@@ -111,17 +111,19 @@ namespace ZipImageViewer
 
     public static class ExtentionMethods
     {
-        public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp, double toVal, int ms, EasingMode ease)
+        public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp,
+            double toVal, int ms, EasingMode ease, HandoffBehavior handOff = HandoffBehavior.Compose)
         {
             var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)))
             { EasingFunction = new CubicEase { EasingMode = ease } };
-            target.BeginAnimation(propdp, anim, HandoffBehavior.Compose);
+            target.BeginAnimation(propdp, anim, handOff);
         }
-        public static void AnimateDoubleCubicEase(this Animatable target, DependencyProperty propdp, double toVal, int ms, EasingMode ease)
+        public static void AnimateDoubleCubicEase(this Animatable target, DependencyProperty propdp,
+            double toVal, int ms, EasingMode ease, HandoffBehavior handOff = HandoffBehavior.Compose)
         {
             var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)))
             { EasingFunction = new CubicEase { EasingMode = ease } };
-            target.BeginAnimation(propdp, anim, HandoffBehavior.Compose);
+            target.BeginAnimation(propdp, anim, handOff);
         }
     }
     public class DpiDecorator : Decorator

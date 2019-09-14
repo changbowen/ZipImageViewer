@@ -37,7 +37,9 @@ namespace ZipImageViewer
 
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
         {
-            Task.Run(() => LoadFile(@"E:\Pictures\chroma_test_4k.png", ii => ImageList.Add(ii), App.ThumbnailSize.Width));
+#if DEBUG
+            Task.Run(() => LoadFile(@"E:\Pictures\To Do.7z", ii => ImageList.Add(ii), App.ThumbnailSize.Width));
+#endif
         }
 
         private void MainWin_Drop(object sender, DragEventArgs e)
@@ -69,10 +71,11 @@ namespace ZipImageViewer
 
         /// <summary>
         /// Load image based on the type of file and try passwords when possible.
-        /// <param name="offset">0 = load current file; 1 = load next file; -1 = load previous file</param>
+        /// Can be called from a background thread.
+        /// Callback can be used to handle the display of image. Use Dispatcher if callback needs to access the UI thread.
         /// </summary>
         public void LoadFile(string filePath, Action<ImageInfo> callback,
-            int decodeWidth = 0, string[] extractedFileNames = null, int offset = 0)
+            int decodeWidth = 0, string[] extractedFileNames = null)
         {
             var fileName = Path.GetFileName(filePath);
             var ft = Helpers.GetFileType(fileName);
@@ -190,13 +193,12 @@ namespace ZipImageViewer
                 App.Config["Saved Passwords"][path] = ext.Password;
                 return true;
             }
-            catch (ExtractionFailedException)
+            catch (Exception ex)
             {
-                return false;
-            }
-            catch (SevenZipArchiveException)
-            {
-                return false;
+                if (ex is ExtractionFailedException ||
+                    ex is SevenZipArchiveException ||
+                    ex is NotSupportedException) return false;
+                throw;
             }
             finally
             {
