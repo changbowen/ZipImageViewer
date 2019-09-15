@@ -126,6 +126,7 @@ namespace ZipImageViewer
             target.BeginAnimation(propdp, anim, handOff);
         }
     }
+
     public class DpiDecorator : Decorator
     {
         public DpiDecorator()
@@ -149,6 +150,18 @@ namespace ZipImageViewer
         }
     }
 
+    [Flags]
+    public enum FileFlags {
+        Unknown,
+        Image,
+        Archive,
+        Directory,
+        /// <summary>
+        /// Indicate to load all archive content instead of a single image
+        /// </summary>
+        Archive_OpenSelf
+    }
+
     public class ImageInfo
     {
         /// <summary>
@@ -162,16 +175,51 @@ namespace ZipImageViewer
         public string FilePath { get; set; }
 
         /// <summary>
-        /// Indicates the file is an image or belong to an archive.
+        /// Indicates the flags of the file. Affects click operations etc.
         /// </summary>
-        public App.FileType FileType { get; set; }
+        public FileFlags Flags { get; set; }
 
         public ImageSource ImageSource { get; set; }
 
-        public string ImageRealPath => FileType == App.FileType.Archive ? FilePath + @"\" + FileName : FilePath;
+        /// <summary>
+        /// A virtual path used to avoid duplicated paths in a collection for zipped files.
+        /// For non-zip files, same as FilePath.
+        /// </summary>
+        public string ImageRealPath {
+            get {
+                if (Flags.HasFlag(FileFlags.Archive))
+                    return FilePath + @"\" + FileName;
+                if (Flags.HasFlag(FileFlags.Image))
+                    return FilePath;
+                return null;
+            }
+        } 
 
 //        public HashSet<string> ImageSet { get; set; }
-        public string Password { get; set; }
+//        public string Password { get; set; }
+//        public string Link { get; set; }
+    }
+
+    public class LoadOptions {
+        public int DecodeWidth { get; set; } = 0;
+        public string Password { get; set; } = null;
+        public string[] FileNames { get; set; } = null;
+        /// <summary>
+        /// The number of files to extract. Ignored when FileNames are not empty.
+        /// </summary>
+        public int ExtractCount { get; set; } = 0;
+        public Action<ImageInfo> Callback { get; set; } = null;
+        
+        public LoadOptions() {}
+
+        public LoadOptions(int decodeWidth = 0, string password = null,
+            string[] fileNames = null, int extractCount = 0, Action<ImageInfo> callback = null) {
+            DecodeWidth = decodeWidth;
+            Password = password;
+            FileNames = fileNames;
+            ExtractCount = extractCount;
+            Callback = callback;
+        }
     }
 
     public class Helpers
@@ -181,15 +229,25 @@ namespace ZipImageViewer
         /// </summary>
         /// <param name="fileName">A full or not full path of the file.</param>
         /// <returns></returns>
-        public static App.FileType GetFileType(string fileName)
+        public static FileFlags GetFileType(string fileName)
         {
-            var ft = App.FileType.Unknown;
+            var ft = FileFlags.Unknown;
             var extension = Path.GetExtension(fileName)?.TrimStart('.').ToLowerInvariant();
             if (extension?.Length == 0) return ft;
 
-            if (App.ImageExtensions.Contains(extension)) ft = App.FileType.Image;
-            else if (App.ZipExtensions.Contains(extension)) ft = App.FileType.Archive;
+            if (App.ImageExtensions.Contains(extension)) ft = FileFlags.Image;
+            else if (App.ZipExtensions.Contains(extension)) ft = FileFlags.Archive;
             return ft;
+        }
+
+        public static FileFlags GetFileType(FileSystemInfo fsInfo) {
+            if (fsInfo.Attributes.HasFlag(FileAttributes.Directory))
+                return FileFlags.Directory;
+            if (App.ZipExtensions.Contains(fsInfo.Extension))
+                return FileFlags.Archive;
+            if (App.ImageExtensions.Contains(fsInfo.Extension))
+                return FileFlags.Image;
+            return FileFlags.Unknown;
         }
 
         public static BitmapSource GetImageSource(string path, int decodeWidth = 0)

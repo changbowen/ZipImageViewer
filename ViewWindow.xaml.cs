@@ -142,7 +142,7 @@ namespace ZipImageViewer
                     Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 0.001d, 100, EasingMode.EaseOut));
                     Thread.Sleep(100);
                     Dispatcher.Invoke(() => Transform(0, tgtSize, tgtPoint));
-                    //Thread.Sleep(100);
+//                    Thread.Sleep(100);
                     Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 200, EasingMode.EaseOut), DispatcherPriority.Background);
                 });
         }
@@ -301,9 +301,8 @@ namespace ZipImageViewer
                         //load next or previous image
                         Task.Run(() => {
                             var next = il[i];
-                            App.MainWin.LoadFile(next.FilePath,
-                                nii => Dispatcher.Invoke(() => ImageInfo = nii),
-                                0, new[] {next.FileName});
+                            Action<ImageInfo> cb = nii => Dispatcher.Invoke(() => ImageInfo = nii);
+                            App.MainWin.LoadFile(next.FilePath, next.Flags, new LoadOptions(fileNames: new[] {next.FileName}, callback: cb));
                             Dispatcher.Invoke(() => {
                                 IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
                                 ScaleToCanvas();

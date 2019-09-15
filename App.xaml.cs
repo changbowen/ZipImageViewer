@@ -16,9 +16,18 @@ namespace ZipImageViewer
     public partial class App : Application {
         public static MainWindow MainWin;
         public static IniData Config;
-        public static readonly string[] ImageExtensions = {"jpg", "jpeg", "png", "gif", "tiff", "bmp"};
-        public static readonly string[] ZipExtensions = {"zip", "rar", "7z"};
-        public enum FileType { Unknown, Image, Archive }
+
+        public static readonly HashSet<string> ImageExtensions =
+            new HashSet<string>(new[] {
+                "jpg", "jpeg", "png", "gif", "tiff", "bmp",
+                ".jpg", ".jpeg", ".png", ".gif", ".tiff", ".bmp",
+            });
+
+        public static readonly HashSet<string> ZipExtensions =
+            new HashSet<string>(new[] {
+                "zip", "rar", "7z",
+                ".zip", ".rar", ".7z",
+            });
 
         public static Size ThumbnailSize { get; set; } = new Size(300, 200);
 
