@@ -139,10 +139,10 @@ namespace ZipImageViewer
                 Transform(ms, tgtSize, tgtPoint);
             else
                 Task.Run(() => {
-                    Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 0.001d, 100, EasingMode.EaseOut));
+                    Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 0.01d, 100, EasingMode.EaseOut));
                     Thread.Sleep(100);
                     Dispatcher.Invoke(() => Transform(0, tgtSize, tgtPoint));
-//                    Thread.Sleep(100);
+                    Thread.Sleep(100);
                     Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 200, EasingMode.EaseOut), DispatcherPriority.Background);
                 });
         }
