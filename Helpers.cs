@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace ZipImageViewer
 {
@@ -152,14 +153,14 @@ namespace ZipImageViewer
 
     [Flags]
     public enum FileFlags {
-        Unknown,
-        Image,
-        Archive,
-        Directory,
+        Unknown = 0,
+        Image = 1,
+        Archive = 2,
+        Directory = 4,
         /// <summary>
         /// Indicate to load all archive content instead of a single image
         /// </summary>
-        Archive_OpenSelf
+        Archive_OpenSelf = 8
     }
 
     public class ImageInfo
@@ -170,7 +171,9 @@ namespace ZipImageViewer
         public string FileName { get; set; }
 
         /// <summary>
-        /// For archives, full path to the archive file. Otherwise full path to the image file.
+        /// For archives, full path to the archive file.
+        /// For directories, full path to the directory.
+        /// Otherwise full path to the image file.
         /// </summary>
         public string FilePath { get; set; }
 
@@ -193,7 +196,12 @@ namespace ZipImageViewer
                     return FilePath;
                 return null;
             }
-        } 
+        }
+
+        /// <summary>
+        /// For Flags.Directory, the parent folder name of FilePath. Otherwise FileName.
+        /// </summary>
+        public string DisplayName => Flags.HasFlag(FileFlags.Directory) ? Path.GetDirectoryName(FilePath) : FileName;
 
 //        public HashSet<string> ImageSet { get; set; }
 //        public string Password { get; set; }
@@ -225,11 +233,11 @@ namespace ZipImageViewer
     public class Helpers
     {
         /// <summary>
-        /// Get file type based on extension.
+        /// Get file type based on extension. Assumes fileName points to a file.
         /// </summary>
         /// <param name="fileName">A full or not full path of the file.</param>
         /// <returns></returns>
-        public static FileFlags GetFileType(string fileName)
+        public static FileFlags GetPathType(string fileName)
         {
             var ft = FileFlags.Unknown;
             var extension = Path.GetExtension(fileName)?.TrimStart('.').ToLowerInvariant();
@@ -240,7 +248,7 @@ namespace ZipImageViewer
             return ft;
         }
 
-        public static FileFlags GetFileType(FileSystemInfo fsInfo) {
+        public static FileFlags GetPathType(FileSystemInfo fsInfo) {
             if (fsInfo.Attributes.HasFlag(FileAttributes.Directory))
                 return FileFlags.Directory;
             if (App.ZipExtensions.Contains(fsInfo.Extension))
@@ -360,6 +368,15 @@ namespace ZipImageViewer
             }
 
             return new Size(oldW, oldH);
+        }
+
+        public static string OpenFolderDialog(Window owner)
+        {
+            var cofd = new CommonOpenFileDialog() {
+                IsFolderPicker = true
+            };
+
+            return cofd.ShowDialog(owner) == CommonFileDialogResult.Ok ? cofd.FileName : null;
         }
     }
 }

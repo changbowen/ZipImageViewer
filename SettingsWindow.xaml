@@ -1,0 +1,74 @@
+﻿<Window x:Class="ZipImageViewer.SettingsWindow" x:Name="SettingsWin"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
+        Background="#FF333333" Foreground="LightGray" SizeToContent="WidthAndHeight"
+        Title="Settings" UseLayoutRounding="True" Loaded="SettingsWin_Loaded">
+    <local:PaddedGrid Padding="4" VerticalChildrenAlignment="Stretch" HorizontalChildrenAlignment="Stretch">
+        <local:PaddedGrid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </local:PaddedGrid.ColumnDefinitions>
+        <local:PaddedGrid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </local:PaddedGrid.RowDefinitions>
+        <local:PaddedGrid.Resources>
+            <Style TargetType="TextBox">
+                <Style.Setters>
+                    <Setter Property="MinWidth" Value="200"/>
+                    <Setter Property="MaxWidth" Value="500"/>
+                </Style.Setters>
+            </Style>
+            <Style x:Key="TipTextStyle" TargetType="TextBlock">
+                <Style.Setters>
+                    <Setter Property="FontSize" Value="10"/>
+                    <Setter Property="FontStyle" Value="Italic"/>
+                    <Setter Property="Padding" Value="0 2"/>
+                    <Setter Property="MaxWidth" Value="240"/>
+                    <Setter Property="TextWrapping" Value="Wrap"/>
+                </Style.Setters>
+            </Style>
+        </local:PaddedGrid.Resources>
+
+        <TextBlock  Grid.Row="0" Grid.Column="0" Text="7-Zip Dll Path"/>
+        <TextBox    Grid.Row="0" Grid.Column="1" x:Name="TB_7zDllPath"/>
+        <TextBlock  Grid.Row="0" Grid.Column="2" Style="{StaticResource TipTextStyle}" Text="The path to 7z.dll on the PC."/>
+
+        <TextBlock  Grid.Row="1" Grid.Column="0" Text="Thumbnail Size"/>
+        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+            <TextBox x:Name="TB_ThumbWidth" MinWidth="32"/>
+            <TextBlock Text=" x "/>
+            <TextBox x:Name="TB_ThumbHeight" MinWidth="32"/>
+        </StackPanel>
+        <TextBlock  Grid.Row="1" Grid.Column="2" Style="{StaticResource TipTextStyle}">
+            <TextBlock.Inlines>
+                <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.
+            </TextBlock.Inlines>
+        </TextBlock>
+
+        <TextBlock  Grid.Row="2" Grid.Column="0" Text="Saved Passwords"/>
+        <TextBox    Grid.Row="2" Grid.Column="1" x:Name="TB_SavedPasswords" AcceptsReturn="True" Height="170" VerticalScrollBarVisibility="Auto"/>
+        <TextBlock  Grid.Row="2" Grid.Column="2" Style="{StaticResource TipTextStyle}">
+            <TextBlock.Inlines>
+                Saved passwords for zipped files.<LineBreak/>
+                One on each line with the below formats:<LineBreak/>
+                <Bold>password</Bold>=<LineBreak/>
+                <Bold>file_full_path</Bold>=<Bold>password</Bold>
+                <LineBreak/>
+                <LineBreak/>
+                Using the format without <Bold>file_full_path</Bold> indicates a fallback password to try on any files not included in this section."
+            </TextBlock.Inlines>
+        </TextBlock>
+
+        <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="Btn_OK" Content="OK" MinWidth="50" MinHeight="22" Click="Btn_OK_Click"/>
+            <Button x:Name="Btn_Cancel" Content="Cancel" MinWidth="50" MinHeight="22" Margin="4 0 0 0" IsCancel="True" Click="Btn_Cancel_Click"/>
+        </StackPanel>
+    </local:PaddedGrid>
+</Window>

@@ -20,7 +20,7 @@ using static ZipImageViewer.ExtentionMethods;
 
 namespace ZipImageViewer
 {
-    public class CenterConterter : IMultiValueConverter
+    public class CenterConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {

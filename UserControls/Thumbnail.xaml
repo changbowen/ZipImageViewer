@@ -23,8 +23,11 @@
             </Style.Triggers>
         </Style>
     </UserControl.Style>-->
-
-    <Border CornerRadius="5" VerticalAlignment="Center" HorizontalAlignment="Center">
+    <UserControl.Resources>
+        <local:FlagToBrushConverter x:Key="FlagToBrushConverter"/>
+    </UserControl.Resources>
+    <Border CornerRadius="5" VerticalAlignment="Center" HorizontalAlignment="Center" BorderThickness="2"
+            BorderBrush="{Binding ElementName=TN, Path=ImageInfo.Flags, Converter={StaticResource FlagToBrushConverter}}">
         <local:DpiImage Source="{Binding ElementName=TN, Path=ImageInfo.ImageSource, Mode=OneWay}"
                         RenderOptions.BitmapScalingMode="HighQuality"
                         VerticalAlignment="Center" HorizontalAlignment="Center">

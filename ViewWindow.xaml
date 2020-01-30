@@ -14,7 +14,7 @@
         </EventTrigger>
     </Window.Triggers>
     <Window.Resources>
-        <local:CenterConterter x:Key="CenterConterter"/>
+        <local:CenterConverter x:Key="CenterConverter"/>
     </Window.Resources>
 
     <Grid x:Name="GR">
@@ -27,13 +27,13 @@
                             RenderOptions.BitmapScalingMode="HighQuality"
                             Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay}">
                 <Canvas.Left>
-                    <MultiBinding Converter="{StaticResource CenterConterter}">
+                    <MultiBinding Converter="{StaticResource CenterConverter}">
                         <Binding ElementName="CA" Path="ActualWidth" />
                         <Binding ElementName="IM" Path="ActualWidth" />
                     </MultiBinding>
                 </Canvas.Left>
                 <Canvas.Top>
-                    <MultiBinding Converter="{StaticResource CenterConterter}">
+                    <MultiBinding Converter="{StaticResource CenterConverter}">
                         <Binding ElementName="CA" Path="ActualHeight" />
                         <Binding ElementName="IM" Path="ActualHeight" />
                     </MultiBinding>

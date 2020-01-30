@@ -24,9 +24,6 @@ using Size = System.Drawing.Size;
 namespace ZipImageViewer
 {
     public partial class MainWindow : Window {
-        private readonly string[] genericPasswords =
-            App.Config["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => d.KeyName).ToArray();
-
         public ObservableKeyedCollection<string, ImageInfo> ImageList { get; set; } =
             new ObservableKeyedCollection<string, ImageInfo>(ii => ii.ImageRealPath);
 
@@ -38,53 +35,73 @@ namespace ZipImageViewer
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
         {
 #if DEBUG
-//            Task.Run(() => LoadFolder(@"E:\Pictures\new folder\", Callback_AddToImageList, new LoadOptions(App.ThumbnailSize.Width)));
+            //Task.Run(() => LoadFolder(@"E:\Pictures\new folder\", Callback_AddToImageList, new LoadOptions(Setting.ThumbnailSize.Width)));
+            new SettingsWindow().ShowDialog();
 #endif
+            if (Helpers.OpenFolderDialog(this) is string path)
+                Task.Run(() => LoadPath(path));
         }
 
         private void MainWin_Drop(object sender, DragEventArgs e)
         {
             ImageList.Clear();
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (paths == null) return;
+            if (paths == null || paths.Length == 0) return;
 
             Task.Run(() => {
-                foreach (var path in paths) {
-                    // check if path is a file or directory
-                    var info = new DirectoryInfo(path);
-                    var fileType = Helpers.GetFileType(info);
-                    switch (fileType) {
-                        case FileFlags.Unknown:
-                            continue;
-                        case FileFlags.Directory:
-                            //dropped directory
-                            LoadFolder(info);
-                            break;
-                        default:
-                            //dropped file
-                            LoadFile(info.FullName, fileType, new LoadOptions(App.ThumbnailSize.Width, callback: Callback_AddToImageList));
-                            break;
-                    }
-                }
+                LoadPath(paths[0]);
             });
         }
 
+        public void LoadPath(string path) {
+            LoadPath(new DirectoryInfo(path));
+        }
+        public void LoadPath(FileSystemInfo info) {
+            var pathType = Helpers.GetPathType(info);
+            // check if path is a file or directory
+            switch (pathType) {
+                case FileFlags.Directory:
+                    //directory
+                    ImageList.Clear();
+                    LoadFolder((DirectoryInfo)info);
+                    break;
+                default:
+                    //file
+                    LoadFile(info.FullName, pathType, new LoadOptions(Setting.ThumbnailSize.Width, callback: Callback_AddToImageList));
+                    break;
+            }
+        }
+
+
         public void LoadFolder(DirectoryInfo dirInfo) {
             foreach (var childInfo in dirInfo.EnumerateFileSystemInfos()) {
-                var fileType = Helpers.GetFileType(childInfo);
-                switch (fileType) {
-                    case FileFlags.Directory:
-                        ImageList.Add(new ImageInfo {FileName = "--FOLDER--"});
+                if (childInfo is DirectoryInfo childDirInfo) {
+                    //get first image file
+                    FileSystemInfo firstImg = null;
+                    foreach (var fsInfo in childDirInfo.EnumerateFileSystemInfos()) {
+                        var fType = Helpers.GetPathType(fsInfo);
+                        if (fType != FileFlags.Image) continue;
+                        firstImg = fsInfo;
                         break;
-                    case FileFlags.Archive:
-                        LoadFile(childInfo.FullName, fileType,
-                            new LoadOptions(App.ThumbnailSize.Width, extractCount: 1, callback: Callback_AddToImageList));
-                        break;
-                    case FileFlags.Image:
-                        LoadFile(childInfo.FullName, fileType,
-                            new LoadOptions(App.ThumbnailSize.Width, callback: Callback_AddToImageList));
-                        break;
+                    }
+                    if (firstImg != null)
+                        LoadFile(firstImg.FullName, FileFlags.Image | FileFlags.Directory,
+                            new LoadOptions(Setting.ThumbnailSize.Width, callback: Callback_AddToImageList));
                 }
+                else {
+                    var fileType = Helpers.GetPathType(childInfo);
+                    switch (fileType) {
+                        case FileFlags.Archive:
+                            LoadFile(childInfo.FullName, fileType,
+                                new LoadOptions(Setting.ThumbnailSize.Width, extractCount: 1, callback: Callback_AddToImageList));
+                            break;
+                        case FileFlags.Image:
+                            LoadFile(childInfo.FullName, fileType,
+                                new LoadOptions(Setting.ThumbnailSize.Width, callback: Callback_AddToImageList));
+                            break;
+                    }
+                }
+                
             }
         }
 
@@ -101,7 +118,7 @@ namespace ZipImageViewer
         /// Load image based on the type of file and try passwords when possible.
         /// Can be called from a background thread.
         /// Callback can be used to handle the display of image. Use Dispatcher if callback needs to access the UI thread.
-        /// <param name="flags">Only checks for FileFlags.Image and FileFlags.Archive.</param>
+        /// <param name="flags">Only checks for Image and Archive.</param>
         /// </summary>
         public void LoadFile(string filePath, FileFlags flags, LoadOptions options = null)
         {
@@ -114,7 +131,7 @@ namespace ZipImageViewer
                 {
                     FileName = fileName,
                     FilePath = filePath,
-                    Flags = FileFlags.Image,
+                    Flags = flags,
                     ImageSource = Helpers.GetImageSource(filePath, options.DecodeWidth)
                 };
                 options.Callback?.Invoke(imgInfo);
@@ -123,7 +140,7 @@ namespace ZipImageViewer
                 while (true)
                 {
                     //first check if there is a match in saved passwords
-                    var pwd = App.Config["Saved Passwords"][filePath];
+                    var pwd = Setting.MappedPasswords[filePath];
                     if (pwd != null)
                     {
                         //matching password found
@@ -136,8 +153,8 @@ namespace ZipImageViewer
                     if (extractZip(filePath, options)) break;
 
                     //then try all saved passwords with no filename
-                    foreach (var gp in genericPasswords) {
-                        options.Password = gp;
+                    foreach (var fp in Setting.FallbackPasswords) {
+                        options.Password = fp;
                         if (extractZip(filePath, options)) break;
                     }
 
@@ -181,7 +198,7 @@ namespace ZipImageViewer
                     {
                         //check if file is supported
                         var imgfile = ext.ArchiveFileData[i];
-                        if (imgfile.IsDirectory || Helpers.GetFileType(imgfile.FileName) != FileFlags.Image)
+                        if (imgfile.IsDirectory || Helpers.GetPathType(imgfile.FileName) != FileFlags.Image)
                             continue;
 #if DEBUG
                         Console.WriteLine("Extracting " + ext.ArchiveFileData[i].FileName);
@@ -229,7 +246,7 @@ namespace ZipImageViewer
                 }
 
                 //save password for the future
-                App.Config["Saved Passwords"][path] = ext.Password;
+                Setting.MappedPasswords[path] = ext.Password;
                 return true;
             }
             catch (Exception ex)
@@ -246,31 +263,36 @@ namespace ZipImageViewer
         }
 
 
-        //        private void MainWin_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
-        //            WP1.Children.Clear();
-        //            GC.Collect();
-        //        }
-        private void TN1_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void TN1_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
             var tn = (Thumbnail)sender;
             var imgInfo = tn.ImageInfo;
-
-            if (imgInfo.Flags.HasFlag(FileFlags.Archive_OpenSelf)) {
-                ImageList.Clear();
-                Task.Run(() => LoadFile(imgInfo.FilePath, FileFlags.Archive,
-                    new LoadOptions(App.ThumbnailSize.Width, callback: Callback_AddToImageList)));
+            switch (e.ChangedButton) {
+                case MouseButton.Left:
+                    if (imgInfo.Flags.HasFlag(FileFlags.Directory)) {
+                        ImageList.Clear();
+                        Task.Run(() => LoadFolder(new DirectoryInfo(imgInfo.FilePath).Parent));
+                    }
+                    else if (imgInfo.Flags.HasFlag(FileFlags.Archive_OpenSelf)) {
+                        ImageList.Clear();
+                        Task.Run(() => LoadFile(imgInfo.FilePath, imgInfo.Flags,
+                            new LoadOptions(Setting.ThumbnailSize.Width, callback: Callback_AddToImageList)));
+                    }
+                    else if (imgInfo.Flags.HasFlag(FileFlags.Image)) {
+                        Task.Run(() => LoadFile(imgInfo.FilePath, imgInfo.Flags,
+                            new LoadOptions(
+                                fileNames: new[] { imgInfo.FileName },
+                                callback: ii => Dispatcher.Invoke(() => new ViewWindow { ImageInfo = ii }.Show()))));
+                    }
+                    //
+                    //            LoadFile(imgInfo.FilePath, ii => new ViewWindow {ImageInfo = ii}.Show(),
+                    //                new LoadOptions(fileNames: new[] {imgInfo.FileName}));
+                    break;
+                case MouseButton.Right:
+                    Task.Run(() => LoadPath(Directory.GetParent(imgInfo.FilePath).Parent));
+                    break;
             }
-            else if (imgInfo.Flags.HasFlag(FileFlags.Image)) {
-                Task.Run(() => LoadFile(imgInfo.FilePath, imgInfo.Flags,
-                    new LoadOptions(
-                        fileNames: new[] {imgInfo.FileName},
-                        callback: ii => Dispatcher.Invoke(() => new ViewWindow {ImageInfo = ii}.Show()))));
-            }
-
-//                
-//
-//            LoadFile(imgInfo.FilePath, ii => new ViewWindow {ImageInfo = ii}.Show(),
-//                new LoadOptions(fileNames: new[] {imgInfo.FileName}));
+            
         }
     }
 }

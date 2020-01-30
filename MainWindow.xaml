@@ -4,8 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer"
-        mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True"
-        Title="ZipImageViewer" Height="640" Width="1110" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
+        mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" Foreground="LightGray"
+        Title="ZipImageViewer" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
     <ScrollViewer>
         <ItemsControl x:Name="LB1" ItemsSource="{Binding ElementName=MainWin, Path=ImageList}">
             <ItemsControl.ItemsPanel>
@@ -19,7 +19,7 @@
                                 UseLayoutRounding="True">
                         <local:Thumbnail x:Name="TN1" Tag="False" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1"
                                          ImageInfo="{Binding}" Margin="10"
-                                         PreviewMouseLeftButtonUp="TN1_PreviewMouseLeftButtonUp">
+                                         PreviewMouseUp="TN1_PreviewMouseUp">
                             <!-- Width="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Width}" -->
                             <!-- Height="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Height}" -->
                             <local:Thumbnail.Effect>
@@ -44,7 +44,7 @@
                             </local:Thumbnail.Style>
                         </local:Thumbnail>
                         
-                        <TextBlock Text="{Binding FileName}" FontSize="10" Foreground="Gray"
+                        <TextBlock Text="{Binding DisplayName}" FontSize="10" Foreground="Gray"
                                    HorizontalAlignment="Center" Panel.ZIndex="0"/>
                     </StackPanel>
                     <DataTemplate.Triggers>
