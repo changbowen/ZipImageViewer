@@ -10,6 +10,8 @@ namespace ZipImageViewer
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
+            //if (values[0] == DependencyProperty.UnsetValue) values[0] = 0d;
+            //if (values[1] == DependencyProperty.UnsetValue) values[1] = 0d;
             return new Rect(0d, 0d, (double)values[0], (double)values[1]);
         }
 
@@ -19,16 +21,16 @@ namespace ZipImageViewer
         }
     }
 
-    public class FlagToBrushConverter : IValueConverter
+    public class FlagToImageConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            var brush = Brushes.DimGray;
             if (value is FileFlags flags) {
-                if (flags.HasFlag(FileFlags.Directory)) brush = Brushes.Goldenrod;
-                else if (flags.HasFlag(FileFlags.Archive)) brush = Brushes.DarkRed;
-                else if (flags.HasFlag(FileFlags.Image)) brush = Brushes.Transparent;
+                if (flags.HasFlag(FileFlags.Directory)) return FontAwesome.WPF.FontAwesomeIcon.FolderOutline;
+                else if (flags.HasFlag(FileFlags.Image)) return FontAwesome.WPF.FontAwesomeIcon.FileImageOutline;
+                else if (flags.HasFlag(FileFlags.Archive)) return FontAwesome.WPF.FontAwesomeIcon.FileArchiveOutline;
+                else return FontAwesome.WPF.FontAwesomeIcon.FileOutline;
             }
-            return brush;
+            return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {

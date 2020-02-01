@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using SizeInt = System.Drawing.Size;
 
 namespace ZipImageViewer
 {
@@ -115,20 +116,22 @@ namespace ZipImageViewer
         public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp,
             double toVal, int ms, EasingMode ease, HandoffBehavior handOff = HandoffBehavior.Compose)
         {
-            var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)))
-            { EasingFunction = new CubicEase { EasingMode = ease } };
+            var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = new CubicEase { EasingMode = ease } };
             target.BeginAnimation(propdp, anim, handOff);
         }
         public static void AnimateDoubleCubicEase(this Animatable target, DependencyProperty propdp,
             double toVal, int ms, EasingMode ease, HandoffBehavior handOff = HandoffBehavior.Compose)
         {
-            var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)))
-            { EasingFunction = new CubicEase { EasingMode = ease } };
+            var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = new CubicEase { EasingMode = ease } };
             target.BeginAnimation(propdp, anim, handOff);
+        }
+
+        public static double RoundToMultiplesOf(this double input, double multiplesOf) {
+            return Math.Ceiling(input / multiplesOf) * multiplesOf;
         }
     }
 
-    public class DpiDecorator : Decorator
+/*    public class DpiDecorator : Decorator
     {
         public DpiDecorator()
         {
@@ -149,7 +152,7 @@ namespace ZipImageViewer
                 LayoutTransform = dpiTransform;
             }
         }
-    }
+    }*/
 
     [Flags]
     public enum FileFlags {
@@ -163,7 +166,7 @@ namespace ZipImageViewer
         Archive_OpenSelf = 8
     }
 
-    public class ImageInfo
+    public class ObjectInfo
     {
         /// <summary>
         /// For archives, relative path of the file inside the archive. Otherwise name of the file.
@@ -188,7 +191,7 @@ namespace ZipImageViewer
         /// A virtual path used to avoid duplicated paths in a collection for zipped files.
         /// For non-zip files, same as FilePath.
         /// </summary>
-        public string ImageRealPath {
+        public string RealPath {
             get {
                 if (Flags.HasFlag(FileFlags.Archive))
                     return FilePath + @"\" + FileName;
@@ -209,20 +212,20 @@ namespace ZipImageViewer
     }
 
     public class LoadOptions {
-        public int DecodeWidth { get; set; } = 0;
+        public SizeInt DecodeSize { get; set; } = default;
         public string Password { get; set; } = null;
         public string[] FileNames { get; set; } = null;
         /// <summary>
         /// The number of files to extract. Ignored when FileNames are not empty.
         /// </summary>
         public int ExtractCount { get; set; } = 0;
-        public Action<ImageInfo> Callback { get; set; } = null;
+        public Action<ObjectInfo> Callback { get; set; } = null;
         
         public LoadOptions() {}
 
-        public LoadOptions(int decodeWidth = 0, string password = null,
-            string[] fileNames = null, int extractCount = 0, Action<ImageInfo> callback = null) {
-            DecodeWidth = decodeWidth;
+        public LoadOptions(SizeInt decodeSize = default, string password = null,
+            string[] fileNames = null, int extractCount = 0, Action<ObjectInfo> callback = null) {
+            DecodeSize = decodeSize;
             Password = password;
             FileNames = fileNames;
             ExtractCount = extractCount;
@@ -258,30 +261,32 @@ namespace ZipImageViewer
             return FileFlags.Unknown;
         }
 
-        public static BitmapSource GetImageSource(string path, int decodeWidth = 0)
+        public static BitmapSource GetImageSource(string path, SizeInt decodeSize)
         {
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                return GetImageSource(fs, decodeWidth);
+                return GetImageSource(fs, decodeSize);
             }
         }
 
-        public static BitmapSource GetImageSource(Stream stream, int decodeWidth = 0)
+        public static BitmapSource GetImageSource(Stream stream, SizeInt decodeSize)
         {
             stream.Position = 0;
             var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
-
+            var frameSize = new Size(frame.PixelWidth, frame.PixelHeight);
             ushort orien = 0;
             if ((frame.Metadata as BitmapMetadata)?.GetQuery("/app1/ifd/{ushort=274}") is ushort u)
                 orien = u;
             frame = null;
-            //            var size = new Size(frame.PixelWidth, frame.PixelHeight);
 
             stream.Position = 0;
             var bi = new BitmapImage();
             bi.BeginInit();
             bi.CacheOption = BitmapCacheOption.OnLoad;
-            bi.DecodePixelWidth = decodeWidth;
+            if (frameSize.Width > frameSize.Height)
+                bi.DecodePixelHeight = decodeSize.Height;
+            else
+                bi.DecodePixelWidth = decodeSize.Width;
             bi.StreamSource = stream;
             bi.EndInit();
             bi.Freeze();
@@ -332,7 +337,39 @@ namespace ZipImageViewer
             return tb;
         }
 
-        public static Size UniformScaleUp(double oldW, double oldH, double maxW, double maxH)
+        /// <summary>
+        /// Same behavior as Image.Stretch = Uniform. Useful for custom Measure and Arrange passes, as well as scaling on Canvas.
+        /// </summary>
+        public static Size UniformScale(Size original, Size target) {
+            var ratio = original.Width / original.Height;
+            if (original.Width > target.Width) {
+                original.Width = target.Width;
+                original.Height = original.Width / ratio;
+            }
+            if (original.Height > target.Height) {
+                original.Height = target.Height;
+                original.Width = original.Height * ratio;
+            }
+            return original;
+        }
+
+        /// <summary>
+        /// Same behavior as Image.Stretch = UniformToFill. Useful for custom Measure and Arrange passes, as well as scaling on Canvas.
+        /// </summary>
+        public static Size UniformScaleToFill(Size original, Size target) {
+            var ratio = original.Width / original.Height;
+            if (ratio > 1d) {//wide image
+                original.Height = target.Height;
+                original.Width = original.Height * ratio;
+            }
+            else {//tall image
+                original.Width = target.Width;
+                original.Height = original.Width / ratio;
+            }
+            return original;
+        }
+
+        /*public static Size UniformScaleUp(double oldW, double oldH, double maxW, double maxH)
         {
             var ratio = oldW / oldH;
             if (oldW > maxW)
@@ -368,7 +405,7 @@ namespace ZipImageViewer
             }
 
             return new Size(oldW, oldH);
-        }
+        }*/
 
         public static string OpenFolderDialog(Window owner)
         {
@@ -378,5 +415,6 @@ namespace ZipImageViewer
 
             return cofd.ShowDialog(owner) == CommonFileDialogResult.Ok ? cofd.FileName : null;
         }
+
     }
 }

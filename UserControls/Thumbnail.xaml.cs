@@ -27,30 +27,31 @@ namespace ZipImageViewer
 
     public partial class Thumbnail : UserControl
     {
-        public ImageInfo ImageInfo
-        {
-            get { return (ImageInfo)GetValue(ImageInfoProperty); }
-            set { SetValue(ImageInfoProperty, value); }
+        public ObjectInfo ObjectInfo {
+            get { return (ObjectInfo)GetValue(ObjectInfoProperty); }
+            set { SetValue(ObjectInfoProperty, value); }
         }
-        public static readonly DependencyProperty ImageInfoProperty =
-            DependencyProperty.Register("ImageInfo", typeof(ImageInfo), typeof(Thumbnail), new PropertyMetadata(null));
+
+        // Using a DependencyProperty as the backing store for ObjectInfo.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ObjectInfoProperty =
+            DependencyProperty.Register("ObjectInfo", typeof(ObjectInfo), typeof(Thumbnail), new PropertyMetadata(null));
 
 
-//        public new double Width {
-//            get => PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice
-//                .Transform(new Point((double) GetValue(WidthProperty), 0)).X;
-//            set => SetValue(WidthProperty, value);
-////            set => SetValue(DpiSizeProperty,
-////                PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.Transform(new Point(value, 0)));
-//        }
-//
-//        public new double Height {
-//            get => PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice
-//                .Transform(new Point((double) GetValue(HeightProperty), 0)).X;
-//            set => SetValue(HeightProperty, value);
-////            set => SetValue(DpiSizeProperty,
-////                PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.Transform(new Point(value, 0)));
-//        }
+        //        public new double Width {
+        //            get => PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice
+        //                .Transform(new Point((double) GetValue(WidthProperty), 0)).X;
+        //            set => SetValue(WidthProperty, value);
+        ////            set => SetValue(DpiSizeProperty,
+        ////                PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.Transform(new Point(value, 0)));
+        //        }
+        //
+        //        public new double Height {
+        //            get => PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice
+        //                .Transform(new Point((double) GetValue(HeightProperty), 0)).X;
+        //            set => SetValue(HeightProperty, value);
+        ////            set => SetValue(DpiSizeProperty,
+        ////                PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.Transform(new Point(value, 0)));
+        //        }
 
 
         public Thumbnail() {

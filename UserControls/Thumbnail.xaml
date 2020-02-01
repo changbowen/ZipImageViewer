@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:local="clr-namespace:ZipImageViewer" UseLayoutRounding="True" SnapsToDevicePixels="True"
              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" >
     <!--<UserControl.RenderTransform>
@@ -24,27 +25,27 @@
         </Style>
     </UserControl.Style>-->
     <UserControl.Resources>
-        <local:FlagToBrushConverter x:Key="FlagToBrushConverter"/>
+        <local:FlagToImageConverter x:Key="FlagToImageConverter"/>
     </UserControl.Resources>
-    <Border CornerRadius="5" VerticalAlignment="Center" HorizontalAlignment="Center" BorderThickness="2"
-            BorderBrush="{Binding ElementName=TN, Path=ImageInfo.Flags, Converter={StaticResource FlagToBrushConverter}}">
-        <local:DpiImage Source="{Binding ElementName=TN, Path=ImageInfo.ImageSource, Mode=OneWay}"
-                        RenderOptions.BitmapScalingMode="HighQuality"
-                        VerticalAlignment="Center" HorizontalAlignment="Center">
-            <local:DpiImage.Clip>
-                <RectangleGeometry
-                    RadiusX="{Binding RelativeSource={RelativeSource AncestorType=Border}, Path=CornerRadius.TopLeft}"
-                    RadiusY="{Binding RelativeSource={RelativeSource AncestorType=Border}, Path=CornerRadius.BottomRight}">
-                    <RectangleGeometry.Rect>
-                        <MultiBinding Converter="{StaticResource RectConverter}">
-                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Image}" Path="ActualWidth"/>
-                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Image}" Path="ActualHeight"/>
-                        </MultiBinding>
-                    </RectangleGeometry.Rect>
-                </RectangleGeometry>
-            </local:DpiImage.Clip>
-        </local:DpiImage>
-    </Border>
+
+    <Grid>
+        <Grid.OpacityMask>
+            <VisualBrush Visual="{Binding ElementName=mask}"/>
+        </Grid.OpacityMask>
+        <Border x:Name="mask" CornerRadius="10" Background="Black"/>
+        <local:DpiImage Source="{Binding ElementName=TN, Path=ObjectInfo.ImageSource, Mode=OneWay}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        RenderOptions.BitmapScalingMode="HighQuality" Stretch="UniformToFill"/>
+        <fa:ImageAwesome VerticalAlignment="Top" HorizontalAlignment="Right" Width="32" Foreground="#AAFFFFFF" Margin="10"
+                         Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}}">
+            <fa:ImageAwesome.Effect>
+                <DropShadowEffect ShadowDepth="0"/>
+            </fa:ImageAwesome.Effect>
+        </fa:ImageAwesome>
+        <!--<Border CornerRadius="8" BorderThickness="3"
+                BorderBrush="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToBrushConverter}}"/>-->
+    </Grid>
+    
 </UserControl>
 
 

@@ -27,8 +27,7 @@ namespace ZipImageViewer
         private void Btn_OK_Click(object sender, RoutedEventArgs e) {
             try {
                 Setting.SevenZipDllPath = TB_7zDllPath.Text;
-                Setting.ThumbnailSize.Width = int.Parse(TB_ThumbWidth.Text);
-                Setting.ThumbnailSize.Height = int.Parse(TB_ThumbHeight.Text);
+                Setting.ThumbnailSize = new System.Drawing.Size(int.Parse(TB_ThumbWidth.Text), int.Parse(TB_ThumbHeight.Text));
                 Setting.SaveConfigToFile(serPwds: TB_SavedPasswords.Text);
                 Close();
             }

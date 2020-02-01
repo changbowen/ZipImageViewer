@@ -9,11 +9,32 @@ namespace ZipImageViewer
     public class DpiImage : Image
     {
         /// <summary>
-        /// The value to set if you want to avoid DPI scaling.
+        /// The device-dependent size to use in WPF to avoid DPI scaling. Updated in Measure pass.
         /// </summary>
         public Size RealSize { get; set; }
 
         public bool IsRealSize => RealSize.Width.Equals(ActualWidth) && RealSize.Height.Equals(ActualHeight);
+
+        /// <summary>
+        /// Caches the last CompositionTarget.TransformFromDevice value.
+        /// </summary>
+        public Matrix TransformFromDevice { get; set; }
+
+        private void updateRealSize() {
+            var target = PresentationSource.FromVisual(this)?.CompositionTarget;
+            var source = Source as BitmapSource;
+            if (source == null || target == null) return;
+
+            TransformFromDevice = target.TransformFromDevice;
+            var pixelSize = new Size(source.PixelWidth, source.PixelHeight);
+            RealSize = new Size(Math.Round(pixelSize.Width * TransformFromDevice.M11, 3),
+                                Math.Round(pixelSize.Height * TransformFromDevice.M22, 3));
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
+            if (e.Property == SourceProperty) updateRealSize();
+            base.OnPropertyChanged(e);
+        }
 
 
         protected override Size MeasureOverride(Size constraint) {
@@ -43,28 +64,8 @@ namespace ZipImageViewer
                 .Transform(new Vector(baseValue.Width, baseValue.Height));
             return newValue.HasValue ? new Size(newValue.Value.X, newValue.Value.Y) : baseValue;
 */
-            //trial 3
-            var source = Source as BitmapSource;
-            var target = PresentationSource.FromVisual(this)?.CompositionTarget;
-            if (source == null || target == null)
-                return base.MeasureOverride(constraint);
-
-            var desiredSize = new Size(source.PixelWidth, source.PixelHeight);
-            var matrix = target.TransformFromDevice;
-            RealSize = new Size(Math.Round(desiredSize.Width * matrix.M11, 3), Math.Round(desiredSize.Height * matrix.M22, 3));
-            
-            Size realSize;
-            if (Stretch == Stretch.Uniform)
-                realSize = Helpers.UniformScaleUp(RealSize.Width, RealSize.Height, constraint.Width, constraint.Height);
-            else
-                realSize = RealSize;
-
-//            if (UseLayoutRounding) {
-//                realSize.Width = Math.Round(realSize.Width);
-//                realSize.Height = Math.Round(realSize.Height);
-//            }
-
-            return realSize;
+            //trial 3 uses the helper
+            return MeasureArrangeHelper(constraint);
 /*
             //trial 4
             var bitmapImage = Source as BitmapImage;
@@ -84,10 +85,35 @@ namespace ZipImageViewer
 */
         }
 
-        protected override Size ArrangeOverride(Size finalSize)
-        {
-            return new Size(DesiredSize.Width, DesiredSize.Height);
-//            return new Size(Math.Round(DesiredSize.Width), Math.Round(DesiredSize.Height));
+        protected override Size ArrangeOverride(Size finalSize) {
+            //return base.ArrangeOverride(finalSize);
+            //return new Size(DesiredSize.Width, DesiredSize.Height);
+            //return new Size(Math.Round(DesiredSize.Width), Math.Round(DesiredSize.Height));
+            return MeasureArrangeHelper(finalSize);
+        }
+
+        private Size MeasureArrangeHelper(Size constraint) {
+            if (RealSize == default) updateRealSize();
+
+            Size size = default;
+            switch (Stretch) {
+                case Stretch.Fill:
+                    size.Width = double.IsInfinity(constraint.Width) ? RealSize.Width : constraint.Width;
+                    size.Height = double.IsInfinity(constraint.Height) ? RealSize.Height : constraint.Height;
+                    break;
+                case Stretch.Uniform:
+                    size = Helpers.UniformScale(RealSize, constraint);
+                    break;
+                case Stretch.UniformToFill:
+                    size = Helpers.UniformScaleToFill(RealSize, constraint);
+                    break;
+                case Stretch.None:
+                default:
+                    size = RealSize;
+                    break;
+            }
+
+            return size;
         }
     }
 }

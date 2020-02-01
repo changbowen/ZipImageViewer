@@ -7,7 +7,7 @@
         mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" Foreground="LightGray"
         Title="ZipImageViewer" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
     <ScrollViewer>
-        <ItemsControl x:Name="LB1" ItemsSource="{Binding ElementName=MainWin, Path=ImageList}">
+        <ItemsControl x:Name="LB1" ItemsSource="{Binding ElementName=MainWin, Path=ObjectList}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel Width="{Binding ElementName=LB1, Path=ActualWidth, Mode=OneWay}"/>
@@ -18,7 +18,9 @@
                     <StackPanel x:Name="SP1" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center"
                                 UseLayoutRounding="True">
                         <local:Thumbnail x:Name="TN1" Tag="False" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1"
-                                         ImageInfo="{Binding}" Margin="10"
+                                         ObjectInfo="{Binding}" Margin="10"
+                                         Width="{Binding ElementName=MainWin, Path=ThumbWidth, Mode=OneWay}"
+                                         Height="{Binding ElementName=MainWin, Path=ThumbHeight, Mode=OneWay}"
                                          PreviewMouseUp="TN1_PreviewMouseUp">
                             <!-- Width="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Width}" -->
                             <!-- Height="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Height}" -->

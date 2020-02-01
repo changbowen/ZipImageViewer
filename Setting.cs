@@ -14,7 +14,7 @@ namespace ZipImageViewer
     {
         public static IniData iniData;
         public static string SevenZipDllPath = @"C:\Program Files\7-Zip\7z.dll";
-        public static System.Drawing.Size ThumbnailSize = new System.Drawing.Size(300, 200);
+        public static System.Drawing.Size ThumbnailSize { get; set; } = new System.Drawing.Size(300, 200);
         public static string[] FallbackPasswords;
         public static Dictionary<string, string> MappedPasswords;
 

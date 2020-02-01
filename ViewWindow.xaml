@@ -23,9 +23,9 @@
                 PreviewMouseWheel="CA_PreviewMouseWheel"
                 PreviewMouseMove="CA_PreviewMouseMove"
                 PreviewMouseLeftButtonUp="CA_PreviewMouseLeftButtonUp">
-            <local:DpiImage x:Name="IM" Stretch="None"
+            <local:DpiImage x:Name="IM" Stretch="Fill" Opacity="0"
                             RenderOptions.BitmapScalingMode="HighQuality"
-                            Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay}">
+                            Source="{Binding ElementName=ViewWin, Path=ObjectInfo.ImageSource, Mode=OneWay}">
                 <Canvas.Left>
                     <MultiBinding Converter="{StaticResource CenterConverter}">
                         <Binding ElementName="CA" Path="ActualWidth" />
@@ -55,7 +55,7 @@
                       PreviewMouseWheel="SV_PreviewMouseWheel">
                 <local:DpiImage x:Name="IM" RenderOptions.BitmapScalingMode="HighQuality"
                                 VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="None"
-                                Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay}">
+                                Source="{Binding ElementName=ViewWin, Path=ObjectInfo.ImageSource, Mode=OneWay}">
                     <local:DpiImage.CacheMode>
                         <BitmapCache/>
                     </local:DpiImage.CacheMode>
@@ -67,7 +67,7 @@
                     </local:DpiImage.LayoutTransform>--><!--
                 </local:DpiImage>
                 --><!--<Image x:Name="IM" RenderOptions.BitmapScalingMode="HighQuality"
-                       Source="{Binding ElementName=ViewWin, Path=ImageInfo.ImageSource, Mode=OneWay}">
+                       Source="{Binding ElementName=ViewWin, Path=ObjectInfo.ImageSource, Mode=OneWay}">
                     <Image.CacheMode>
                         <BitmapCache/>
                     </Image.CacheMode>
@@ -76,7 +76,7 @@
                     </Image.Effect>
                 </Image>--><!--
         </ScrollViewer>
-        <TextBlock Text="{Binding ElementName=ViewWin, Path=ImageInfo.FileName, Mode=OneWay}"
+        <TextBlock Text="{Binding ElementName=ViewWin, Path=ObjectInfo.FileName, Mode=OneWay}"
                    HorizontalAlignment="Left" VerticalAlignment="Top"
                    Margin="4" Foreground="Gray"/>
     </Grid>-->

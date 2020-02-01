@@ -66,7 +66,7 @@
       <HintPath>packages\ini-parser.2.5.2\lib\net20\INIFileParser.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.WindowsAPICodePack-Core.1.1.0.0\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
+      <HintPath>packages\Microsoft.WindowsAPICodePack-Core.1.1.0.2\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.WindowsAPICodePack-Shell.1.1.0.0\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
@@ -105,7 +105,6 @@
     <Compile Include="Converters.cs" />
     <Compile Include="UserControls\DpiImage.cs" />
     <Compile Include="Helpers.cs" />
-    <Compile Include="NativeMethods.cs" />
     <Compile Include="UserControls\ObservableKeyedCollection.cs" />
     <Compile Include="UserControls\PaddedGrid.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
