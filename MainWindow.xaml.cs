@@ -300,5 +300,12 @@ namespace ZipImageViewer
             }
             
         }
+
+        private void MainWin_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
+            if (!(e.OriginalSource is ScrollViewer)) return;
+            if (e.ChangedButton == MouseButton.Right) {
+                if (Helpers.OpenFolderDialog(this) is string path) Task.Run(() => LoadPath(path));
+            }
+        }
     }
 }

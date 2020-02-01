@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
+             xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d" IsHitTestVisible="False"
              d:DesignHeight="50" d:DesignWidth="150" HorizontalAlignment="Center" VerticalAlignment="Center">
     <Grid>
         <Rectangle RadiusY="10" RadiusX="10" Fill="Gray">

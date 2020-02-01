@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer"
         mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" Foreground="LightGray"
-        Title="ZipImageViewer" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True" Loaded="MainWin_Loaded">
+        Title="ZipImageViewer" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
+        Loaded="MainWin_Loaded" PreviewMouseUp="MainWin_PreviewMouseUp">
     <ScrollViewer>
         <ItemsControl x:Name="LB1" ItemsSource="{Binding ElementName=MainWin, Path=ObjectList}">
             <ItemsControl.ItemsPanel>
