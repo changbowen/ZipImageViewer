@@ -149,10 +149,9 @@ namespace ZipImageViewer
 
         private void CA_PreviewMouseMove(object sender, MouseEventArgs e) {
             if (!CA.IsMouseCaptured) return;
-            IM_TT.BeginAnimation(TranslateTransform.XProperty, null);
-            IM_TT.BeginAnimation(TranslateTransform.YProperty, null);
-            IM_TT.X = existingTranslate.OffsetX + ((e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M11);
-            IM_TT.Y = existingTranslate.OffsetY + ((e.GetPosition(CA).Y - mouseCapturePoint.Y) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M22);
+            transform(50, transPoint:
+                new Point(existingTranslate.OffsetX + ((e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M11),
+                          existingTranslate.OffsetY + ((e.GetPosition(CA).Y - mouseCapturePoint.Y) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M22)));
         }
 
         private void CA_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -162,7 +161,7 @@ namespace ZipImageViewer
 
 
         private void CA_PreviewMouseWheel(object sender, MouseWheelEventArgs e) {
-            if (Transforming) return;
+            //if (Transforming) return;
             var scale = e.Delta > 0 ? 1.25d : 0.8d;
             scaleCenterMouse(e.GetPosition(IM), new Size(IM.Width * scale, IM.Height * scale), 80);
         }
