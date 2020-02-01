@@ -72,15 +72,11 @@ namespace ZipImageViewer
             IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
         }
 
-        /*private void IM_TargetUpdated(object sender, DataTransferEventArgs e) {
-            if (!IsLoaded) return; //avoid firing twice the first time
-        }*/
-
         private void ViewWin_MouseUp(object sender, MouseButtonEventArgs e) {
             if (e.ChangedButton == MouseButton.Right) Close();
         }
 
-        private void Transform(int ms, Size? newSize = null, Point? transPoint = null) {
+        private void transform(int ms, Size? newSize = null, Point? transPoint = null) {
             if (newSize.HasValue) {
                 newSize = new Size(newSize.Value.Width, newSize.Value.Height);
                 if (double.IsNaN(IM.Width) || double.IsNaN(IM.Height)) {
@@ -95,8 +91,8 @@ namespace ZipImageViewer
                 BM.Show($"{Scale:P1}");
             }
             if (transPoint.HasValue) {
-                //transPoint = new Point(transPoint.Value.X * IM.TransformFromDevice.M11, transPoint.Value.Y * IM.TransformFromDevice.M22);
-                transPoint = new Point(transPoint.Value.X, transPoint.Value.Y);
+                transPoint = new Point(transPoint.Value.X.RoundToMultiplesOf(IM.TransformFromDevice.M11),
+                                       transPoint.Value.Y.RoundToMultiplesOf(IM.TransformFromDevice.M22));
                 IM_TT.AnimateDoubleCubicEase(TranslateTransform.XProperty, transPoint.Value.X, ms, EasingMode.EaseOut);
                 IM_TT.AnimateDoubleCubicEase(TranslateTransform.YProperty, transPoint.Value.Y, ms, EasingMode.EaseOut);
             }
@@ -108,107 +104,22 @@ namespace ZipImageViewer
             }
         }
 
-        private void SwitchRealSize(int ms = 400, bool? overRide = null) {
-            bool toRealSize;
-            if (overRide.HasValue) toRealSize = overRide.Value;
-            else toRealSize = !IM.IsRealSize;
 
-            if (toRealSize) Transform(ms, IM.RealSize);
-            else scaleToCanvas(ms);
-
-            ////use different animation when image is large to reduce stutter
-            //if (rs.Width / CA.ActualWidth < 1.8d && rs.Height / CA.ActualHeight < 1.8d)
-            //    Transform(ms, tgtSize, tgtPoint);
-            //else
-            //    Task.Run(() => {
-            //        Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 0.01d, 100, EasingMode.EaseOut));
-            //        Thread.Sleep(100);
-            //        Dispatcher.Invoke(() => Transform(0, tgtSize, tgtPoint));
-            //        Thread.Sleep(100);
-            //        Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 200, EasingMode.EaseOut), DispatcherPriority.Background);
-            //    });
+        private void scaleToCanvas(int ms = 400) {
+            var uniSize = Helpers.UniformScale(IM.RealSize, new Size(CA.ActualWidth, CA.ActualHeight));
+            transform(ms, uniSize, new Point(0d, 0d));
         }
 
-        /*Point scrollMousePoint;
-        double hOff = 1;
-        double vOff = 1;
-        private void SV_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            scrollMousePoint = e.GetPosition(SV);
-            hOff = SV.HorizontalOffset;
-            vOff = SV.VerticalOffset;
-            SV.CaptureMouse();
+        private void scaleCenterMouse(Point relativePos, Size targetSize, int ms = 400) {
+            //the point ensures pixels around mouse point not moving
+            transform(ms, targetSize,
+                          new Point(IM_TT.X + (IM.Width / 2d - relativePos.X) * (targetSize.Width / IM.Width - 1d),
+                                    IM_TT.Y + (IM.Height/ 2d - relativePos.Y) * (targetSize.Height/ IM.Height - 1d)));
         }
 
-        private void SV_PreviewMouseMove(object sender, MouseEventArgs e)
-        {
-            if(SV.IsMouseCaptured)
-            {
-                SV.ScrollToHorizontalOffset(hOff + 3d * (scrollMousePoint.X - e.GetPosition(SV).X));
-                SV.ScrollToVerticalOffset(vOff + 3d * (scrollMousePoint.Y - e.GetPosition(SV).Y));
-            }
-        }
 
-        private void SV_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            SV.ReleaseMouseCapture();
-        }
-
-        private void SV_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e) {
-            if (IsActualSize) {
-                if (IM.ActualHeight <= SV.ViewportHeight && IM.ActualWidth <= SV.ViewportWidth) return;
-                var newSize = Helpers.UniformScaleUp(IM.ActualWidth, IM.ActualHeight, SV.ViewportWidth, SV.ViewportHeight);
-
-                IM.AnimateDoubleCubicEase(WidthProperty, newSize.Width, 400, EasingMode.EaseOut);
-                IM.AnimateDoubleCubicEase(HeightProperty, newSize.Height, 400, EasingMode.EaseOut);
-                IsActualSize = false;
-            }
-            else {
-                IM.AnimateDoubleCubicEase(WidthProperty, IM.RealSize.Width, 400, EasingMode.EaseOut);
-                IM.AnimateDoubleCubicEase(HeightProperty, IM.RealSize.Height, 400, EasingMode.EaseOut);
-//                SV.ScrollToHorizontalOffset((SV.ViewportWidth - SV.ExtentWidth) / 2);
-//                SV.ScrollToVerticalOffset((SV.ViewportHeight - SV.ExtentHeight) / 2);
-//                SV.UpdateLayout();                              
-                IsActualSize = true;
-            }
-            
-        }
-
-        private void SV_PreviewMouseWheel(object sender, MouseWheelEventArgs e) {
-            IsActualSize = false;
-            var scale = e.Delta > 0 ? 1.2d : 0.8d;
-
-            //prevent zooming out smaller than viewport
-            var newSize = Helpers.UniformScaleDown(IM.ActualWidth * scale, IM.ActualHeight * scale,
-                SV.ViewportWidth, SV.ViewportHeight);
-
-            IM.AnimateDoubleCubicEase(WidthProperty, newSize.Width, 100, EasingMode.EaseOut);
-            IM.AnimateDoubleCubicEase(HeightProperty, newSize.Height, 100, EasingMode.EaseOut);
-
-            e.Handled = true;
-//            IM.Width *= scale;
-//            IM.Height *= scale;
-//
-//            var mousePos = e.GetPosition(SV);
-//            var scale = e.Delta > 0 ? 0.1d : -0.1d;
-////            Console.WriteLine(mousePos.X / SV.ViewportWidth);
-////            SV.ScrollToHorizontalOffset(SV.ExtentWidth * mousePos.X / SV.ViewportWidth);
-////            SV.ScrollToVerticalOffset(SV.ExtentHeight * mousePos.Y / SV.ViewportHeight);
-//            var st = (ScaleTransform)IM.LayoutTransform;
-//            st.CenterX = IM.ActualWidth * mousePos.X / SV.ViewportWidth;
-//            st.CenterY = IM.ActualHeight * mousePos.Y / SV.ViewportHeight;
-//            st.ScaleX += scale;
-//            st.ScaleY += scale;
-
-//            var mousePos = e.GetPosition(SV);
-//            var scale = e.Delta > 0 ? 0.1d : -0.1d;
-//            var st = (ScaleTransform)IM.LayoutTransform;
-//            st.ScaleX += scale;
-//            st.ScaleY += scale;
-        }*/
         private Point mouseCapturePoint;
         private Matrix existingTranslate;
-
 
         private void CA_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             if (e.ClickCount == 1) {
@@ -217,32 +128,31 @@ namespace ZipImageViewer
                 CA.CaptureMouse();
             }
             else if (e.ClickCount == 2) {
-                SwitchRealSize();
+                if (!IM.IsRealSize)
+                    scaleCenterMouse(e.GetPosition(IM), IM.RealSize);
+                else
+                    scaleToCanvas();
+
+                ////use different animation when image is large to reduce stutter
+                //if (rs.Width / CA.ActualWidth < 1.8d && rs.Height / CA.ActualHeight < 1.8d)
+                //    Transform(ms, tgtSize, tgtPoint);
+                //else
+                //    Task.Run(() => {
+                //        Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 0.01d, 100, EasingMode.EaseOut));
+                //        Thread.Sleep(100);
+                //        Dispatcher.Invoke(() => Transform(0, tgtSize, tgtPoint));
+                //        Thread.Sleep(100);
+                //        Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 200, EasingMode.EaseOut), DispatcherPriority.Background);
+                //    });
             }
         }
 
-        private void CA_PreviewMouseMove(object sender, MouseEventArgs e)
-        {
-            if (CA.IsMouseCaptured)
-            {
-                //Console.WriteLine(mouseCapturePoint.X - e.GetPosition(CA).X);
-                //var newX = currentPosition.X + (e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d;
-                //if (newX > -currentPosition.X) newX = -currentPosition.X;
-                //newX = Math.Round(newX);
-                //Canvas.SetLeft(IM, newX);
-
-                //var newY = currentPosition.Y + (e.GetPosition(CA).Y - mouseCapturePoint.Y) * Scale * 2d;
-                //if (newY > -currentPosition.Y) newY = -currentPosition.Y;
-                //newY = Math.Round(newY);
-                //Canvas.SetTop(IM, newY);
-
-                IM_TT.BeginAnimation(TranslateTransform.XProperty, null);
-                IM_TT.BeginAnimation(TranslateTransform.YProperty, null);
-                IM_TT.X = existingTranslate.OffsetX + ((e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M11);
-                IM_TT.Y = existingTranslate.OffsetY + ((e.GetPosition(CA).Y - mouseCapturePoint.Y) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M22);
-
-                //Console.WriteLine($"{existingTranslate.OffsetX}\t\t+\t\t{Math.Round(e.GetPosition(CA).X-mouseCapturePoint.X, 3)}\t\t*\t\t{Scale}\t\t*2");
-            }
+        private void CA_PreviewMouseMove(object sender, MouseEventArgs e) {
+            if (!CA.IsMouseCaptured) return;
+            IM_TT.BeginAnimation(TranslateTransform.XProperty, null);
+            IM_TT.BeginAnimation(TranslateTransform.YProperty, null);
+            IM_TT.X = existingTranslate.OffsetX + ((e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M11);
+            IM_TT.Y = existingTranslate.OffsetY + ((e.GetPosition(CA).Y - mouseCapturePoint.Y) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M22);
         }
 
         private void CA_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -254,7 +164,7 @@ namespace ZipImageViewer
         private void CA_PreviewMouseWheel(object sender, MouseWheelEventArgs e) {
             if (Transforming) return;
             var scale = e.Delta > 0 ? 1.25d : 0.8d;
-            Transform(50, new Size(IM.ActualWidth * scale, IM.ActualHeight * scale));
+            scaleCenterMouse(e.GetPosition(IM), new Size(IM.Width * scale, IM.Height * scale), 80);
         }
 
         private void CA_PreviewKeyUp(object sender, KeyEventArgs e) {
@@ -286,9 +196,5 @@ namespace ZipImageViewer
             }
         }
 
-        private void scaleToCanvas(int ms = 400) {
-            var uniSize = Helpers.UniformScale(IM.RealSize, new Size(CA.ActualWidth, CA.ActualHeight));
-            Transform(ms, uniSize, new Point(0d, 0d));
-        }
     }
 }

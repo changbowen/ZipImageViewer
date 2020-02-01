@@ -129,6 +129,10 @@ namespace ZipImageViewer
         public static double RoundToMultiplesOf(this double input, double multiplesOf) {
             return Math.Ceiling(input / multiplesOf) * multiplesOf;
         }
+
+        //public static double Round3(this double input) {
+        //    return Math.Round(input, 3, MidpointRounding.ToEven);
+        //}
     }
 
 /*    public class DpiDecorator : Decorator
