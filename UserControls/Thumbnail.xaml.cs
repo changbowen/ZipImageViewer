@@ -1,62 +1,60 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.IO;
+using System.Threading;
+using Timer = System.Timers.Timer;
+using System.Windows.Media.Animation;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace ZipImageViewer
 {
-//    public class FileNameConverter : IValueConverter {
-//        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-//            if (value is string path)
-//                return Path.GetFileName(path);
-//            return value;
-//        }
-//
-//        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-//            throw new NotSupportedException();
-//        }
-//    }
-
     public partial class Thumbnail : UserControl
     {
         public ObjectInfo ObjectInfo {
             get { return (ObjectInfo)GetValue(ObjectInfoProperty); }
             set { SetValue(ObjectInfoProperty, value); }
         }
-
-        // Using a DependencyProperty as the backing store for ObjectInfo.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ObjectInfoProperty =
             DependencyProperty.Register("ObjectInfo", typeof(ObjectInfo), typeof(Thumbnail), new PropertyMetadata(null));
 
+        
+        private Timer CycleTimer;
 
-        //        public new double Width {
-        //            get => PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice
-        //                .Transform(new Point((double) GetValue(WidthProperty), 0)).X;
-        //            set => SetValue(WidthProperty, value);
-        ////            set => SetValue(DpiSizeProperty,
-        ////                PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.Transform(new Point(value, 0)));
-        //        }
-        //
-        //        public new double Height {
-        //            get => PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice
-        //                .Transform(new Point((double) GetValue(HeightProperty), 0)).X;
-        //            set => SetValue(HeightProperty, value);
-        ////            set => SetValue(DpiSizeProperty,
-        ////                PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.Transform(new Point(value, 0)));
-        //        }
-
+        public static ImageSource DefaultThumb => FontAwesome.WPF.ImageAwesome.CreateImageSource(FontAwesome.WPF.FontAwesomeIcon.Image, Brushes.LightGray);
 
         public Thumbnail() {
             InitializeComponent();
         }
 
+        private void TN_Loaded(object sender, RoutedEventArgs e) {
+            if (ObjectInfo.ImageSources.Count < 2) return;
+
+            //cycle thumbnails when more than one exists
+            CycleTimer = new Timer(new Random().Next(3000, 5000));
+            CycleTimer.Elapsed += (o1, e1) => {
+                //Thread.Sleep(new Random().Next(0, 500));
+                Dispatcher.Invoke(() => {
+                    //fade out
+                    IM1.AnimateDoubleCubicEase(OpacityProperty, 0d, 500, EasingMode.EaseIn);
+                });
+                Thread.Sleep(500);
+                Dispatcher.Invoke(() => {
+                    //change image
+                    var currentIdx = ObjectInfo.ImageSources.IndexOf(IM1.Source);
+                    var nextIdx = currentIdx == ObjectInfo.ImageSources.Count - 1 ? 0 : currentIdx + 1;
+                    var binding = new Binding() {
+                        ElementName = nameof(TN),
+                        Path = new PropertyPath($"ObjectInfo.ImageSources[{nextIdx}]"),
+                        Mode = BindingMode.OneWay,
+                    };
+                    BindingOperations.SetBinding(IM1, Image.SourceProperty, binding);
+                    //fade in
+                    IM1.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
+                });
+                
+            };
+            CycleTimer.Start();
+        }
     }
 }

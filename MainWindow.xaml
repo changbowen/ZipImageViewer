@@ -5,10 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer"
         mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" Foreground="LightGray"
-        Title="ZipImageViewer" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
-        Loaded="MainWin_Loaded" PreviewMouseUp="MainWin_PreviewMouseUp">
+        Title="{Binding ElementName=MainWin, Path=CurrentPath}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
+        Loaded="MainWin_Loaded" PreviewMouseDown="MainWin_MouseDown">
+    <Window.Resources>
+        <CollectionViewSource x:Key="ObjectListViewSource" Source="{Binding ElementName=MainWin, Path=ObjectList}">
+            
+        </CollectionViewSource>
+    </Window.Resources>
     <ScrollViewer>
-        <ItemsControl x:Name="LB1" ItemsSource="{Binding ElementName=MainWin, Path=ObjectList}">
+        <ItemsControl x:Name="LB1" ItemsSource="{Binding Source={StaticResource ObjectListViewSource}}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel Width="{Binding ElementName=LB1, Path=ActualWidth, Mode=OneWay}"/>
@@ -22,7 +27,7 @@
                                          ObjectInfo="{Binding}" Margin="10"
                                          Width="{Binding ElementName=MainWin, Path=ThumbWidth, Mode=OneWay}"
                                          Height="{Binding ElementName=MainWin, Path=ThumbHeight, Mode=OneWay}"
-                                         PreviewMouseUp="TN1_PreviewMouseUp">
+                                         MouseUp="TN1_MouseUp">
                             <!-- Width="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Width}" -->
                             <!-- Height="{Binding Source={x:Static Application.Current}, Path=ThumbnailSize.Height}" -->
                             <local:Thumbnail.Effect>

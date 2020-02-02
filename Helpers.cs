@@ -133,6 +133,10 @@ namespace ZipImageViewer
         //public static double Round3(this double input) {
         //    return Math.Round(input, 3, MidpointRounding.ToEven);
         //}
+
+        public static SizeInt DivideBy(this SizeInt input, double d) {
+            return new SizeInt((int)Math.Round(input.Width / d), (int)Math.Round(input.Height / d));
+        }
     }
 
 /*    public class DpiDecorator : Decorator
@@ -170,52 +174,10 @@ namespace ZipImageViewer
         Archive_OpenSelf = 8
     }
 
-    public class ObjectInfo
-    {
-        /// <summary>
-        /// For archives, relative path of the file inside the archive. Otherwise name of the file.
-        /// </summary>
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// For archives, full path to the archive file.
-        /// For directories, full path to the directory.
-        /// Otherwise full path to the image file.
-        /// </summary>
-        public string FilePath { get; set; }
-
-        /// <summary>
-        /// Indicates the flags of the file. Affects click operations etc.
-        /// </summary>
-        public FileFlags Flags { get; set; }
-
-        public ImageSource ImageSource { get; set; }
-
-        /// <summary>
-        /// A virtual path used to avoid duplicated paths in a collection for zipped files.
-        /// For non-zip files, same as FilePath.
-        /// </summary>
-        public string RealPath {
-            get {
-                if (Flags.HasFlag(FileFlags.Archive))
-                    return FilePath + @"\" + FileName;
-                if (Flags.HasFlag(FileFlags.Image))
-                    return FilePath;
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// For Flags.Directory, the parent folder name of FilePath. Otherwise FileName.
-        /// </summary>
-        public string DisplayName => Flags.HasFlag(FileFlags.Directory) ? Path.GetDirectoryName(FilePath) : FileName;
-
-//        public HashSet<string> ImageSet { get; set; }
-//        public string Password { get; set; }
-//        public string Link { get; set; }
-    }
 
     public class LoadOptions {
+        public string FilePath { get; } = null;
+        public FileFlags Flags { get; set; } = FileFlags.Unknown;
         public SizeInt DecodeSize { get; set; } = default;
         public string Password { get; set; } = null;
         public string[] FileNames { get; set; } = null;
@@ -223,18 +185,35 @@ namespace ZipImageViewer
         /// The number of files to extract. Ignored when FileNames are not empty.
         /// </summary>
         public int ExtractCount { get; set; } = 0;
-        public Action<ObjectInfo> Callback { get; set; } = null;
-        
-        public LoadOptions() {}
+        /// <summary>
+        /// Should be called on returning of each ObjectInfo (usually file system objects).
+        /// </summary>
+        public Action<ObjectInfo> ObjInfoCallback { get; set; } = null;
+        /// <summary>
+        /// Should be called on returning of each child ObjectInfo (thumbnails, raw images).
+        /// </summary>
+        public Action<ObjectInfo> CldInfoCallback { get; set; } = null;
 
-        public LoadOptions(SizeInt decodeSize = default, string password = null,
-            string[] fileNames = null, int extractCount = 0, Action<ObjectInfo> callback = null) {
-            DecodeSize = decodeSize;
-            Password = password;
-            FileNames = fileNames;
-            ExtractCount = extractCount;
-            Callback = callback;
+        public LoadOptions(string filePath) {
+            FilePath = filePath;
         }
+
+        //public LoadOptions(SizeInt decodeSize = default, string password = null,
+        //    string[] fileNames = null, int extractCount = 0,
+        //    Action<ObjectInfo> callback = null, ObjectInfo objInfo = null) {
+        //    DecodeSize = decodeSize;
+        //    Password = password;
+        //    FileNames = fileNames;
+        //    ExtractCount = extractCount;
+        //    Callback = callback;
+        //}
+
+        //public LoadOptions(string filePath, FileFlags flags, bool isThumb = true, Action<ObjectInfo> callback = null) {
+        //    FilePath = filePath;
+        //    Flags = flags;
+        //    if (isThumb) DecodeSize = Setting.ThumbnailSize;
+        //    Callback = callback;
+        //}
     }
 
     public class Helpers
@@ -258,9 +237,9 @@ namespace ZipImageViewer
         public static FileFlags GetPathType(FileSystemInfo fsInfo) {
             if (fsInfo.Attributes.HasFlag(FileAttributes.Directory))
                 return FileFlags.Directory;
-            if (App.ZipExtensions.Contains(fsInfo.Extension))
+            if (App.ZipExtensions.Contains(fsInfo.Extension.ToLowerInvariant()))
                 return FileFlags.Archive;
-            if (App.ImageExtensions.Contains(fsInfo.Extension))
+            if (App.ImageExtensions.Contains(fsInfo.Extension.ToLowerInvariant()))
                 return FileFlags.Image;
             return FileFlags.Unknown;
         }
@@ -345,6 +324,8 @@ namespace ZipImageViewer
         /// Same behavior as Image.Stretch = Uniform. Useful for custom Measure and Arrange passes, as well as scaling on Canvas.
         /// </summary>
         public static Size UniformScale(Size original, Size target) {
+            if (original.Width == 0d || original.Height == 0d) return original;
+
             var ratio = original.Width / original.Height;
             if (original.Width > target.Width) {
                 original.Width = target.Width;
@@ -359,57 +340,26 @@ namespace ZipImageViewer
 
         /// <summary>
         /// Same behavior as Image.Stretch = UniformToFill. Useful for custom Measure and Arrange passes, as well as scaling on Canvas.
+        /// Does not scale up.
         /// </summary>
         public static Size UniformScaleToFill(Size original, Size target) {
+            if (original.Width == 0d || original.Height == 0d) return original;
+            
             var ratio = original.Width / original.Height;
             if (ratio > 1d) {//wide image
-                original.Height = target.Height;
-                original.Width = original.Height * ratio;
+                if (!double.IsInfinity(target.Height) && original.Height > target.Height) {
+                    original.Height = target.Height;
+                    original.Width = original.Height * ratio;
+                }
             }
             else {//tall image
-                original.Width = target.Width;
-                original.Height = original.Width / ratio;
+                if (!double.IsInfinity(target.Width) && original.Width > target.Width) {
+                    original.Width = target.Width;
+                    original.Height = original.Width / ratio;
+                }
             }
             return original;
         }
-
-        /*public static Size UniformScaleUp(double oldW, double oldH, double maxW, double maxH)
-        {
-            var ratio = oldW / oldH;
-            if (oldW > maxW)
-            {
-                oldW = maxW;
-                oldH = oldW / ratio;
-            }
-            if (oldH > maxH)
-            {
-                oldH = maxH;
-                oldW = oldH * ratio;
-            }
-
-            return new Size(oldW, oldH);
-        }
-
-        public static Size UniformScaleDown(double oldW, double oldH, double minW, double minH)
-        {
-            if (oldW < minW && oldH < minH)
-            {
-                var oldRatio = oldW / oldH;
-                var minRatio = minW / minH;
-                if (oldRatio > minRatio)
-                {
-                    oldW = minW;
-                    oldH = oldW / oldRatio;
-                }
-                else
-                {
-                    oldH = minH;
-                    oldW = oldH * oldRatio;
-                }
-            }
-
-            return new Size(oldW, oldH);
-        }*/
 
         public static string OpenFolderDialog(Window owner)
         {

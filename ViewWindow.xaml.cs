@@ -173,7 +173,7 @@ namespace ZipImageViewer
                 case Key.Space:
                     var ii = ObjectInfo;
                     var ol = App.MainWin.ObjectList;
-                    var i = ol.IndexOf(ol[ii.RealPath]) + (e.Key == Key.Left ? -1 : 1);
+                    var i = ol.IndexOf(ol[ii.VirtualPath]) + (e.Key == Key.Left ? -1 : 1);
                     if (i > -1 && i < ol.Count) {
                         //fade animation
                         IM.AnimateDoubleCubicEase(OpacityProperty, 0d, 200, EasingMode.EaseOut);
@@ -181,8 +181,10 @@ namespace ZipImageViewer
                         //load next or previous image
                         Task.Run(() => {
                             var next = ol[i];
-                            Action<ObjectInfo> cb = nii => Dispatcher.Invoke(() => ObjectInfo = nii);
-                            App.MainWin.LoadFile(next.FilePath, next.Flags, new LoadOptions(fileNames: new[] {next.FileName}, callback: cb));
+                            App.MainWin.LoadFile(next.FileSystemPath, next.Flags,
+                                isThumb: false,
+                                fileNames: new[] {next.FileName},
+                                objInfoCb: nii => Dispatcher.Invoke(() => ObjectInfo = nii));
                             Dispatcher.Invoke(() => {
                                 IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
                                 scaleToCanvas();

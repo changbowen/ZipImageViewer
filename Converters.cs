@@ -28,7 +28,7 @@ namespace ZipImageViewer
                 if (flags.HasFlag(FileFlags.Directory)) return FontAwesome.WPF.FontAwesomeIcon.FolderOutline;
                 else if (flags.HasFlag(FileFlags.Image)) return FontAwesome.WPF.FontAwesomeIcon.FileImageOutline;
                 else if (flags.HasFlag(FileFlags.Archive)) return FontAwesome.WPF.FontAwesomeIcon.FileArchiveOutline;
-                else return FontAwesome.WPF.FontAwesomeIcon.FileOutline;
+                else return FontAwesome.WPF.FontAwesomeIcon.QuestionCircleOutline;
             }
             return null;
         }

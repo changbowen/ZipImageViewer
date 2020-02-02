@@ -5,25 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:local="clr-namespace:ZipImageViewer" UseLayoutRounding="True" SnapsToDevicePixels="True"
-             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" >
-    <!--<UserControl.RenderTransform>
-        <ScaleTransform/>
-    </UserControl.RenderTransform>
-    <UserControl.Style>
-        <Style TargetType="UserControl">
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Panel.ZIndex" Value="9999"/>
-                    <Trigger.EnterActions>
-                        <BeginStoryboard Storyboard="{StaticResource SB_ZoomIn}"/>
-                    </Trigger.EnterActions>
-                    <Trigger.ExitActions>
-                        <BeginStoryboard Storyboard="{StaticResource SB_ZoomOut}"/>
-                    </Trigger.ExitActions>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </UserControl.Style>-->
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" Loaded="TN_Loaded">
     <UserControl.Resources>
         <local:FlagToImageConverter x:Key="FlagToImageConverter"/>
     </UserControl.Resources>
@@ -33,17 +15,19 @@
             <VisualBrush Visual="{Binding ElementName=mask}"/>
         </Grid.OpacityMask>
         <Border x:Name="mask" CornerRadius="10" Background="Black"/>
-        <local:DpiImage Source="{Binding ElementName=TN, Path=ObjectInfo.ImageSource, Mode=OneWay}"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                        RenderOptions.BitmapScalingMode="HighQuality" Stretch="UniformToFill"/>
+        <local:DpiImage x:Name="IM1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        RenderOptions.BitmapScalingMode="HighQuality" Stretch="UniformToFill"
+                        Source="{Binding ElementName=TN, Path=ObjectInfo.ImageSources[0], Mode=OneWay,
+                                    TargetNullValue={x:Static local:Thumbnail.DefaultThumb},
+                                    FallbackValue={x:Static local:Thumbnail.DefaultThumb}}"
+                        ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo}"
+                        ToolTipService.ShowDuration="20000"/>
         <fa:ImageAwesome VerticalAlignment="Top" HorizontalAlignment="Right" Width="32" Foreground="#AAFFFFFF" Margin="10"
                          Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}}">
             <fa:ImageAwesome.Effect>
                 <DropShadowEffect ShadowDepth="0"/>
             </fa:ImageAwesome.Effect>
         </fa:ImageAwesome>
-        <!--<Border CornerRadius="8" BorderThickness="3"
-                BorderBrush="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToBrushConverter}}"/>-->
     </Grid>
     
 </UserControl>

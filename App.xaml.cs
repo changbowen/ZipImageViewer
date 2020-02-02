@@ -23,6 +23,7 @@ namespace ZipImageViewer
                 "zip", "rar", "7z",
                 ".zip", ".rar", ".7z",
             });
+        public const int PreviewCount = 4;
 
 
         private void App_Startup(object sender, StartupEventArgs e) {

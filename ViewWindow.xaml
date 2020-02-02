@@ -25,7 +25,7 @@
                 PreviewMouseLeftButtonUp="CA_PreviewMouseLeftButtonUp">
             <local:DpiImage x:Name="IM" Stretch="Fill" Opacity="0"
                             RenderOptions.BitmapScalingMode="HighQuality"
-                            Source="{Binding ElementName=ViewWin, Path=ObjectInfo.ImageSource, Mode=OneWay}">
+                            Source="{Binding ElementName=ViewWin, Path=ObjectInfo.ImageSources[0], Mode=OneWay}">
                 <Canvas.Left>
                     <MultiBinding Converter="{StaticResource CenterConverter}">
                         <Binding ElementName="CA" Path="ActualWidth" />
@@ -45,41 +45,6 @@
         </Canvas>
         <local:BubbleMessage x:Name="BM"/>
     </Grid>
-    <!--<Grid>
-        <ScrollViewer x:Name="SV" Background="#FF464646"
-                      HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"
-                      PreviewMouseLeftButtonDown="SV_PreviewMouseLeftButtonDown"
-                      PreviewMouseLeftButtonUp="SV_PreviewMouseLeftButtonUp"
-                      PreviewMouseMove="SV_PreviewMouseMove"
-                      PreviewMouseDoubleClick="SV_PreviewMouseDoubleClick"
-                      PreviewMouseWheel="SV_PreviewMouseWheel">
-                <local:DpiImage x:Name="IM" RenderOptions.BitmapScalingMode="HighQuality"
-                                VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="None"
-                                Source="{Binding ElementName=ViewWin, Path=ObjectInfo.ImageSource, Mode=OneWay}">
-                    <local:DpiImage.CacheMode>
-                        <BitmapCache/>
-                    </local:DpiImage.CacheMode>
-                    --><!--<local:DpiImage.Effect>
-                        <DropShadowEffect Direction="270" BlurRadius="30" ShadowDepth="15" Color="#FF4C4C4C"/>
-                    </local:DpiImage.Effect>-->
-                    <!--<local:DpiImage.LayoutTransform>
-                        <ScaleTransform/>
-                    </local:DpiImage.LayoutTransform>--><!--
-                </local:DpiImage>
-                --><!--<Image x:Name="IM" RenderOptions.BitmapScalingMode="HighQuality"
-                       Source="{Binding ElementName=ViewWin, Path=ObjectInfo.ImageSource, Mode=OneWay}">
-                    <Image.CacheMode>
-                        <BitmapCache/>
-                    </Image.CacheMode>
-                    <Image.Effect>
-                        <DropShadowEffect Direction="270" BlurRadius="30" ShadowDepth="15" Color="#FF4C4C4C"/>
-                    </Image.Effect>
-                </Image>--><!--
-        </ScrollViewer>
-        <TextBlock Text="{Binding ElementName=ViewWin, Path=ObjectInfo.FileName, Mode=OneWay}"
-                   HorizontalAlignment="Left" VerticalAlignment="Top"
-                   Margin="4" Foreground="Gray"/>
-    </Grid>-->
 </Window>
 
 

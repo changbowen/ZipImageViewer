@@ -20,24 +20,31 @@ namespace ZipImageViewer
         /// </summary>
         public Matrix TransformFromDevice { get; set; }
 
-        private void updateRealSize() {
-            var target = PresentationSource.FromVisual(this)?.CompositionTarget;
-            var source = Source as BitmapSource;
-            if (source == null || target == null) return;
-
+        private void UpdateRealSize() {
+            var parentWindow = Window.GetWindow(this);
+            var target = parentWindow == null ? PresentationSource.FromVisual(this)?.CompositionTarget :
+                                                PresentationSource.FromVisual(parentWindow)?.CompositionTarget;
+            Size size = default;
+            if (Source is BitmapImage sb)
+                size = new Size(sb.PixelWidth, sb.PixelHeight);
+            else if (Source is ImageSource si) //to handle when Source is not a BitmapImage
+                size = new Size(si.Width, si.Height);
+            if (size == default || target == null) return;
+            
             TransformFromDevice = target.TransformFromDevice;
-            var pixelSize = new Size(source.PixelWidth, source.PixelHeight);
-            RealSize = new Size(Math.Round(pixelSize.Width * TransformFromDevice.M11, 3),
-                                Math.Round(pixelSize.Height * TransformFromDevice.M22, 3));
+            RealSize = new Size(Math.Round(size.Width * TransformFromDevice.M11, 3),
+                                Math.Round(size.Height * TransformFromDevice.M22, 3));
         }
 
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
-            if (e.Property == SourceProperty) updateRealSize();
+            if (e.Property == SourceProperty) UpdateRealSize();
             base.OnPropertyChanged(e);
         }
 
 
         protected override Size MeasureOverride(Size constraint) {
+            //trial 3 uses the helper
+            return MeasureArrangeHelper(constraint);
 /*
             //trial 1
             Size measureSize = new Size();
@@ -64,8 +71,6 @@ namespace ZipImageViewer
                 .Transform(new Vector(baseValue.Width, baseValue.Height));
             return newValue.HasValue ? new Size(newValue.Value.X, newValue.Value.Y) : baseValue;
 */
-            //trial 3 uses the helper
-            return MeasureArrangeHelper(constraint);
 /*
             //trial 4
             var bitmapImage = Source as BitmapImage;
@@ -93,7 +98,7 @@ namespace ZipImageViewer
         }
 
         private Size MeasureArrangeHelper(Size constraint) {
-            if (RealSize == default) updateRealSize();
+            if (RealSize == default) UpdateRealSize();
 
             Size size = default;
             switch (Stretch) {
@@ -112,7 +117,6 @@ namespace ZipImageViewer
                     size = RealSize;
                     break;
             }
-
             return size;
         }
     }
