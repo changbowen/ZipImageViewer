@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Media;
 
 namespace ZipImageViewer
 {
@@ -25,10 +24,10 @@ namespace ZipImageViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             if (value is FileFlags flags) {
-                if (flags.HasFlag(FileFlags.Directory)) return FontAwesome.WPF.FontAwesomeIcon.FolderOutline;
-                else if (flags.HasFlag(FileFlags.Image)) return FontAwesome.WPF.FontAwesomeIcon.FileImageOutline;
-                else if (flags.HasFlag(FileFlags.Archive)) return FontAwesome.WPF.FontAwesomeIcon.FileArchiveOutline;
-                else return FontAwesome.WPF.FontAwesomeIcon.QuestionCircleOutline;
+                if (flags.HasFlag(FileFlags.Directory)) return FontAwesome5.EFontAwesomeIcon.Regular_Folder;
+                else if (flags.HasFlag(FileFlags.Image)) return FontAwesome5.EFontAwesomeIcon.Regular_FileImage;
+                else if (flags.HasFlag(FileFlags.Archive)) return FontAwesome5.EFontAwesomeIcon.Regular_FileArchive;
+                else return FontAwesome5.EFontAwesomeIcon.Regular_QuestionCircle;
             }
             return null;
         }

@@ -5,6 +5,10 @@
              Startup="App_Startup" ShutdownMode="OnMainWindowClose"
              Exit="App_Exit">
     <Application.Resources>
+        <!--<FontFamily x:Key="FontAwesomeRegular">/ZipImageViewer;component/Resources/FontAwesome5FreeRegular400.otf#Font Awesome 5 Free Regular</FontFamily>
+        <FontFamily x:Key="FontAwesomeSolid">/ZipImageViewer;component/Resources/FontAwesome5FreeSolid900.otf#Font Awesome 5 Free Solid</FontFamily>
+        <FontFamily x:Key="FontAwesomeBrand">/ZipImageViewer;component/Resources/FontAwesome5BrandsRegular400.otf#Font Awesome 5 Brands Regular</FontFamily>-->
+
         <local:RectConverter x:Key="RectConverter"/>
 
         <CubicEase x:Key="CE_EaseIn" EasingMode="EaseIn"/>

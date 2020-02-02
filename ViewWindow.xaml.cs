@@ -15,7 +15,6 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using FontAwesome.WPF;
 using static ZipImageViewer.ExtentionMethods;
 
 namespace ZipImageViewer

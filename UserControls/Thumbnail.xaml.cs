@@ -21,7 +21,8 @@ namespace ZipImageViewer
         
         private Timer CycleTimer;
 
-        public static ImageSource DefaultThumb => FontAwesome.WPF.ImageAwesome.CreateImageSource(FontAwesome.WPF.FontAwesomeIcon.Image, Brushes.LightGray);
+        public static ImageSource DefaultThumb => FontAwesome5.ImageAwesome.CreateImageSource(
+            FontAwesome5.EFontAwesomeIcon.Regular_Meh, new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
 
         public Thumbnail() {
             InitializeComponent();
