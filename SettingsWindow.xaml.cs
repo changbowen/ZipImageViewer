@@ -23,6 +23,9 @@ namespace ZipImageViewer
             TB_ThumbHeight.Text =   Setting.ThumbnailSize.Height.ToString();
             CB_ViewerTransition.ItemsSource = Enum.GetValues(typeof(Setting.Transition));
             CB_ViewerTransition.SelectedItem = Setting.ViewerTransition;
+            CB_AnimSpeed.ItemsSource = Enum.GetValues(typeof(Setting.TransitionSpeed));
+            CB_AnimSpeed.SelectedItem = Setting.ViewerTransitionSpeed;
+
             TB_SavedPasswords.Text = Setting.SerializePasswords();
         }
 
@@ -31,6 +34,7 @@ namespace ZipImageViewer
                 Setting.SevenZipDllPath = TB_7zDllPath.Text;
                 Setting.ThumbnailSize = new System.Drawing.Size(int.Parse(TB_ThumbWidth.Text), int.Parse(TB_ThumbHeight.Text));
                 Setting.ViewerTransition = (Setting.Transition)CB_ViewerTransition.SelectedItem;
+                Setting.ViewerTransitionSpeed = (Setting.TransitionSpeed)CB_AnimSpeed.SelectedItem;
                 Setting.SaveConfigToFile(serPwds: TB_SavedPasswords.Text);
                 Close();
             }

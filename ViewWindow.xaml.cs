@@ -42,7 +42,32 @@ namespace ZipImageViewer
             set { SetValue(ObjectInfoProperty, value); }
         }
         public static readonly DependencyProperty ObjectInfoProperty =
-            Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow));
+            Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(new PropertyChangedCallback(ObjectInfoChanged)));
+
+        private static void ObjectInfoChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e) {
+            var win = (ViewWindow)obj;
+            if (!win.IsLoaded)
+                //update directly without animations when window is not loaded yet (first time opening)
+                win.ViewImageSource = win.ObjectInfo.ImageSources[0];
+            else if (win.Transforming)
+                //update after transform end
+                DependencyPropertyDescriptor.FromProperty(TransformingProperty, typeof(ViewWindow)).AddValueChanged(win, updateViewImageSource);
+            else
+                //update with "in" animations following the previous "out" animations
+                updateViewImageSource(win, null);
+        }
+
+        private static void updateViewImageSource(object obj, EventArgs e) {
+            var win = (ViewWindow)obj;
+            DependencyPropertyDescriptor.FromProperty(TransformingProperty, typeof(ViewWindow)).RemoveValueChanged(win, updateViewImageSource);
+            //update image
+            win.ViewImageSource = win.ObjectInfo.ImageSources[0];
+            //reset image position instantaneously
+            win.scaleToCanvas(0);
+            //continue "in" animation
+            if (win.LastTransition != Setting.Transition.None)
+                win.IM.BeginStoryboard((Storyboard)win.IM.FindResource($"SB_Trans_{win.LastTransition}_In"));
+        }
 
 
         public ImageSource ViewImageSource {
@@ -58,12 +83,9 @@ namespace ZipImageViewer
             set { SetValue(TransformingProperty, value); }
         }
         public static readonly DependencyProperty TransformingProperty =
-            DependencyProperty.Register("Transforming", typeof(bool), typeof(ViewWindow),
-                new PropertyMetadata(false, new PropertyChangedCallback(TransformingChanged)));
+            DependencyProperty.Register("Transforming", typeof(bool), typeof(ViewWindow), new PropertyMetadata(false));
 
-        private static void TransformingChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e) {
 
-        }
 
         private Tuple<TransParam, TransParam> transParams;
         /// <summary>
@@ -82,6 +104,7 @@ namespace ZipImageViewer
         public event PropertyChangedEventHandler PropertyChanged;
 
         private double Scale = 1d;
+        private Setting.Transition LastTransition = Setting.Transition.None;
 
         //public Point CenterPoint =>
         //    new Point((CA.ActualWidth - IM.ActualWidth) / 2, (CA.ActualHeight - IM.ActualHeight) / 2);
@@ -93,8 +116,8 @@ namespace ZipImageViewer
         }
 
         private void ViewWindow_Loaded(object sender, RoutedEventArgs e) {
-            scaleToCanvas();
-            ViewWin.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
+            scaleToCanvas(0);
+            this.AnimateDoubleCubicEase(OpacityProperty, 1d, 100, EasingMode.EaseOut);
         }
 
         private void ViewWin_MouseUp(object sender, MouseButtonEventArgs e) {
@@ -114,7 +137,7 @@ namespace ZipImageViewer
                     IM.AnimateDoubleCubicEase(HeightProperty, newSize.Value.Height, ms, EasingMode.EaseOut);
                 }
                 Scale = newSize.Value.Width / IM.RealSize.Width;
-                BM.Show($"{Scale:P1}");
+                if (ms > 0) BM.Show($"{Scale:P1}");
             }
             if (transPoint.HasValue) {
                 transPoint = new Point(transPoint.Value.X.RoundToMultiplesOf(IM.TransformFromDevice.M11),
@@ -208,48 +231,51 @@ namespace ZipImageViewer
                             continue;
                         }
                         //out animation
-                        var trans = Setting.ViewerTransition;
-                        if (trans == Setting.Transition.Random) {
+                        if (Setting.ViewerTransition == Setting.Transition.Random) {
                             var transVals = Enum.GetValues(typeof(Setting.Transition));
-                            trans = (Setting.Transition)transVals.GetValue(App.Random.Next(2, transVals.Length));
+                            LastTransition = (Setting.Transition)transVals.GetValue(App.Random.Next(2, transVals.Length));
                         }
-                        switch (trans) {
+                        else LastTransition = Setting.ViewerTransition;
+
+                        int multi = 1;
+                        switch (Setting.ViewerTransitionSpeed) {
+                            case Setting.TransitionSpeed.Medium:
+                                multi = 2;
+                                break;
+                            case Setting.TransitionSpeed.Slow:
+                                multi = 3;
+                                break;
+                        }
+                        switch (LastTransition) {
                             case Setting.Transition.ZoomFadeBlur:
                                 TransParams = new Tuple<TransParam, TransParam>(
-                                    new TransParam(1 - 0.05 * increment, dur1: 200),
-                                    new TransParam(dur1: 500));
+                                    new TransParam(1 - 0.05 * increment, dur1: 200 * multi),
+                                    new TransParam(dur1: 500 * multi));
                                 break;
+
                             case Setting.Transition.Fade:
                                 TransParams = new Tuple<TransParam, TransParam>(
-                                    new TransParam(dur1: 200),
-                                    new TransParam(dur1: 500));
+                                    new TransParam(dur1: 200 * multi),
+                                    new TransParam(dur1: 500 * multi));
                                 break;
+
                             case Setting.Transition.HorizontalSwipe:
                                 //bound to From, To and Duration respectively
                                 TransParams = new Tuple<TransParam, TransParam>(
-                                    new TransParam(0d, (IM_TT.X - IM.Width / 2d) * increment, 400),
-                                    new TransParam(IM.Width / 2d * increment, 0d, 500));
+                                    new TransParam(0d, (IM_TT.X - IM.Width / 2d) * increment, 400 * multi),
+                                    new TransParam(IM.Width / 2d * increment, 0d, 500 * multi));
                                 break;
                             case Setting.Transition.None:
                                 break;
                         }
-                        if (trans != Setting.Transition.None) {
-                            IM.BeginStoryboard((Storyboard)IM.FindResource($"SB_Trans_{trans}_Out"));
+                        if (LastTransition != Setting.Transition.None) {
+                            IM.BeginStoryboard((Storyboard)IM.FindResource($"SB_Trans_{LastTransition}_Out"));
                             this.AnimateBool(TransformingProperty, true, false, (int)TransParams.Item1.Duration1.TimeSpan.TotalMilliseconds);
                         }
 
                         //load next or previous image
                         Task.Run(() => {
-                            if (TransParams != null && TransParams.Item1.Duration1.HasTimeSpan)
-                                Thread.Sleep((int)TransParams.Item1.Duration1.TimeSpan.TotalMilliseconds);
                             App.MainWin.LoadPath(next, this);
-                            Dispatcher.Invoke(() => {
-                                //reset image position instantaneously
-                                scaleToCanvas(0);
-                                //in animation
-                                if (trans != Setting.Transition.None)
-                                    IM.BeginStoryboard((Storyboard)IM.FindResource($"SB_Trans_{trans}_In"));
-                            }, DispatcherPriority.ApplicationIdle);
                         });
                         return;
                     }

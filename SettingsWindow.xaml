@@ -69,11 +69,21 @@
         </TextBlock>
 
         <TextBlock  Grid.Row="3" Grid.Column="0" Text="Transition Animation"/>
-        <ComboBox   Grid.Row="3" Grid.Column="1" x:Name="CB_ViewerTransition"/>
+        <StackPanel Grid.Row="3" Grid.Column="1">
+            <ComboBox x:Name="CB_ViewerTransition"/>
+            <DockPanel Margin="0 4 0 0">
+                <TextBlock Text="Speed" VerticalAlignment="Center"/>
+                <ComboBox x:Name="CB_AnimSpeed" Margin="10 0 0 0" MinWidth="32"/>
+            </DockPanel>
+        </StackPanel>
+        <TextBlock  Grid.Row="3" Grid.Column="2" Style="{StaticResource TipTextStyle}">
+            <TextBlock.Inlines>
+                The transition animation used in the viewer.<LineBreak/>
+                Speed affects the length of time the animations are played.
+            </TextBlock.Inlines>
+        </TextBlock>
 
-        <TextBlock  Grid.Row="3" Grid.Column="2" Style="{StaticResource TipTextStyle}"
-                    Text="The transition animation used in the viewer."/>
-
+        
         <StackPanel Grid.Row="100" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="Btn_OK" Content="OK" MinWidth="50" MinHeight="22" Click="Btn_OK_Click"/>
             <Button x:Name="Btn_Cancel" Content="Cancel" MinWidth="50" MinHeight="22" Margin="4 0 0 0" IsCancel="True" Click="Btn_Cancel_Click"/>
