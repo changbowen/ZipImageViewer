@@ -5,41 +5,73 @@
              Startup="App_Startup" ShutdownMode="OnMainWindowClose"
              Exit="App_Exit">
     <Application.Resources>
-        <!--<FontFamily x:Key="FontAwesomeRegular">/ZipImageViewer;component/Resources/FontAwesome5FreeRegular400.otf#Font Awesome 5 Free Regular</FontFamily>
-        <FontFamily x:Key="FontAwesomeSolid">/ZipImageViewer;component/Resources/FontAwesome5FreeSolid900.otf#Font Awesome 5 Free Solid</FontFamily>
-        <FontFamily x:Key="FontAwesomeBrand">/ZipImageViewer;component/Resources/FontAwesome5BrandsRegular400.otf#Font Awesome 5 Brands Regular</FontFamily>-->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/UserControls/AppleStyleScrollBar.xaml"/>
+                <ResourceDictionary>
+                    <!--<FontFamily x:Key="FontAwesomeRegular">/ZipImageViewer;component/Resources/FontAwesome5FreeRegular400.otf#Font Awesome 5 Free Regular</FontFamily>
+                    <FontFamily x:Key="FontAwesomeSolid">/ZipImageViewer;component/Resources/FontAwesome5FreeSolid900.otf#Font Awesome 5 Free Solid</FontFamily>
+                    <FontFamily x:Key="FontAwesomeBrand">/ZipImageViewer;component/Resources/FontAwesome5BrandsRegular400.otf#Font Awesome 5 Brands Regular</FontFamily>-->
 
-        <local:RectConverter x:Key="RectConverter"/>
+                    <local:RectConverter x:Key="RectConverter"/>
 
-        <CubicEase x:Key="CE_EaseIn" EasingMode="EaseIn"/>
-        <CubicEase x:Key="CE_EaseOut" EasingMode="EaseOut"/>
-        <CubicEase x:Key="CE_EaseInOut" EasingMode="EaseInOut"/>
-        <Storyboard x:Key="SB_ZoomIn">
-            <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleX)"
+                    <!--shared animation / style resources-->
+                    <CubicEase x:Key="CE_EaseIn" EasingMode="EaseIn"/>
+                    <CubicEase x:Key="CE_EaseOut" EasingMode="EaseOut"/>
+                    <CubicEase x:Key="CE_EaseInOut" EasingMode="EaseInOut"/>
+                    <Storyboard x:Key="SB_Rise_Up">
+                        <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleX)"
                              To="1.1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-            <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleY)"
+                        <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleY)"
                              To="1.1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-            <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)"
+                        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)"
                              To="5" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-            <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"
+                        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"
                              To="15" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-        </Storyboard>
-        <Storyboard x:Key="SB_ZoomOut">
-            <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleX)"
+                    </Storyboard>
+                    <Storyboard x:Key="SB_Rise_Down">
+                        <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleX)"
                              To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-            <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleY)"
+                        <DoubleAnimation Storyboard.TargetProperty="(RenderTransform).(ScaleTransform.ScaleY)"
                              To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-            <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)"
+                        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)"
                              To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-            <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"
+                        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"
                              To="3" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-        </Storyboard>
+                    </Storyboard>
+                    <Storyboard x:Key="SB_FadeIn" TargetProperty="Opacity">
+                        <DoubleAnimation To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+                    </Storyboard>
+                    <Storyboard x:Key="SB_FadeOut" TargetProperty="Opacity">
+                        <DoubleAnimation To="0" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseIn}"/>
+                    </Storyboard>
+                    <Storyboard x:Key="SB_FadeHalf" TargetProperty="Opacity">
+                        <DoubleAnimation To="0.5" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}" />
+                    </Storyboard>
+                    
+                    <DropShadowEffect x:Key="DS_Below" Direction="270" Opacity="0.8" ShadowDepth="1" BlurRadius="3" />
 
-        <Storyboard x:Key="SB_FadeIn" TargetProperty="Opacity">
-            <DoubleAnimation To="1" Duration="0:0:0.5" EasingFunction="{StaticResource CE_EaseOut}"/>
-        </Storyboard>
-        <Storyboard x:Key="SB_FadeOut" TargetProperty="Opacity">
-            <DoubleAnimation To="0" Duration="0:0:0.5" EasingFunction="{StaticResource CE_EaseIn}"/>
-        </Storyboard>
+                    <Style x:Key="S_RiseOnHover" TargetType="FrameworkElement">
+                        <Setter Property="Effect" Value="{StaticResource DS_Below}"/>
+                        <Setter Property="RenderTransformOrigin" Value="0.5 0.5"/>
+                        <Setter Property="RenderTransform">
+                            <Setter.Value>
+                                <ScaleTransform/>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Up}"/>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down}"/>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

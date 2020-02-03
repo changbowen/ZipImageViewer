@@ -12,12 +12,14 @@ namespace ZipImageViewer
 {
     public static class Setting
     {
+        public enum Transition { None, Random, ZoomFadeBlur, Fade, HorizontalSwipe }
+
         public static IniData iniData;
         public static string SevenZipDllPath = @"C:\Program Files\7-Zip\7z.dll";
         public static System.Drawing.Size ThumbnailSize { get; set; } = new System.Drawing.Size(300, 200);
         public static string[] FallbackPasswords;
         public static Dictionary<string, string> MappedPasswords;
-
+        public static Transition ViewerTransition = Transition.ZoomFadeBlur;
 
         public static void LoadConfigFromFile(string path = "config.ini") {
             //load config
@@ -34,6 +36,10 @@ namespace ZipImageViewer
             var thumbsize = iniData["App Config"]["ThumbnailSize"]?.Split('x', '*', ',');
             if (thumbsize?.Length == 2)
                 ThumbnailSize = new System.Drawing.Size(int.Parse(thumbsize[0]), int.Parse(thumbsize[1]));
+            //parse transition
+            var viewerTrans = iniData["App Config"]["ViewerTransition"];
+            if (viewerTrans != null && !Enum.TryParse(viewerTrans, out ViewerTransition))
+                ViewerTransition = Transition.ZoomFadeBlur; //default value
             //parse saved passwords
             FallbackPasswords = iniData["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => d.KeyName).ToArray();
             MappedPasswords = iniData["Saved Passwords"].Where(d => d.Value.Length > 0).ToDictionary(d => d.KeyName, d => d.Value);
@@ -52,6 +58,7 @@ namespace ZipImageViewer
 [App Config]
 SevenZipDllPath={SevenZipDllPath}
 ThumbnailSize={ThumbnailSize.Width}x{ThumbnailSize.Height}
+ViewerTransition={ViewerTransition}
 
 ;Saved passwords for zipped files. Supported formats:
 ;password=

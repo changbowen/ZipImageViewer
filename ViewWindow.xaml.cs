@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -19,25 +20,21 @@ using static ZipImageViewer.ExtentionMethods;
 
 namespace ZipImageViewer
 {
-    public class CenterConverter : IMultiValueConverter
+    public struct TransParam
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (values == null || values.Length < 2)
-                throw new ArgumentException("Two double values need to be passed in this order -> totalWidth, width", nameof(values));
-
-            var totalWidth = (double)values[0];
-            var width = (double)values[1];
-            return (totalWidth - width) / 2;
-        }
-
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
+        public double Double1 { get; set; }
+        public double Double2 { get; set; }
+        public Duration Duration1 { get; set; }
+        
+        /// <param name="dur1">Value in milliseconds for Duration1.</param>
+        public TransParam(double dbl1 = default, double dbl2 = default, int dur1 = default) {
+            Double1 = dbl1;
+            Double2 = dbl2;
+            Duration1 = new Duration(TimeSpan.FromMilliseconds(dur1));
         }
     }
 
-    public partial class ViewWindow : Window
+    public partial class ViewWindow : Window, INotifyPropertyChanged
     {
         public ObjectInfo ObjectInfo
         {
@@ -48,13 +45,41 @@ namespace ZipImageViewer
             Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow));
 
 
-        public bool Transforming
-        {
+        public ImageSource ViewImageSource {
+            get { return (ImageSource)GetValue(ViewImageSourceProperty); }
+            set { SetValue(ViewImageSourceProperty, value); }
+        }
+        public static readonly DependencyProperty ViewImageSourceProperty =
+            DependencyProperty.Register("ViewImageSource", typeof(ImageSource), typeof(ViewWindow), new PropertyMetadata(null));
+
+
+        public bool Transforming {
             get { return (bool)GetValue(TransformingProperty); }
             set { SetValue(TransformingProperty, value); }
         }
         public static readonly DependencyProperty TransformingProperty =
-            DependencyProperty.Register("Transforming", typeof(bool), typeof(ViewWindow), new PropertyMetadata(false));
+            DependencyProperty.Register("Transforming", typeof(bool), typeof(ViewWindow),
+                new PropertyMetadata(false, new PropertyChangedCallback(TransformingChanged)));
+
+        private static void TransformingChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e) {
+
+        }
+
+        private Tuple<TransParam, TransParam> transParams;
+        /// <summary>
+        /// Item1 is used in "out" animations (before changing ImageSource).
+        /// Item2 is used in "in" animations (after changing ImageSource).
+        /// </summary>
+        public Tuple<TransParam, TransParam> TransParams {
+            get => transParams;
+            set {
+                transParams = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TransParams)));
+            }
+        }
+
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private double Scale = 1d;
 
@@ -63,12 +88,13 @@ namespace ZipImageViewer
 
         public ViewWindow()
         {
+            Opacity = 0d;
             InitializeComponent();
         }
 
         private void ViewWindow_Loaded(object sender, RoutedEventArgs e) {
             scaleToCanvas();
-            IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
+            ViewWin.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
         }
 
         private void ViewWin_MouseUp(object sender, MouseButtonEventArgs e) {
@@ -79,6 +105,7 @@ namespace ZipImageViewer
             if (newSize.HasValue) {
                 newSize = new Size(newSize.Value.Width, newSize.Value.Height);
                 if (double.IsNaN(IM.Width) || double.IsNaN(IM.Height)) {
+                    //skip animation when Width or Height is not set
                     IM.Width = newSize.Value.Width;
                     IM.Height = newSize.Value.Height;
                 }
@@ -96,13 +123,9 @@ namespace ZipImageViewer
                 IM_TT.AnimateDoubleCubicEase(TranslateTransform.YProperty, transPoint.Value.Y, ms, EasingMode.EaseOut);
             }
             if (ms > 0) {
-                var animBool = new BooleanAnimationUsingKeyFrames();
-                animBool.KeyFrames.Add(new DiscreteBooleanKeyFrame(true, KeyTime.FromTimeSpan(TimeSpan.Zero)));
-                animBool.KeyFrames.Add(new DiscreteBooleanKeyFrame(false, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms))));
-                BeginAnimation(TransformingProperty, animBool);
+                this.AnimateBool(TransformingProperty, true, false, ms);
             }
         }
-
 
         private void scaleToCanvas(int ms = 400) {
             var uniSize = Helpers.UniformScale(IM.RealSize, new Size(CA.ActualWidth, CA.ActualHeight));
@@ -119,6 +142,7 @@ namespace ZipImageViewer
 
         private Point mouseCapturePoint;
         private Matrix existingTranslate;
+
 
         private void CA_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             if (e.ClickCount == 1) {
@@ -170,28 +194,67 @@ namespace ZipImageViewer
                 case Key.Left:
                 case Key.Right:
                 case Key.Space:
-                    var ii = ObjectInfo;
-                    var ol = App.MainWin.ObjectList;
-                    var i = ol.IndexOf(ol[ii.VirtualPath]) + (e.Key == Key.Left ? -1 : 1);
-                    if (i > -1 && i < ol.Count) {
-                        //fade animation
-                        IM.AnimateDoubleCubicEase(OpacityProperty, 0d, 200, EasingMode.EaseOut);
+                    var list = App.MainWin.ObjectList;
+                    //get direction for the next items.
+                    //also used to determine direction for some animations.
+                    var increment = e.Key == Key.Left ? -1 : 1;
+                    //get index of the next item
+                    var i = list.IndexOf(list[ObjectInfo.VirtualPath]) + increment;
+                    while (i > -1 && i < list.Count) {
+                        var next = list[i];
+                        //check for non-images and skip
+                        if (!next.Flags.HasFlag(FileFlags.Image)) {
+                            i += increment;
+                            continue;
+                        }
+                        //out animation
+                        var trans = Setting.ViewerTransition;
+                        if (trans == Setting.Transition.Random) {
+                            var transVals = Enum.GetValues(typeof(Setting.Transition));
+                            trans = (Setting.Transition)transVals.GetValue(App.Random.Next(2, transVals.Length));
+                        }
+                        switch (trans) {
+                            case Setting.Transition.ZoomFadeBlur:
+                                TransParams = new Tuple<TransParam, TransParam>(
+                                    new TransParam(1 - 0.05 * increment, dur1: 200),
+                                    new TransParam(dur1: 500));
+                                break;
+                            case Setting.Transition.Fade:
+                                TransParams = new Tuple<TransParam, TransParam>(
+                                    new TransParam(dur1: 200),
+                                    new TransParam(dur1: 500));
+                                break;
+                            case Setting.Transition.HorizontalSwipe:
+                                //bound to From, To and Duration respectively
+                                TransParams = new Tuple<TransParam, TransParam>(
+                                    new TransParam(0d, (IM_TT.X - IM.Width / 2d) * increment, 400),
+                                    new TransParam(IM.Width / 2d * increment, 0d, 500));
+                                break;
+                            case Setting.Transition.None:
+                                break;
+                        }
+                        if (trans != Setting.Transition.None) {
+                            IM.BeginStoryboard((Storyboard)IM.FindResource($"SB_Trans_{trans}_Out"));
+                            this.AnimateBool(TransformingProperty, true, false, (int)TransParams.Item1.Duration1.TimeSpan.TotalMilliseconds);
+                        }
 
                         //load next or previous image
                         Task.Run(() => {
-                            var next = ol[i];
-                            App.MainWin.LoadFile(next.FileSystemPath, next.Flags,
-                                isThumb: false,
-                                fileNames: new[] {next.FileName},
-                                objInfoCb: nii => Dispatcher.Invoke(() => ObjectInfo = nii));
+                            if (TransParams != null && TransParams.Item1.Duration1.HasTimeSpan)
+                                Thread.Sleep((int)TransParams.Item1.Duration1.TimeSpan.TotalMilliseconds);
+                            App.MainWin.LoadPath(next, this);
                             Dispatcher.Invoke(() => {
-                                IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut);
-                                scaleToCanvas();
+                                //reset image position instantaneously
+                                scaleToCanvas(0);
+                                //in animation
+                                if (trans != Setting.Transition.None)
+                                    IM.BeginStoryboard((Storyboard)IM.FindResource($"SB_Trans_{trans}_In"));
                             }, DispatcherPriority.ApplicationIdle);
                         });
+                        return;
                     }
-                    else
-                        BM.Show("No more!");
+
+                    BM.Show("No more!");
                     break;
             }
         }

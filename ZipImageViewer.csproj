@@ -120,6 +120,10 @@
     <Compile Include="ViewWindow.xaml.cs">
       <DependentUpon>ViewWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="UserControls\AppleStyleScrollBar.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\BubbleMessage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

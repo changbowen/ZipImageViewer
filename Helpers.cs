@@ -113,18 +113,35 @@ namespace ZipImageViewer
 
     public static class ExtentionMethods
     {
-        public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp,
-            double toVal, int ms, EasingMode ease, HandoffBehavior handOff = HandoffBehavior.Compose)
+        public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp, double toVal, int ms, EasingMode ease,
+            HandoffBehavior handOff = HandoffBehavior.Compose)
         {
             var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = new CubicEase { EasingMode = ease } };
             target.BeginAnimation(propdp, anim, handOff);
         }
-        public static void AnimateDoubleCubicEase(this Animatable target, DependencyProperty propdp,
-            double toVal, int ms, EasingMode ease, HandoffBehavior handOff = HandoffBehavior.Compose)
+        public static void AnimateDoubleCubicEase(this Animatable target, DependencyProperty propdp, double toVal, int ms, EasingMode ease,
+            HandoffBehavior handOff = HandoffBehavior.Compose)
         {
             var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = new CubicEase { EasingMode = ease } };
             target.BeginAnimation(propdp, anim, handOff);
         }
+
+
+        public static void AnimateBool(this UIElement target, DependencyProperty propdp, bool fromVal, bool toVal, int ms,
+            HandoffBehavior handOff = HandoffBehavior.Compose) {
+            var anim = new BooleanAnimationUsingKeyFrames();
+            if (ms > 0) anim.KeyFrames.Add(new DiscreteBooleanKeyFrame(fromVal, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+            anim.KeyFrames.Add(new DiscreteBooleanKeyFrame(toVal, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms))));
+            target.BeginAnimation(propdp, anim, handOff);
+        }
+        public static void AnimateBool(this Animatable target, DependencyProperty propdp, bool fromVal, bool toVal, int ms,
+            HandoffBehavior handOff = HandoffBehavior.Compose) {
+            var anim = new BooleanAnimationUsingKeyFrames();
+            if (ms > 0) anim.KeyFrames.Add(new DiscreteBooleanKeyFrame(fromVal, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+            anim.KeyFrames.Add(new DiscreteBooleanKeyFrame(toVal, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms))));
+            target.BeginAnimation(propdp, anim, handOff);
+        }
+
 
         public static double RoundToMultiplesOf(this double input, double multiplesOf) {
             return Math.Ceiling(input / multiplesOf) * multiplesOf;

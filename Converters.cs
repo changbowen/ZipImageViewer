@@ -5,6 +5,22 @@ using System.Windows.Data;
 
 namespace ZipImageViewer
 {
+    public class CenterConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+            if (values == null || values.Length < 2)
+                throw new ArgumentException("Two double values need to be passed in this order -> totalWidth, width", nameof(values));
+
+            var totalWidth = (double)values[0];
+            var width = (double)values[1];
+            return (totalWidth - width) / 2;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
     public class RectConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
@@ -36,4 +52,17 @@ namespace ZipImageViewer
             throw new NotImplementedException();
         }
     }
+
+    //public class MathAddConverter : IValueConverter
+    //{
+    //    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+    //        if (!(value is double)) value = System.Convert.ToDouble(value);
+    //        if (!(parameter is double)) parameter = System.Convert.ToDouble(parameter);
+    //        return (double)value + (double)parameter;
+    //    }
+
+    //    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 }

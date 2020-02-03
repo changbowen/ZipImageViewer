@@ -22,7 +22,7 @@ namespace ZipImageViewer
         private Timer CycleTimer;
 
         public static ImageSource DefaultThumb => FontAwesome5.ImageAwesome.CreateImageSource(
-            FontAwesome5.EFontAwesomeIcon.Regular_Meh, new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
+            FontAwesome5.EFontAwesomeIcon.Solid_Meh, new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
 
         public Thumbnail() {
             InitializeComponent();
@@ -32,9 +32,8 @@ namespace ZipImageViewer
             if (ObjectInfo.ImageSources.Count < 2) return;
 
             //cycle thumbnails when more than one exists
-            CycleTimer = new Timer(new Random().Next(3000, 5000));
+            CycleTimer = new Timer(App.Random.Next(3000, 5000));
             CycleTimer.Elapsed += (o1, e1) => {
-                //Thread.Sleep(new Random().Next(0, 500));
                 Dispatcher.Invoke(() => {
                     //fade out
                     IM1.AnimateDoubleCubicEase(OpacityProperty, 0d, 500, EasingMode.EaseIn);

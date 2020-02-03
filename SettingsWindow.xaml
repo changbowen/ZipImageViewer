@@ -17,6 +17,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </local:PaddedGrid.RowDefinitions>
         <local:PaddedGrid.Resources>
             <Style TargetType="TextBox">
@@ -66,7 +68,13 @@
             </TextBlock.Inlines>
         </TextBlock>
 
-        <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
+        <TextBlock  Grid.Row="3" Grid.Column="0" Text="Transition Animation"/>
+        <ComboBox   Grid.Row="3" Grid.Column="1" x:Name="CB_ViewerTransition"/>
+
+        <TextBlock  Grid.Row="3" Grid.Column="2" Style="{StaticResource TipTextStyle}"
+                    Text="The transition animation used in the viewer."/>
+
+        <StackPanel Grid.Row="100" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="Btn_OK" Content="OK" MinWidth="50" MinHeight="22" Click="Btn_OK_Click"/>
             <Button x:Name="Btn_Cancel" Content="Cancel" MinWidth="50" MinHeight="22" Margin="4 0 0 0" IsCancel="True" Click="Btn_Cancel_Click"/>
         </StackPanel>

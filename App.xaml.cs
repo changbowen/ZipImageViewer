@@ -24,6 +24,7 @@ namespace ZipImageViewer
                 ".zip", ".rar", ".7z",
             });
         public const int PreviewCount = 4;
+        public static Random Random = new Random();
 
 
         private void App_Startup(object sender, StartupEventArgs e) {

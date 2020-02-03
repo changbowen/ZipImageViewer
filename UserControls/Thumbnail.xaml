@@ -14,7 +14,7 @@
         <Grid.OpacityMask>
             <VisualBrush Visual="{Binding ElementName=mask}"/>
         </Grid.OpacityMask>
-        <Border x:Name="mask" CornerRadius="10" Background="Black"/>
+        <Border x:Name="mask" CornerRadius="10" Background="#FF333333"/>
         <local:DpiImage x:Name="IM1" HorizontalAlignment="Center" VerticalAlignment="Center"
                         RenderOptions.BitmapScalingMode="HighQuality" Stretch="UniformToFill"
                         Source="{Binding ElementName=TN, Path=ObjectInfo.ImageSources[0], Mode=OneWay,
@@ -22,11 +22,9 @@
                                     FallbackValue={x:Static local:Thumbnail.DefaultThumb}}"
                         ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo}"
                         ToolTipService.ShowDuration="20000"/>
-        <fa:ImageAwesome VerticalAlignment="Top" HorizontalAlignment="Right" Width="32" Foreground="#AAFFFFFF" Margin="10"
-                         Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}}">
-            <fa:ImageAwesome.Effect>
-                <DropShadowEffect ShadowDepth="0"/>
-            </fa:ImageAwesome.Effect>
+        <fa:ImageAwesome VerticalAlignment="Top" HorizontalAlignment="Right" Width="48" Height="48" Margin="0 20 20 0" Foreground="#AAFFFFFF"
+                         Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}}"
+                         Effect="{StaticResource DS_Below}">
         </fa:ImageAwesome>
     </Grid>
     

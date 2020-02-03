@@ -39,8 +39,7 @@ namespace ZipImageViewer
         {
 #if DEBUG
             //Topmost = true;
-            Task.Run(() => LoadPath(@"E:\Pictures\new folder.sdf"));
-            //new SettingsWindow().ShowDialog();
+            Task.Run(() => LoadPath(@"E:\Pictures\new folder.sdf\To Doa"));
 #else
             if (Helpers.OpenFolderDialog(this) is string path) Task.Run(() => LoadPath(path));
 #endif
@@ -65,14 +64,15 @@ namespace ZipImageViewer
         /// <summary>
         /// Flags are inferred from path. Not for opening image in an archive.
         /// </summary>
-        private void LoadPath(string path) {
-            LoadPath(new ObjectInfo(path, FileFlags.Unknown));
+        internal void LoadPath(string path, ViewWindow viewWin = null) {
+            LoadPath(new ObjectInfo(path, FileFlags.Unknown), viewWin);
         }
 
         /// <summary>
-        /// Display file system objects in the path as thumbnails.
+        /// Display file system objects in the path as thumbnails, or open viewer depending on the file type and parameters.
+        /// Main open logic is set here.
         /// </summary>
-        private void LoadPath(ObjectInfo objInfo) {
+        internal void LoadPath(ObjectInfo objInfo, ViewWindow viewWin = null) {
             //infer path type (flags)
             if (objInfo.Flags == FileFlags.Unknown)
                 objInfo.Flags = Helpers.GetPathType(new DirectoryInfo(objInfo.FileSystemPath));
@@ -90,7 +90,10 @@ namespace ZipImageViewer
                     LoadFile(objInfo.FileSystemPath, objInfo.Flags,
                         isThumb: false,
                         fileNames: new[] { objInfo.FileName },
-                        objInfoCb: oi => Dispatcher.Invoke(() => new ViewWindow { ObjectInfo = oi }.Show()));
+                        cldInfoCb: oi => Dispatcher.Invoke(() => {
+                            if (viewWin == null) new ViewWindow() { ObjectInfo = oi }.Show();
+                            else viewWin.ObjectInfo = oi;
+                        }));
                 }
                 else {
                     //archive itself -> extract and load thumbs
@@ -104,14 +107,17 @@ namespace ZipImageViewer
                 //plain image file -> open viewer
                 LoadFile(objInfo.FileSystemPath, objInfo.Flags,
                     isThumb: false,
-                    objInfoCb: oi => Dispatcher.Invoke(() => new ViewWindow { ObjectInfo = oi }.Show()));
+                    objInfoCb: oi => Dispatcher.Invoke(() => {
+                        if (viewWin == null) new ViewWindow() { ObjectInfo = oi }.Show();
+                        else viewWin.ObjectInfo = oi;
+                    }));
             }
         }
 
         /// <summary>
         /// Load thumbnails in folder.
         /// </summary>
-        internal void LoadFolder(DirectoryInfo dirInfo) {
+        private void LoadFolder(DirectoryInfo dirInfo) {
             CurrentPath = dirInfo.FullName;
             foreach (var childInfo in dirInfo.EnumerateFileSystemInfos()) {
                 //when the child is a folder
@@ -154,7 +160,7 @@ namespace ZipImageViewer
         /// Use Dispatcher if callback needs to access the UI thread.
         /// <param name="flags">Only checks for Image and Archive.</param>
         /// </summary>
-        internal void LoadFile(string filePath, FileFlags flags,
+        private void LoadFile(string filePath, FileFlags flags,
             bool isThumb = true, string[] fileNames = null, Action<ObjectInfo> objInfoCb = null, Action<ObjectInfo> cldInfoCb = null)
         {
             var options = new LoadOptions(filePath) {
@@ -167,7 +173,7 @@ namespace ZipImageViewer
             LoadFile(options);
         }
 
-        internal void LoadFile(LoadOptions options)
+        private void LoadFile(LoadOptions options)
         {
             //objInfo to be returned
             var objInfo = new ObjectInfo(options.FilePath, options.Flags) {
@@ -305,12 +311,12 @@ namespace ZipImageViewer
 
         private void MainWin_MouseDown(object sender, MouseButtonEventArgs e) {
             if (!(e.OriginalSource is ScrollViewer)) return;
-            if (e.ClickCount == 1 && e.ChangedButton == MouseButton.Right) {
-                Task.Run(() => LoadPath(Path.GetDirectoryName(CurrentPath)));
-            }
-            else if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left) {
+            if (e.ClickCount == 1 && e.ChangedButton == MouseButton.Right)
+                Nav_Up(null, null);
+            if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left) {
                 if (Helpers.OpenFolderDialog(this) is string path) Task.Run(() => LoadPath(path));
             }
+            e.Handled = true;
         }
 
         private void TN1_MouseUp(object sender, MouseButtonEventArgs e) {
@@ -327,6 +333,22 @@ namespace ZipImageViewer
                         //    break;
                 }
             }
+        }
+
+        //private void CTM1_Clicked(object sender, RoutedEventArgs e) {
+        //    switch (((MenuItem)sender).Header) {
+        //        case "Options":
+        //            new SettingsWindow().ShowDialog();
+        //            break;
+        //    }
+        //}
+
+        private void Nav_Up(object sender, RoutedEventArgs e) {
+            Task.Run(() => LoadPath(Path.GetDirectoryName(CurrentPath)));
+        }
+
+        private void Show_Options(object sender, RoutedEventArgs e) {
+            new SettingsWindow().ShowDialog();
         }
     }
 }
