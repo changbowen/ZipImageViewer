@@ -15,6 +15,20 @@ namespace ZipImageViewer
 
         public bool IsRealSize => RealSize.Width.Equals(ActualWidth) && RealSize.Height.Equals(ActualHeight);
 
+        public double Scale => Width / RealSize.Width;
+
+
+        /// <summary>
+        /// Indicate whether animations are being played on the image.
+        /// </summary>
+        public bool Transforming {
+            get { return (bool)GetValue(TransformingProperty); }
+            set { SetValue(TransformingProperty, value); }
+        }
+        public static readonly DependencyProperty TransformingProperty =
+            DependencyProperty.Register("Transforming", typeof(bool), typeof(DpiImage), new PropertyMetadata(false));
+
+
         /// <summary>
         /// Caches the last CompositionTarget.TransformFromDevice value.
         /// </summary>

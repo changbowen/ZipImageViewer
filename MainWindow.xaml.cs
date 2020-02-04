@@ -39,7 +39,7 @@ namespace ZipImageViewer
         {
 #if DEBUG
             //Topmost = true;
-            Task.Run(() => LoadPath(@"E:\Pictures\new folder.sdf\To Doa"));
+            Task.Run(() => LoadPath(@"E:\Pictures\new folder.sdf\desktops.7z"));
 #else
             if (Helpers.OpenFolderDialog(this) is string path) Task.Run(() => LoadPath(path));
 #endif

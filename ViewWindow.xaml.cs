@@ -49,9 +49,9 @@ namespace ZipImageViewer
             if (!win.IsLoaded)
                 //update directly without animations when window is not loaded yet (first time opening)
                 win.ViewImageSource = win.ObjectInfo.ImageSources[0];
-            else if (win.Transforming)
+            else if (win.IM.Transforming)
                 //update after transform end
-                DependencyPropertyDescriptor.FromProperty(TransformingProperty, typeof(ViewWindow)).AddValueChanged(win, updateViewImageSource);
+                DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).AddValueChanged(win.IM, updateViewImageSource);
             else
                 //update with "in" animations following the previous "out" animations
                 updateViewImageSource(win, null);
@@ -59,7 +59,7 @@ namespace ZipImageViewer
 
         private static void updateViewImageSource(object obj, EventArgs e) {
             var win = (ViewWindow)obj;
-            DependencyPropertyDescriptor.FromProperty(TransformingProperty, typeof(ViewWindow)).RemoveValueChanged(win, updateViewImageSource);
+            DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).RemoveValueChanged(win.IM, updateViewImageSource);
             //update image
             win.ViewImageSource = win.ObjectInfo.ImageSources[0];
             //reset image position instantaneously
@@ -78,15 +78,6 @@ namespace ZipImageViewer
             DependencyProperty.Register("ViewImageSource", typeof(ImageSource), typeof(ViewWindow), new PropertyMetadata(null));
 
 
-        public bool Transforming {
-            get { return (bool)GetValue(TransformingProperty); }
-            set { SetValue(TransformingProperty, value); }
-        }
-        public static readonly DependencyProperty TransformingProperty =
-            DependencyProperty.Register("Transforming", typeof(bool), typeof(ViewWindow), new PropertyMetadata(false));
-
-
-
         private Tuple<TransParam, TransParam> transParams;
         /// <summary>
         /// Item1 is used in "out" animations (before changing ImageSource).
@@ -103,7 +94,6 @@ namespace ZipImageViewer
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private double Scale = 1d;
         private Setting.Transition LastTransition = Setting.Transition.None;
 
         //public Point CenterPoint =>
@@ -124,29 +114,89 @@ namespace ZipImageViewer
             if (e.ChangedButton == MouseButton.Right) Close();
         }
 
-        private void transform(int ms, Size? newSize = null, Point? transPoint = null) {
+        /// <param name="altAnim">Set this to true or false to override alternate zoom & move animation.</param>
+        private void transform(int ms, Size? newSize = null, Point? transPoint = null, bool? altAnim = null) {
+            var sb = new Storyboard();
+            var isLarge = false;
+            //process resizing
             if (newSize.HasValue) {
-                newSize = new Size(newSize.Value.Width, newSize.Value.Height);
+                var showScale = true;
                 if (double.IsNaN(IM.Width) || double.IsNaN(IM.Height)) {
                     //skip animation when Width or Height is not set
                     IM.Width = newSize.Value.Width;
                     IM.Height = newSize.Value.Height;
+                    showScale = false;
+                }
+                else if ((!altAnim.HasValue || altAnim.Value) &&
+                         Math.Abs(newSize.Value.Width / IM.Width - 1d) > 0.5d &&
+                         Math.Abs(newSize.Value.Height / IM.Height - 1d) > 0.5d) {
+                    isLarge = true;
+                    //for large images, use alternate animation to reduce stutter
+                    var animOp = new DoubleAnimationUsingKeyFrames();
+                    animOp.KeyFrames.Add(new EasingDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100)), new CubicEase() { EasingMode = EasingMode.EaseIn }));
+                    animOp.KeyFrames.Add(new LinearDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100+20))));
+                    animOp.KeyFrames.Add(new EasingDoubleKeyFrame(1d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100*2+20)), new CubicEase() { EasingMode = EasingMode.EaseOut }));
+                    Storyboard.SetTargetProperty(animOp, new PropertyPath(nameof(Opacity)));
+                    var animW = new DoubleAnimationUsingKeyFrames();
+                    animW.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Width, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100+1))));
+                    Storyboard.SetTargetProperty(animW, new PropertyPath(nameof(Width)));
+                    var animH = new DoubleAnimationUsingKeyFrames();
+                    animH.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Height, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100+1))));
+                    Storyboard.SetTargetProperty(animH, new PropertyPath(nameof(Height)));
+                    sb.Children.Add(animOp);
+                    sb.Children.Add(animW);
+                    sb.Children.Add(animH);
                 }
                 else {
-                    IM.AnimateDoubleCubicEase(WidthProperty, newSize.Value.Width, ms, EasingMode.EaseOut);
-                    IM.AnimateDoubleCubicEase(HeightProperty, newSize.Value.Height, ms, EasingMode.EaseOut);
+                    //for normal sized images
+                    var animW = new DoubleAnimation(newSize.Value.Width, new Duration(TimeSpan.FromMilliseconds(ms)))
+                    { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+                    var animH = new DoubleAnimation(newSize.Value.Height, new Duration(TimeSpan.FromMilliseconds(ms)))
+                    { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+                    Storyboard.SetTargetProperty(animW, new PropertyPath(nameof(Width)));
+                    Storyboard.SetTargetProperty(animH, new PropertyPath(nameof(Height)));
+                    sb.Children.Add(animW);
+                    sb.Children.Add(animH);
                 }
-                Scale = newSize.Value.Width / IM.RealSize.Width;
-                if (ms > 0) BM.Show($"{Scale:P1}");
+                if (showScale) {
+                    sb.Completed += (o1, e1) => BM.Show($"{IM.Scale:P1}");
+                }
             }
+            //process moving
             if (transPoint.HasValue) {
                 transPoint = new Point(transPoint.Value.X.RoundToMultiplesOf(IM.TransformFromDevice.M11),
                                        transPoint.Value.Y.RoundToMultiplesOf(IM.TransformFromDevice.M22));
-                IM_TT.AnimateDoubleCubicEase(TranslateTransform.XProperty, transPoint.Value.X, ms, EasingMode.EaseOut);
-                IM_TT.AnimateDoubleCubicEase(TranslateTransform.YProperty, transPoint.Value.Y, ms, EasingMode.EaseOut);
+                DoubleAnimation animX, animY;
+                if (isLarge) {
+                    //for large images, move instantly when invisible
+                    animX = new DoubleAnimation(transPoint.Value.X, new Duration(TimeSpan.Zero))
+                    { BeginTime = TimeSpan.FromMilliseconds(100+1) };
+                    animY = new DoubleAnimation(transPoint.Value.Y, new Duration(TimeSpan.Zero))
+                    { BeginTime = TimeSpan.FromMilliseconds(100+1) };
+                }
+                else {
+                    animX = new DoubleAnimation(transPoint.Value.X, new Duration(TimeSpan.FromMilliseconds(ms)))
+                    { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+                    animY = new DoubleAnimation(transPoint.Value.Y, new Duration(TimeSpan.FromMilliseconds(ms)))
+                    { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+                }
+                Storyboard.SetTargetProperty(animX, new PropertyPath("RenderTransform.Children[0].X"));
+                Storyboard.SetTargetProperty(animY, new PropertyPath("RenderTransform.Children[0].Y"));
+                sb.Children.Add(animX);
+                sb.Children.Add(animY);
             }
             if (ms > 0) {
-                this.AnimateBool(TransformingProperty, true, false, ms);
+                //use Transforming property to indicate whether the animation is playing
+                var animB = new BooleanAnimationUsingKeyFrames();
+                animB.KeyFrames.Add(new DiscreteBooleanKeyFrame(true, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+                animB.KeyFrames.Add(new DiscreteBooleanKeyFrame(false, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms))));
+                Storyboard.SetTargetProperty(animB, new PropertyPath(nameof(IM.Transforming)));
+                sb.Children.Add(animB);
+            }
+
+            if (sb.Children.Count > 0) {
+                foreach (var child in sb.Children) Storyboard.SetTarget(child, IM);
+                BeginStoryboard(sb, HandoffBehavior.Compose);
             }
         }
 
@@ -178,26 +228,14 @@ namespace ZipImageViewer
                     scaleCenterMouse(e.GetPosition(IM), IM.RealSize);
                 else
                     scaleToCanvas();
-
-                ////use different animation when image is large to reduce stutter
-                //if (rs.Width / CA.ActualWidth < 1.8d && rs.Height / CA.ActualHeight < 1.8d)
-                //    Transform(ms, tgtSize, tgtPoint);
-                //else
-                //    Task.Run(() => {
-                //        Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 0.01d, 100, EasingMode.EaseOut));
-                //        Thread.Sleep(100);
-                //        Dispatcher.Invoke(() => Transform(0, tgtSize, tgtPoint));
-                //        Thread.Sleep(100);
-                //        Dispatcher.Invoke(() => IM.AnimateDoubleCubicEase(OpacityProperty, 1d, 200, EasingMode.EaseOut), DispatcherPriority.Background);
-                //    });
             }
         }
 
         private void CA_PreviewMouseMove(object sender, MouseEventArgs e) {
             if (!CA.IsMouseCaptured) return;
             transform(50, transPoint:
-                new Point(existingTranslate.OffsetX + ((e.GetPosition(CA).X - mouseCapturePoint.X) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M11),
-                          existingTranslate.OffsetY + ((e.GetPosition(CA).Y - mouseCapturePoint.Y) * Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M22)));
+                new Point(existingTranslate.OffsetX + ((e.GetPosition(CA).X - mouseCapturePoint.X) * IM.Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M11),
+                          existingTranslate.OffsetY + ((e.GetPosition(CA).Y - mouseCapturePoint.Y) * IM.Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M22)));
         }
 
         private void CA_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -270,7 +308,7 @@ namespace ZipImageViewer
                         }
                         if (LastTransition != Setting.Transition.None) {
                             IM.BeginStoryboard((Storyboard)IM.FindResource($"SB_Trans_{LastTransition}_Out"));
-                            this.AnimateBool(TransformingProperty, true, false, (int)TransParams.Item1.Duration1.TimeSpan.TotalMilliseconds);
+                            IM.AnimateBool(DpiImage.TransformingProperty, true, false, (int)TransParams.Item1.Duration1.TimeSpan.TotalMilliseconds);
                         }
 
                         //load next or previous image
