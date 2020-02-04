@@ -120,6 +120,8 @@ namespace ZipImageViewer
             var isLarge = false;
             //process resizing
             if (newSize.HasValue) {
+                var rW = newSize.Value.Width / IM.Width;
+                var rH = newSize.Value.Height / IM.Height;
                 var showScale = true;
                 if (double.IsNaN(IM.Width) || double.IsNaN(IM.Height)) {
                     //skip animation when Width or Height is not set
@@ -128,8 +130,8 @@ namespace ZipImageViewer
                     showScale = false;
                 }
                 else if ((!altAnim.HasValue || altAnim.Value) &&
-                         Math.Abs(newSize.Value.Width / IM.Width - 1d) > 0.5d &&
-                         Math.Abs(newSize.Value.Height / IM.Height - 1d) > 0.5d) {
+                         (rW < 0.5d || 2d < rW) && (rH < 0.5d || 2d < rH))
+                {
                     isLarge = true;
                     //for large images, use alternate animation to reduce stutter
                     var animOp = new DoubleAnimationUsingKeyFrames();
