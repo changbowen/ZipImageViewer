@@ -6,17 +6,6 @@ using System.Windows.Media;
 
 namespace ZipImageViewer
 {
-    //public class ImageInfo
-    //{
-    //    public ImageSource ImageSource { get; set; }
-
-    //    public ImageInfo(ImageSource source) {
-    //        ImageSource = source;
-    //    }
-
-    //    public ImageInfo() { }
-    //}
-
     public class ObjectInfo
     {
         /// <summary>
@@ -74,18 +63,21 @@ namespace ZipImageViewer
         /// ImageSources is used in both thumbnail display and ViewWindow.
         /// Whether it is a thumbnail depends on the decode width & height used when loading the image.
         /// </summary>
-        public List<ImageSource> ImageSources { get; set; } = new List<ImageSource>();
+        public ObservableCollection<ImageSource> ImageSources { get; set; } = new ObservableCollection<ImageSource>();
 
         public string DebugInfo {
             get {
                 return $"{nameof(FileName)}: {FileName}\r\n" +
                     $"{nameof(FileSystemPath)}: {FileSystemPath}\r\n" +
                     $"{nameof(Flags)}: {Flags.ToString()}\r\n" +
-                    $"{nameof(ImageSources)}: {string.Join("\r\n", ImageSources.Select(i => i.Width + " x " + i.Height))}\r\n" +
+                    $"{nameof(ImageSources)}:\r\n{string.Join("\r\n", ImageSources.Select(i => i.Width + " x " + i.Height))}\r\n" +
                     $"{nameof(VirtualPath)}: {VirtualPath}\r\n" +
-                    $"{nameof(DisplayName)}: {DisplayName}";
+                    $"{nameof(DisplayName)}: {DisplayName}\r\n" +
+                    $"{nameof(Comments)}:\r\n{Comments}";
             }
         }
+
+        public string Comments { get; set; }
 
 
         public ObjectInfo(string fileSystemPath, FileFlags flags) {

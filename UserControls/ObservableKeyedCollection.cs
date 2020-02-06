@@ -13,8 +13,7 @@ using System.ComponentModel;
 using System.Windows;
 
 namespace ZipImageViewer {
-    public class ObservableKeyedCollection<TKey, TItem> : KeyedCollection<TKey, TItem>, INotifyCollectionChanged, INotifyPropertyChanged
-    {
+    public class ObservableKeyedCollection<TKey, TItem> : KeyedCollection<TKey, TItem>, INotifyCollectionChanged, INotifyPropertyChanged {
         private readonly Func<TItem, TKey> _getKeyForItemDelegate;
         private readonly PropertyChangingEventHandler ChildPropertyChanging;
         private readonly PropertyChangedEventHandler ChildPropertyChanged;
@@ -25,8 +24,7 @@ namespace ZipImageViewer {
         /// Using a delegate should be faster than the property name which will use reflection.
         /// If TItem implements both INotifyCollectionChanged and INotifyCollectionChanging, the name of the key property is also needed for key updating to work.
         /// </summary>
-        public ObservableKeyedCollection(Func<TItem, TKey> getKeyForItemDelegate = null, string keyPropName = null)
-        {
+        public ObservableKeyedCollection(Func<TItem, TKey> getKeyForItemDelegate = null, string keyPropName = null) {
             if (getKeyForItemDelegate == null && keyPropName == null)
                 throw new ArgumentException(@"getKeyForItemDelegate and KeyPropertyName cannot both be null.");
             keyPropertyName = keyPropName;
@@ -34,16 +32,13 @@ namespace ZipImageViewer {
 
             if (keyPropertyName != null &&
                 typeof(TItem).GetInterface(nameof(INotifyPropertyChanged)) != null &&
-                typeof(TItem).GetInterface(nameof(INotifyPropertyChanging)) != null)
-            {
-                ChildPropertyChanging = (o, e) =>
-                {
+                typeof(TItem).GetInterface(nameof(INotifyPropertyChanging)) != null) {
+                ChildPropertyChanging = (o, e) => {
                     if (e.PropertyName != keyPropertyName) return;
                     var item = (TItem)o;
                     Dictionary?.Remove(GetKeyForItem(item));
                 };
-                ChildPropertyChanged = (o, e) =>
-                {
+                ChildPropertyChanged = (o, e) => {
                     if (e.PropertyName != keyPropertyName) return;
                     var item = (TItem)o;
                     Dictionary?.Add(GetKeyForItem(item), item);
@@ -51,8 +46,7 @@ namespace ZipImageViewer {
             }
         }
 
-        protected override TKey GetKeyForItem(TItem item)
-        {
+        protected override TKey GetKeyForItem(TItem item) {
             if (_getKeyForItemDelegate != null)//delegate is faster than reflection.
                 return _getKeyForItemDelegate(item);
             if (keyPropertyName != null)
@@ -60,8 +54,7 @@ namespace ZipImageViewer {
             throw new ArgumentException(@"getKeyForItemDelegate and KeyPropertyName cannot both be null.");
         }
 
-        protected override void SetItem(int index, TItem newitem)
-        {
+        protected override void SetItem(int index, TItem newitem) {
             //need old item to use Replace action below.
             TItem olditem = base[index];
             UpdatePropChangeHandlers(olditem, false);
@@ -71,22 +64,19 @@ namespace ZipImageViewer {
         }
 
         //Add method calls this internally. Lookup dictionary is updated automatically.
-        protected override void InsertItem(int index, TItem item)
-        {
+        protected override void InsertItem(int index, TItem item) {
             UpdatePropChangeHandlers(item, true);
             base.InsertItem(index, item);
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
         }
 
-        protected override void ClearItems()
-        {
+        protected override void ClearItems() {
             UpdatePropChangeHandlers(Items, null);
             base.ClearItems();
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        protected override void RemoveItem(int index)
-        {
+        protected override void RemoveItem(int index) {
             TItem item = this[index];
             UpdatePropChangeHandlers(item, false);
             base.RemoveItem(index);
@@ -95,8 +85,7 @@ namespace ZipImageViewer {
         }
 
         private bool _deferNotifyCollectionChanged = false;
-        public void AddRange(IEnumerable<TItem> items)
-        {
+        public void AddRange(IEnumerable<TItem> items) {
             _deferNotifyCollectionChanged = true;
             foreach (var item in items) Add(item);//Add will call Insert internally.
             _deferNotifyCollectionChanged = false;
@@ -104,8 +93,7 @@ namespace ZipImageViewer {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e) {
             if (_deferNotifyCollectionChanged) return;
 
             //if you get InvalidOperation here and the collection is on the UI thread,
@@ -115,46 +103,37 @@ namespace ZipImageViewer {
             else NotifyChanges(e);
         }
 
-        private void UpdatePropChangeHandlers(TItem item, bool addOrRemove)
-        {
+        private void UpdatePropChangeHandlers(TItem item, bool addOrRemove) {
             if (item == null || keyPropertyName == null || ChildPropertyChanging == null || ChildPropertyChanged == null) return;
 
-            if (addOrRemove)
-            {
+            if (addOrRemove) {
                 ((INotifyPropertyChanging)item).PropertyChanging += ChildPropertyChanging;
                 ((INotifyPropertyChanged)item).PropertyChanged += ChildPropertyChanged;
             }
-            else
-            {
+            else {
                 ((INotifyPropertyChanging)item).PropertyChanging -= ChildPropertyChanging;
                 ((INotifyPropertyChanged)item).PropertyChanged -= ChildPropertyChanged;
             }
         }
 
-        private void UpdatePropChangeHandlers(IEnumerable<TItem> olditems, IEnumerable<TItem> newitems)
-        {
+        private void UpdatePropChangeHandlers(IEnumerable<TItem> olditems, IEnumerable<TItem> newitems) {
             if (keyPropertyName == null || ChildPropertyChanging == null || ChildPropertyChanged == null) return;
 
-            if (olditems != null)
-            {
-                foreach (var olditem in olditems)
-                {
+            if (olditems != null) {
+                foreach (var olditem in olditems) {
                     ((INotifyPropertyChanging)olditem).PropertyChanging -= ChildPropertyChanging;
                     ((INotifyPropertyChanged)olditem).PropertyChanged -= ChildPropertyChanged;
                 }
             }
-            if (newitems != null)
-            {
-                foreach (var newitem in newitems)
-                {
+            if (newitems != null) {
+                foreach (var newitem in newitems) {
                     ((INotifyPropertyChanging)newitem).PropertyChanging += ChildPropertyChanging;
                     ((INotifyPropertyChanged)newitem).PropertyChanged += ChildPropertyChanged;
                 }
             }
         }
 
-        private void NotifyChanges(NotifyCollectionChangedEventArgs e)
-        {
+        private void NotifyChanges(NotifyCollectionChangedEventArgs e) {
             CollectionChanged?.Invoke(this, e);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         }
@@ -165,5 +144,20 @@ namespace ZipImageViewer {
         public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion
+    }
+
+
+    public class ObservableCollection<T> : System.Collections.ObjectModel.ObservableCollection<T>
+    {
+        private void NotifyChanges(NotifyCollectionChangedEventArgs e) {
+            CollectionChanged?.Invoke(this, e);
+        }
+
+        public override event NotifyCollectionChangedEventHandler CollectionChanged;
+        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e) {
+            if (!Application.Current.Dispatcher.CheckAccess())
+                Application.Current.Dispatcher.Invoke(() => NotifyChanges(e));
+            else NotifyChanges(e);
+        }
     }
 }

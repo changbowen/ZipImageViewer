@@ -42,24 +42,28 @@ namespace ZipImageViewer
             set { SetValue(ObjectInfoProperty, value); }
         }
         public static readonly DependencyProperty ObjectInfoProperty =
-            Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(new PropertyChangedCallback(ObjectInfoChanged)));
+            Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(new PropertyChangedCallback((o, e)=> {
+                if (e.NewValue == null) return;
+                var win = (ViewWindow)o;
+                var objInfo = (ObjectInfo)e.NewValue;
+                objInfo.ImageSources.CollectionChanged += (o1, e1) => {
+                    if (!win.IsLoaded)
+                        //update directly without animations when window is not loaded yet (first time opening)
+                        win.ViewImageSource = win.ObjectInfo.ImageSources[0];
+                    else if (win.IM.Transforming)
+                        //update after transform end
+                        DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).AddValueChanged(win.IM, updateViewImageSource);
+                    else
+                        //update with "in" animations following the previous "out" animations
+                        updateViewImageSource(win.IM, null);
+                };
+            })));
 
-        private static void ObjectInfoChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e) {
-            var win = (ViewWindow)obj;
-            if (!win.IsLoaded)
-                //update directly without animations when window is not loaded yet (first time opening)
-                win.ViewImageSource = win.ObjectInfo.ImageSources[0];
-            else if (win.IM.Transforming)
-                //update after transform end
-                DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).AddValueChanged(win.IM, updateViewImageSource);
-            else
-                //update with "in" animations following the previous "out" animations
-                updateViewImageSource(win, null);
-        }
 
         private static void updateViewImageSource(object obj, EventArgs e) {
-            var win = (ViewWindow)obj;
-            DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).RemoveValueChanged(win.IM, updateViewImageSource);
+            DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).RemoveValueChanged(obj, updateViewImageSource);
+            var im = (DpiImage)obj;
+            var win = (ViewWindow)GetWindow(im);
             //update image
             win.ViewImageSource = win.ObjectInfo.ImageSources[0];
             //reset image position instantaneously
@@ -135,15 +139,15 @@ namespace ZipImageViewer
                     isLarge = true;
                     //for large images, use alternate animation to reduce stutter
                     var animOp = new DoubleAnimationUsingKeyFrames();
-                    animOp.KeyFrames.Add(new EasingDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100)), new CubicEase() { EasingMode = EasingMode.EaseIn }));
-                    animOp.KeyFrames.Add(new LinearDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100+20))));
-                    animOp.KeyFrames.Add(new EasingDoubleKeyFrame(1d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100*2+20)), new CubicEase() { EasingMode = EasingMode.EaseOut }));
+                    animOp.KeyFrames.Add(new EasingDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150)), new CubicEase() { EasingMode = EasingMode.EaseIn }));
+                    animOp.KeyFrames.Add(new LinearDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 + 20))));
+                    animOp.KeyFrames.Add(new EasingDoubleKeyFrame(1d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 * 3 + 20)), new CubicEase() { EasingMode = EasingMode.EaseOut }));
                     Storyboard.SetTargetProperty(animOp, new PropertyPath(nameof(Opacity)));
                     var animW = new DoubleAnimationUsingKeyFrames();
-                    animW.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Width, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100+1))));
+                    animW.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Width, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 + 1))));
                     Storyboard.SetTargetProperty(animW, new PropertyPath(nameof(Width)));
                     var animH = new DoubleAnimationUsingKeyFrames();
-                    animH.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Height, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100+1))));
+                    animH.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Height, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 + 1))));
                     Storyboard.SetTargetProperty(animH, new PropertyPath(nameof(Height)));
                     sb.Children.Add(animOp);
                     sb.Children.Add(animW);
@@ -172,9 +176,9 @@ namespace ZipImageViewer
                 if (isLarge) {
                     //for large images, move instantly when invisible
                     animX = new DoubleAnimation(transPoint.Value.X, new Duration(TimeSpan.Zero))
-                    { BeginTime = TimeSpan.FromMilliseconds(100+1) };
+                    { BeginTime = TimeSpan.FromMilliseconds(150 + 1) };
                     animY = new DoubleAnimation(transPoint.Value.Y, new Duration(TimeSpan.Zero))
-                    { BeginTime = TimeSpan.FromMilliseconds(100+1) };
+                    { BeginTime = TimeSpan.FromMilliseconds(150 + 1) };
                 }
                 else {
                     animX = new DoubleAnimation(transPoint.Value.X, new Duration(TimeSpan.FromMilliseconds(ms)))

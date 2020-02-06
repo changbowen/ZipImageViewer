@@ -13,17 +13,20 @@ namespace ZipImageViewer
     public static class ExtentionMethods
     {
         public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp, double toVal, int ms, EasingMode ease,
-            HandoffBehavior handOff = HandoffBehavior.Compose)
+            HandoffBehavior handOff = HandoffBehavior.Compose, int begin = 0, EventHandler completed = null)
         {
             var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = new CubicEase { EasingMode = ease } };
+            if (begin > 0) anim.BeginTime = TimeSpan.FromMilliseconds(begin);
+            if (completed != null) anim.Completed += completed;
             target.BeginAnimation(propdp, anim, handOff);
         }
-        public static void AnimateDoubleCubicEase(this Animatable target, DependencyProperty propdp, double toVal, int ms, EasingMode ease,
-            HandoffBehavior handOff = HandoffBehavior.Compose)
-        {
-            var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = new CubicEase { EasingMode = ease } };
-            target.BeginAnimation(propdp, anim, handOff);
-        }
+        //public static void AnimateDoubleCubicEase(this Animatable target, DependencyProperty propdp, double toVal, int ms, EasingMode ease,
+        //    HandoffBehavior handOff = HandoffBehavior.Compose, int begin = 0)
+        //{
+        //    var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = new CubicEase { EasingMode = ease } };
+        //    if (begin > 0) anim.BeginTime = TimeSpan.FromMilliseconds(begin);
+        //    target.BeginAnimation(propdp, anim, handOff);
+        //}
 
 
         public static void AnimateBool(this UIElement target, DependencyProperty propdp, bool fromVal, bool toVal, int ms,
@@ -33,13 +36,13 @@ namespace ZipImageViewer
             anim.KeyFrames.Add(new DiscreteBooleanKeyFrame(toVal, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms))));
             target.BeginAnimation(propdp, anim, handOff);
         }
-        public static void AnimateBool(this Animatable target, DependencyProperty propdp, bool fromVal, bool toVal, int ms,
-            HandoffBehavior handOff = HandoffBehavior.Compose) {
-            var anim = new BooleanAnimationUsingKeyFrames();
-            if (ms > 0) anim.KeyFrames.Add(new DiscreteBooleanKeyFrame(fromVal, KeyTime.FromTimeSpan(TimeSpan.Zero)));
-            anim.KeyFrames.Add(new DiscreteBooleanKeyFrame(toVal, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms))));
-            target.BeginAnimation(propdp, anim, handOff);
-        }
+        //public static void AnimateBool(this Animatable target, DependencyProperty propdp, bool fromVal, bool toVal, int ms,
+        //    HandoffBehavior handOff = HandoffBehavior.Compose) {
+        //    var anim = new BooleanAnimationUsingKeyFrames();
+        //    if (ms > 0) anim.KeyFrames.Add(new DiscreteBooleanKeyFrame(fromVal, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        //    anim.KeyFrames.Add(new DiscreteBooleanKeyFrame(toVal, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(ms))));
+        //    target.BeginAnimation(propdp, anim, handOff);
+        //}
 
 
         public static double RoundToMultiplesOf(this double input, double multiplesOf) {
@@ -177,7 +180,12 @@ namespace ZipImageViewer
             if ((frame.Metadata as BitmapMetadata)?.GetQuery("/app1/ifd/{ushort=274}") is ushort u)
                 orien = u;
             frame = null;
-            
+
+            //flip decodeSize according to orientation
+            if (decodeSize.Width + decodeSize.Height > 0 && orien > 4 && orien < 9)
+                decodeSize = new SizeInt(decodeSize.Height, decodeSize.Width);
+
+            //init bitmapimage
             stream.Position = 0;
             var bi = new BitmapImage();
             bi.BeginInit();
@@ -191,7 +199,7 @@ namespace ZipImageViewer
             bi.Freeze();
 
             if (orien < 2) return bi;
-
+            //apply orientation based on metadata
             var tb = new TransformedBitmap();
             tb.BeginInit();
             tb.Source = bi;
@@ -208,8 +216,7 @@ namespace ZipImageViewer
                 case 4:
                     tb.Transform = new ScaleTransform(1d, -1d);
                     break;
-                case 5:
-                    {
+                case 5: {
                         var tg = new TransformGroup();
                         tg.Children.Add(new RotateTransform(90d));
                         tg.Children.Add(new ScaleTransform(-1d, 1d));
@@ -219,8 +226,7 @@ namespace ZipImageViewer
                 case 6:
                     tb.Transform = new RotateTransform(90d);
                     break;
-                case 7:
-                    {
+                case 7: {
                         var tg = new TransformGroup();
                         tg.Children.Add(new RotateTransform(90d));
                         tg.Children.Add(new ScaleTransform(1d, -1d));

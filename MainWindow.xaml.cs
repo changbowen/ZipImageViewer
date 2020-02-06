@@ -8,12 +8,14 @@ using System.Windows.Input;
 using SevenZip;
 using Path = System.IO.Path;
 using System.ComponentModel;
+using System.Threading;
+using System.Windows.Media;
 
 namespace ZipImageViewer
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        public ObservableKeyedCollection<string, ObjectInfo> ObjectList { get; set; } =
+        public ObservableKeyedCollection<string, ObjectInfo> ObjectList { get; } =
             new ObservableKeyedCollection<string, ObjectInfo>(ii => ii.VirtualPath);
         public double ThumbWidth => PresentationSource.FromVisual(this).CompositionTarget.TransformFromDevice.M11 * Setting.ThumbnailSize.Width;
         public double ThumbHeight => PresentationSource.FromVisual(this).CompositionTarget.TransformFromDevice.M22 * Setting.ThumbnailSize.Height;
@@ -29,6 +31,14 @@ namespace ZipImageViewer
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public int ThumbChangeDelay => ObjectList.Count * 200 + App.Random.Next(2, 5) * 1000;
+
+        private static CancellationTokenSource tknSrc_LoadThumb;
+        private static readonly object lock_LoadThumb = new object();
+
+        private static readonly ImageSource fa_exclamation = FontAwesome5.ImageAwesome.CreateImageSource(
+            FontAwesome5.EFontAwesomeIcon.Solid_ExclamationCircle,
+            new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
 
         public MainWindow()
         {
@@ -37,31 +47,39 @@ namespace ZipImageViewer
 
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
         {
+            ObjectList.CollectionChanged += (o1, e1) => {
+                if (e1.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+                    SV1.ScrollToTop();
+            };
+
 #if DEBUG
-            //Topmost = true;
-            Task.Run(() => LoadPath(@"E:\Pictures\new folder.sdf\desktops.7z"));
+            Task.Run(() => LoadPath(@"E:\Pictures\new folder.sdf\SubFolders"));
 #else
             if (Helpers.OpenFolderDialog(this) is string path) Task.Run(() => LoadPath(path));
 #endif
+        }
+
+        private void MainWin_Unloaded(object sender, RoutedEventArgs e) {
 
         }
 
         private void MainWin_Drop(object sender, DragEventArgs e)
         {
-            ObjectList.Clear();
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (paths == null || paths.Length == 0) return;
-
-            Task.Run(() => {
-                LoadPath(paths[0]);
-            });
+            
+            Task.Run(() => LoadPath(paths[0]));
         }
 
         private void Callback_AddToImageList(ObjectInfo objInfo) {
-            ObjectList.Add(objInfo);
+            ObjectList.Add(new ObjectInfo(objInfo.FileSystemPath, FileFlags.Unknown));
+            //ObjectList.Add(objInfo);
         }
 
         /// <summary>
+        /// Display file system objects in the path as thumbnails, or open viewer depending on the file type and parameters.
+        /// Main open logic is set here.
+        /// Support cancellation. Used in Task.
         /// Flags are inferred from path. Not for opening image in an archive.
         /// </summary>
         internal void LoadPath(string path, ViewWindow viewWin = null) {
@@ -71,18 +89,29 @@ namespace ZipImageViewer
         /// <summary>
         /// Display file system objects in the path as thumbnails, or open viewer depending on the file type and parameters.
         /// Main open logic is set here.
+        /// Support cancellation. Used in Task.
         /// </summary>
         internal void LoadPath(ObjectInfo objInfo, ViewWindow viewWin = null) {
             //infer path type (flags)
             if (objInfo.Flags == FileFlags.Unknown)
                 objInfo.Flags = Helpers.GetPathType(new DirectoryInfo(objInfo.FileSystemPath));
-            
+
             // action based on flags
             if (objInfo.Flags.HasFlag(FileFlags.Directory)) {
                 //directory -> load thumbs
-                CurrentPath = objInfo.FileSystemPath;
-                ObjectList.Clear();
-                LoadFolder(new DirectoryInfo(objInfo.FileSystemPath));
+                try {
+                    tknSrc_LoadThumb?.Cancel();
+                    Monitor.Enter(lock_LoadThumb);
+                    tknSrc_LoadThumb = new CancellationTokenSource();
+                    CurrentPath = objInfo.FileSystemPath;
+                    ObjectList.Clear();
+                    LoadFolder(new DirectoryInfo(objInfo.FileSystemPath), tknSrc: tknSrc_LoadThumb);
+                    
+                }
+                finally {
+                    tknSrc_LoadThumb = null;
+                    Monitor.Exit(lock_LoadThumb);
+                }
             }
             else if (objInfo.Flags.HasFlag(FileFlags.Archive)) {
                 if (objInfo.Flags.HasFlag(FileFlags.Image)) {
@@ -97,11 +126,19 @@ namespace ZipImageViewer
                 }
                 else {
                     //archive itself -> extract and load thumbs
-                    CurrentPath = objInfo.FileSystemPath;
-                    ObjectList.Clear();
-                    LoadFile(objInfo.FileSystemPath, objInfo.Flags, cldInfoCb: Callback_AddToImageList);
+                    try {
+                        tknSrc_LoadThumb?.Cancel();
+                        Monitor.Enter(lock_LoadThumb);
+                        tknSrc_LoadThumb = new CancellationTokenSource();
+                        CurrentPath = objInfo.FileSystemPath;
+                        ObjectList.Clear();
+                        LoadFile(objInfo.FileSystemPath, objInfo.Flags, cldInfoCb: Callback_AddToImageList, tknSrc: tknSrc_LoadThumb);
+                    }
+                    finally {
+                        tknSrc_LoadThumb = null;
+                        Monitor.Exit(lock_LoadThumb);
+                    }
                 }
-                
             }
             else if (objInfo.Flags.HasFlag(FileFlags.Image)) {
                 //plain image file -> open viewer
@@ -117,14 +154,18 @@ namespace ZipImageViewer
         /// <summary>
         /// Load thumbnails in folder.
         /// </summary>
-        private void LoadFolder(DirectoryInfo dirInfo) {
+        private void LoadFolder(DirectoryInfo dirInfo, CancellationTokenSource tknSrc = null) {
             CurrentPath = dirInfo.FullName;
             foreach (var childInfo in dirInfo.EnumerateFileSystemInfos()) {
+                if (tknSrc?.IsCancellationRequested == true) return;
+
                 //when the child is a folder
                 if (childInfo is DirectoryInfo childDirInfo) {
                     //get the first few images
                     var thumbs = new List<FileSystemInfo>();
                     foreach (var fsInfo in childDirInfo.EnumerateFileSystemInfos()) {
+                        if (tknSrc?.IsCancellationRequested == true) return;
+
                         var fType = Helpers.GetPathType(fsInfo);
                         if (fType != FileFlags.Image) continue;
                         thumbs.Add(fsInfo);
@@ -132,10 +173,12 @@ namespace ZipImageViewer
                     }
                     //add to list
                     var objInfo = new ObjectInfo(childDirInfo.FullName, FileFlags.Directory);
+                    Callback_AddToImageList(objInfo);
                     foreach (var thumb in thumbs) {
+                        if (tknSrc?.IsCancellationRequested == true) return;
+
                         objInfo.ImageSources.Add(Helpers.GetImageSource(thumb.FullName, Setting.ThumbnailSize));
                     }
-                    Callback_AddToImageList(objInfo);
                 }
                 //when the child is a file
                 else {
@@ -145,9 +188,8 @@ namespace ZipImageViewer
                         ObjInfoCallback = Callback_AddToImageList,
                     };
                     if (options.Flags == FileFlags.Archive) options.ExtractCount = App.PreviewCount;
-                    LoadFile(options);
+                    LoadFile(options, tknSrc);
                 }
-                
             }
         }
 
@@ -161,7 +203,9 @@ namespace ZipImageViewer
         /// <param name="flags">Only checks for Image and Archive.</param>
         /// </summary>
         private void LoadFile(string filePath, FileFlags flags,
-            bool isThumb = true, string[] fileNames = null, Action<ObjectInfo> objInfoCb = null, Action<ObjectInfo> cldInfoCb = null)
+            bool isThumb = true, string[] fileNames = null,
+            Action<ObjectInfo> objInfoCb = null, Action<ObjectInfo> cldInfoCb = null,
+            CancellationTokenSource tknSrc = null)
         {
             var options = new LoadOptions(filePath) {
                 Flags = flags,
@@ -170,71 +214,78 @@ namespace ZipImageViewer
                 ObjInfoCallback = objInfoCb,
                 CldInfoCallback = cldInfoCb,
             };
-            LoadFile(options);
+            LoadFile(options, tknSrc);
         }
 
-        private void LoadFile(LoadOptions options)
+        private void LoadFile(LoadOptions options, CancellationTokenSource tknSrc = null)
         {
+            if (tknSrc?.IsCancellationRequested == true) return;
+
             //objInfo to be returned
             var objInfo = new ObjectInfo(options.FilePath, options.Flags) {
                 FileName = Path.GetFileName(options.FilePath)
             };
+            options.ObjInfoCallback?.Invoke(objInfo);
 
             //when file is an image
             if (options.Flags.HasFlag(FileFlags.Image) && !options.Flags.HasFlag(FileFlags.Archive))
                 objInfo.ImageSources.Add(Helpers.GetImageSource(options.FilePath, options.DecodeSize));
             //when file is an archive
             else if (options.Flags.HasFlag(FileFlags.Archive)) {
-                while (true)
-                {
-                    //first check if there is a match in saved passwords
-                    var pwd = Setting.MappedPasswords[options.FilePath];
-                    if (pwd != null)
-                    {
-                        //matching password found
-                        options.Password = pwd;
-                        if (ExtractZip(options, objInfo)) break;
+                for (int caseIdx = 0; caseIdx < 4; caseIdx++) {
+                    if (tknSrc?.IsCancellationRequested == true) break;
+
+                    var success = false;
+                    switch (caseIdx) {
+                        //first check if there is a match in saved passwords
+                        case 0 when Setting.MappedPasswords.TryGetValue(options.FilePath, out string pwd):
+                            options.Password = pwd;
+                            success = ExtractZip(options, objInfo, tknSrc);
+                            break;
+                        //then try no password
+                        case 1:
+                            options.Password = null;
+                            success = ExtractZip(options, objInfo, tknSrc);
+                            break;
+                        //then try all saved passwords with no filename
+                        case 2:
+                            foreach (var fp in Setting.FallbackPasswords) {
+                                options.Password = fp;
+                                success = ExtractZip(options, objInfo, tknSrc);
+                                if (success) break;
+                            }
+                            break;
+                        case 3:
+                            //if all fails mark with icon and when clicked
+                            //prompt for a generic or dedicated password then extract with it
+                            //-------------logic needed here-------------
+                            Dispatcher.Invoke(() => objInfo.ImageSources.Add(fa_exclamation));
+                            objInfo.Comments = $"Extraction failed. Bad password or not supported image formats.";
+                            break;
                     }
 
-                    //then try no password
-                    options.Password = null;
-                    if (ExtractZip(options, objInfo)) break;
-
-                    //then try all saved passwords with no filename
-                    foreach (var fp in Setting.FallbackPasswords) {
-                        options.Password = fp;
-                        if (ExtractZip(options, objInfo)) break;
-                    }
-
-                    //if all fails prompt for a generic or dedicated password
-                    //then extract with it
-                    //-------------logic needed here-------------
-
-
-                    //exit loop
-                    break;
+                    if (success) break;
                 }
             }
-
-            options.ObjInfoCallback?.Invoke(objInfo);
         }
 
         /// <summary>
         /// Returns true or false based on whether extraction succeeds.
         /// </summary>
-        private static bool ExtractZip(LoadOptions options, ObjectInfo objInfo)
+        private static bool ExtractZip(LoadOptions options, ObjectInfo objInfo, CancellationTokenSource tknSrc = null)
         {
-            using (var fs = new FileStream(options.FilePath, FileMode.Open, FileAccess.Read))
-            {
-                return ExtractZip(fs, options, objInfo);
+            if (tknSrc?.IsCancellationRequested == true) return false;
+            using (var fs = new FileStream(options.FilePath, FileMode.Open, FileAccess.Read)) {
+                return ExtractZip(fs, options, objInfo, tknSrc);
             }
         }
 
         /// <summary>
         /// Returns true or false based on whether extraction succeeds.
         /// </summary>
-        private static bool ExtractZip(Stream stream, LoadOptions options, ObjectInfo objInfo)
+        private static bool ExtractZip(Stream stream, LoadOptions options, ObjectInfo objInfo, CancellationTokenSource tknSrc = null)
         {
+            if (tknSrc?.IsCancellationRequested == true) return false;
             SevenZipExtractor ext = null;
             stream.Position = 0;
             try
@@ -248,6 +299,8 @@ namespace ZipImageViewer
                     //    objInfo.Flags |= FileFlags.Archive_OpenSelf;
 
                     for (int i = 0; i < ext.ArchiveFileData.Count; i++) {
+                        if (tknSrc?.IsCancellationRequested == true) return false;
+
                         //check if file is supported
                         var imgfile = ext.ArchiveFileData[i];
                         if (imgfile.IsDirectory || Helpers.GetPathType(imgfile.FileName) != FileFlags.Image) continue;
@@ -257,6 +310,8 @@ namespace ZipImageViewer
                         var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive) {
                             FileName = imgfile.FileName,
                         };
+                        options.CldInfoCallback?.Invoke(cldInfo);
+
                         using (var ms = new MemoryStream())
                         {
                             ext.ExtractFile(i, ms);
@@ -265,7 +320,6 @@ namespace ZipImageViewer
                             objInfo.ImageSources.Add(source);
                         }
                         extractCount++;
-                        options.CldInfoCallback?.Invoke(cldInfo);
 
                         if (options.ExtractCount > 0 && extractCount >= options.ExtractCount)
                             break;
@@ -274,12 +328,14 @@ namespace ZipImageViewer
                 //extract specified
                 else {
                     foreach (var fileName in options.FileNames) {
+                        if (tknSrc?.IsCancellationRequested == true) return false;
 #if DEBUG
                         Console.WriteLine("Extracting " + fileName);
 #endif
                         var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive) {
                             FileName = fileName,
                         };
+                        options.CldInfoCallback?.Invoke(cldInfo);
                         using (var ms = new MemoryStream())
                         {
                             ext.ExtractFile(fileName, ms);
@@ -287,12 +343,12 @@ namespace ZipImageViewer
                             cldInfo.ImageSources.Add(source);
                             objInfo.ImageSources.Add(source);
                         }
-                        options.CldInfoCallback?.Invoke(cldInfo);
                     }
                 }
 
                 //save password for the future
-                Setting.MappedPasswords[options.FilePath] = ext.Password;
+                if (ext.Password != null)
+                    Setting.MappedPasswords[options.FilePath] = ext.Password;
                 return true;
             }
             catch (Exception ex)
@@ -327,10 +383,7 @@ namespace ZipImageViewer
                     case MouseButton.Left:
                         Task.Run(() => LoadPath(objInfo));
                         break;
-                        //case MouseButton.Right:
-                        //    ObjectList.Clear();
-                        //    Task.Run(() => LoadPath(objInfo.Parent));
-                        //    break;
+
                 }
             }
         }

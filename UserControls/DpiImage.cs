@@ -39,7 +39,7 @@ namespace ZipImageViewer
             var target = parentWindow == null ? PresentationSource.FromVisual(this)?.CompositionTarget :
                                                 PresentationSource.FromVisual(parentWindow)?.CompositionTarget;
             Size size = default;
-            if (Source is BitmapImage sb)
+            if (Source is BitmapSource sb)
                 size = new Size(sb.PixelWidth, sb.PixelHeight);
             else if (Source is ImageSource si) //to handle when Source is not a BitmapImage
                 size = new Size(si.Width, si.Height);

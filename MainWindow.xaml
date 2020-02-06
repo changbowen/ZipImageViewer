@@ -7,10 +7,9 @@
         xmlns:fa="http://schemas.fontawesome.com/icons/"
         mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" Foreground="LightGray"
         Title="{Binding ElementName=MainWin, Path=CurrentPath}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
-        Loaded="MainWin_Loaded" PreviewMouseDown="MainWin_MouseDown">
+        Loaded="MainWin_Loaded" PreviewMouseDown="MainWin_MouseDown" Unloaded="MainWin_Unloaded">
     <Window.Resources>
         <CollectionViewSource x:Key="ObjectListViewSource" Source="{Binding ElementName=MainWin, Path=ObjectList}">
-            
         </CollectionViewSource>
     </Window.Resources>
     <Grid>
@@ -40,7 +39,7 @@
                 </Hyperlink>
             </TextBlock>
         </StackPanel>
-        <ScrollViewer>
+        <ScrollViewer x:Name="SV1">
             <ItemsControl x:Name="LB1" ItemsSource="{Binding Source={StaticResource ObjectListViewSource}}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
