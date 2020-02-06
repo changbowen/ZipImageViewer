@@ -6,7 +6,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media;
 using System.Threading.Tasks;
 using System.ComponentModel;
-using System.Collections.Specialized;
+using System.Linq;
 
 namespace ZipImageViewer
 {
@@ -17,53 +17,42 @@ namespace ZipImageViewer
             set { SetValue(ObjectInfoProperty, value); }
         }
         public static readonly DependencyProperty ObjectInfoProperty =
-            DependencyProperty.Register("ObjectInfo", typeof(ObjectInfo), typeof(Thumbnail), new PropertyMetadata(null, (o, e)=> {
-                if (e.NewValue == null) return;
-                var tn = (Thumbnail)o;
-                var objInfo = (ObjectInfo)e.NewValue;
-                objInfo.ImageSources.CollectionChanged += (o1, e1) => {
-                    var col = (ObservableCollection<ImageSource>)o1;
-                    switch (e1.Action) {
-                        case NotifyCollectionChangedAction.Add:
-                            if (col.Count == 1) tn.ThumbSource = col[0];
-                            break;
-                        case NotifyCollectionChangedAction.Remove:
-                            if (col.Count == 0) tn.ThumbSource = fa_meh;
-                            break;
-                        case NotifyCollectionChangedAction.Reset:
-                            tn.ThumbSource = fa_meh;
-                            break;
-                    }
-                };
-            }));
+            DependencyProperty.Register("ObjectInfo", typeof(ObjectInfo), typeof(Thumbnail), new PropertyMetadata(null));
 
-
-        private static readonly ImageSource fa_meh = FontAwesome5.ImageAwesome.CreateImageSource(
-            FontAwesome5.EFontAwesomeIcon.Solid_Meh,
-            new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
 
         //private Timer CycleTimer = new Timer() { AutoReset = false };
 
         public event PropertyChangedEventHandler PropertyChanged;
-        
-        
-        private ImageSource thumbSource = fa_meh;
-        public ImageSource ThumbSource {
-            get => thumbSource;
+
+        private int thumbIndex = -1;
+
+
+        private ImageSource thumbImageSource = App.fa_spinner;
+        public ImageSource ThumbImageSource {
+            get => thumbImageSource;
             set {
-                if (thumbSource == value) return;
+                if (thumbImageSource == value) return;
                 Dispatcher.Invoke(() => {
                     //fade out
                     IM1.AnimateDoubleCubicEase(OpacityProperty, 0d, 500, EasingMode.EaseIn,
                         completed: (o1, e1) => {
-                            thumbSource = value;
-                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbSource)));
+                            thumbImageSource = value;
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbImageSource)));
                         });
                     //fade in
                     IM1.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut, begin: 520);
                 });
             }
         }
+
+
+        //public ImageSource ThumbImageSource {
+        //    get { return (ImageSource)GetValue(ThumbImageSourceProperty); }
+        //    set { SetValue(ThumbImageSourceProperty, value); }
+        //}
+        //public static readonly DependencyProperty ThumbImageSourceProperty =
+        //    DependencyProperty.Register("ThumbImageSource", typeof(ImageSource), typeof(Thumbnail), new PropertyMetadata(fa_meh));
+
 
         public Thumbnail() {
             InitializeComponent();
@@ -75,18 +64,20 @@ namespace ZipImageViewer
 
         private void cycleImageSource() {
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
-            Console.WriteLine(ObjectInfo.FileSystemPath);
-
-            if (ObjectInfo.ImageSources.Count > 0 && ThumbSource == fa_meh)
-                ThumbSource = ObjectInfo.ImageSources[0];
-            else if (ObjectInfo.ImageSources.Count == 1 && ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
-                ThumbSource = ObjectInfo.ImageSources[0];
+            if (ObjectInfo.ImageSources == null || ObjectInfo.ImageSources.Length == 0) {
+                ThumbImageSource = App.fa_meh;
                 return;
             }
-            else if (ObjectInfo.ImageSources.Count > 0) {
-                var currentIdx = ObjectInfo.ImageSources.IndexOf(IM1.Source);
-                var nextIdx = currentIdx == ObjectInfo.ImageSources.Count - 1 ? 0 : currentIdx + 1;
-                ThumbSource = ObjectInfo.ImageSources[nextIdx];
+#if DEBUG
+            Console.WriteLine(ObjectInfo.FileSystemPath);
+#endif
+            if (ObjectInfo.ImageSources.Length == 1 && ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
+                ThumbImageSource = ObjectInfo.ImageSources[0];
+                return;
+            }
+            else if (ObjectInfo.ImageSources.Length > 0) {
+                thumbIndex = thumbIndex == ObjectInfo.ImageSources.Length - 1 ? 0 : thumbIndex + 1;
+                ThumbImageSource = ObjectInfo.ImageSources[thumbIndex];
             }
 
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
@@ -94,6 +85,16 @@ namespace ZipImageViewer
                 Thread.Sleep(App.MainWin.ThumbChangeDelay);
                 Dispatcher.Invoke(cycleImageSource);
             });
+        }
+
+        private void TN_Unloaded(object sender, RoutedEventArgs e) {
+            ThumbImageSource = null;
+            ObjectInfo.ImageSources = null;
+            ObjectInfo = null;
+            IM1.Source = null;
+            IM1.ToolTip = null;
+            IM1 = null;
+            mask = null;
         }
     }
 }

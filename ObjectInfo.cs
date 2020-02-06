@@ -1,17 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Media;
 
 namespace ZipImageViewer
 {
-    public class ObjectInfo
+    public class ObjectInfo : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+
+        private string fileName;
         /// <summary>
         /// For archives, relative path of the file inside the archive. Otherwise name of the file.
         /// </summary>
-        public string FileName { get; set; }
+        public string FileName {
+            get => fileName;
+            set {
+                if (fileName == value) return;
+                fileName = value;
+                if (PropertyChanged == null) return;
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(FileName)));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+                if (Flags.HasFlag(FileFlags.Archive))
+                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
+                if (Flags.HasFlag(FileFlags.Image) && Flags.HasFlag(FileFlags.Archive))
+                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+            }
+        }
 
         /// <summary>
         /// For archives, full path to the archive file.
@@ -20,10 +38,23 @@ namespace ZipImageViewer
         /// </summary>
         public string FileSystemPath { get; }
 
+        private FileFlags flags;
         /// <summary>
         /// Indicates the flags of the file. Affects click operations etc.
         /// </summary>
-        public FileFlags Flags { get; set; }
+        public FileFlags Flags {
+            get => flags;
+            set {
+                if (flags == value) return;
+                flags = value;
+                if (PropertyChanged == null) return;
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Flags)));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Parent)));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+            }
+        }
 
         /// <summary>
         /// A virtual path used to avoid duplicated paths in a collection for zipped files.
@@ -59,31 +90,51 @@ namespace ZipImageViewer
             }
         }
 
+        private ImageSource[] imageSources;
         /// <summary>
         /// ImageSources is used in both thumbnail display and ViewWindow.
         /// Whether it is a thumbnail depends on the decode width & height used when loading the image.
         /// </summary>
-        public ObservableCollection<ImageSource> ImageSources { get; set; } = new ObservableCollection<ImageSource>();
+        public ImageSource[] ImageSources {
+            get => imageSources;
+            set {
+                if (imageSources == value) return;
+                imageSources = value;
+                if (PropertyChanged == null) return;
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ImageSources)));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+            }
+        }
 
         public string DebugInfo {
             get {
                 return $"{nameof(FileName)}: {FileName}\r\n" +
                     $"{nameof(FileSystemPath)}: {FileSystemPath}\r\n" +
                     $"{nameof(Flags)}: {Flags.ToString()}\r\n" +
-                    $"{nameof(ImageSources)}:\r\n{string.Join("\r\n", ImageSources.Select(i => i.Width + " x " + i.Height))}\r\n" +
+                    $"{nameof(ImageSources)}:\r\n{(ImageSources == null ? null : string.Join("\r\n", ImageSources.Select(i => i.Width + " x " + i.Height)) + "\r\n")}" +
                     $"{nameof(VirtualPath)}: {VirtualPath}\r\n" +
                     $"{nameof(DisplayName)}: {DisplayName}\r\n" +
                     $"{nameof(Comments)}:\r\n{Comments}";
             }
         }
 
-        public string Comments { get; set; }
-
-
-        public ObjectInfo(string fileSystemPath, FileFlags flags) {
-            FileSystemPath = fileSystemPath;
-            Flags = flags;
+        private string comments;
+        public string Comments {
+            get => comments;
+            set {
+                if (comments == value) return;
+                comments = value;
+                if (PropertyChanged == null) return;
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Comments)));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+            }
         }
 
+
+        public ObjectInfo(string fileSystemPath, FileFlags flags = FileFlags.Unknown, ImageSource[] sources = null) {
+            FileSystemPath = fileSystemPath;
+            Flags = flags;
+            ImageSources = sources;
+        }
     }
 }

@@ -4,9 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d" 
-        Title="ViewWindow" Height="600" Width="800" WindowState="Maximized"
+        Title="{Binding ElementName=ViewWin, Path=ObjectInfo.VirtualPath, Mode=OneWay}"
+        Height="600" Width="800" WindowState="Maximized"
         MouseUp="ViewWin_MouseUp" Loaded="ViewWindow_Loaded" PreviewKeyUp="CA_PreviewKeyUp"
-        UseLayoutRounding="True" Background="#FF464646">
+        UseLayoutRounding="True" Background="#FF464646" Unloaded="ViewWin_Unloaded">
     <Window.Resources>
         <local:CenterConverter x:Key="CenterConverter"/>
     </Window.Resources>

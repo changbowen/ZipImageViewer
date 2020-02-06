@@ -1,22 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Windows.Threading;
-using static ZipImageViewer.ExtentionMethods;
 
 namespace ZipImageViewer
 {
@@ -41,22 +29,21 @@ namespace ZipImageViewer
             get { return (ObjectInfo)GetValue(ObjectInfoProperty); }
             set { SetValue(ObjectInfoProperty, value); }
         }
+        //public static readonly DependencyProperty ObjectInfoProperty =
+        //    Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(null));
         public static readonly DependencyProperty ObjectInfoProperty =
-            Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(new PropertyChangedCallback((o, e)=> {
-                if (e.NewValue == null) return;
+            Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(new PropertyChangedCallback((o, e) => {
+                if (!(e.NewValue is ObjectInfo objInfo) || objInfo.ImageSources.Length == 0) return;
                 var win = (ViewWindow)o;
-                var objInfo = (ObjectInfo)e.NewValue;
-                objInfo.ImageSources.CollectionChanged += (o1, e1) => {
-                    if (!win.IsLoaded)
-                        //update directly without animations when window is not loaded yet (first time opening)
-                        win.ViewImageSource = win.ObjectInfo.ImageSources[0];
-                    else if (win.IM.Transforming)
-                        //update after transform end
-                        DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).AddValueChanged(win.IM, updateViewImageSource);
-                    else
-                        //update with "in" animations following the previous "out" animations
-                        updateViewImageSource(win.IM, null);
-                };
+                if (!win.IsLoaded)
+                    //update directly without animations when window is not loaded yet (first time opening)
+                    win.ViewImageSource = win.ObjectInfo.ImageSources[0];
+                else if (win.IM.Transforming)
+                    //update after transform end
+                    DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).AddValueChanged(win.IM, updateViewImageSource);
+                else
+                    //update with "in" animations following the previous "out" animations
+                    updateViewImageSource(win.IM, null);
             })));
 
 
@@ -110,7 +97,7 @@ namespace ZipImageViewer
         }
 
         private void ViewWindow_Loaded(object sender, RoutedEventArgs e) {
-            scaleToCanvas(0);
+            scaleToCanvas(0); //needed for first time opening due to impossible to layout before loaded
             this.AnimateDoubleCubicEase(OpacityProperty, 1d, 100, EasingMode.EaseOut);
         }
 
@@ -329,5 +316,12 @@ namespace ZipImageViewer
             }
         }
 
+        private void ViewWin_Unloaded(object sender, RoutedEventArgs e) {
+            ViewImageSource = null;
+            ObjectInfo.ImageSources = null;
+            ObjectInfo = null;
+            IM.Source = null;
+            IM = null;
+        }
     }
 }

@@ -5,24 +5,24 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:fa="http://schemas.fontawesome.com/icons/"
              xmlns:local="clr-namespace:ZipImageViewer" UseLayoutRounding="True" SnapsToDevicePixels="True"
-             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" Loaded="TN_Loaded">
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" Loaded="TN_Loaded" Unloaded="TN_Unloaded">
     <UserControl.Resources>
         <local:FlagToImageConverter x:Key="FlagToImageConverter"/>
     </UserControl.Resources>
 
     <Grid>
         <Grid.OpacityMask>
-            <VisualBrush Visual="{Binding ElementName=mask}"/>
+            <VisualBrush Visual="{Binding ElementName=mask, Mode=OneTime}"/>
         </Grid.OpacityMask>
         <Border x:Name="mask" CornerRadius="10" Background="#FF333333"/>
         <local:DpiImage x:Name="IM1" HorizontalAlignment="Center" VerticalAlignment="Center"
-                        RenderOptions.BitmapScalingMode="HighQuality" Stretch="UniformToFill"
-                        Source="{Binding ElementName=TN, Path=ThumbSource, Mode=OneWay}"
-                        ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo}"
+                        RenderOptions.BitmapScalingMode="HighQuality" Stretch="None"
+                        Source="{Binding ElementName=TN, Path=ThumbImageSource, Mode=OneWay}"
+                        ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo, Mode=OneTime}"
                         ToolTipService.ShowDuration="20000"/>
         <!--Source="{Binding ElementName=TN, Path=ObjectInfo.ImageSources, Mode=OneWay, Converter={StaticResource ImageSourceFallbackConverter}}"-->
         <fa:ImageAwesome VerticalAlignment="Top" HorizontalAlignment="Right" Width="48" Height="48" Margin="0 20 20 0" Foreground="#AAFFFFFF"
-                         Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}}"
+                         Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}, Mode=OneTime}"
                          Effect="{StaticResource DS_Below}">
         </fa:ImageAwesome>
     </Grid>
