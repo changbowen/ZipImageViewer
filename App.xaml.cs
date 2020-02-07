@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace ZipImageViewer
 {
@@ -26,6 +27,10 @@ namespace ZipImageViewer
         internal static ImageSource fa_meh;
         internal static ImageSource fa_spinner;
         internal static ImageSource fa_exclamation;
+
+        public static CubicEase CE_EaseIn => (CubicEase)Current.FindResource("CE_EaseIn");
+        public static CubicEase CE_EaseOut => (CubicEase)Current.FindResource("CE_EaseOut");
+        public static CubicEase CE_EaseInOut => (CubicEase)Current.FindResource("CE_EaseInOut");
 
 
         private void App_Startup(object sender, StartupEventArgs e) {

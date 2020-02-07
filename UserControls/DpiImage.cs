@@ -36,24 +36,40 @@ namespace ZipImageViewer
 
 
         /// <summary>
-        /// Caches the last CompositionTarget.TransformFromDevice value.
+        /// Same as the last CompositionTarget.TransformFromDevice value.
         /// </summary>
-        public Matrix TransformFromDevice { get; set; }
+        public Point DpiMultiplier { get; set; }
 
         private void UpdateRealSize() {
-            var parentWindow = Window.GetWindow(this);
-            var target = parentWindow == null ? PresentationSource.FromVisual(this)?.CompositionTarget :
-                                                PresentationSource.FromVisual(parentWindow)?.CompositionTarget;
             Size size = default;
             if (Source is BitmapSource sb)
                 size = new Size(sb.PixelWidth, sb.PixelHeight);
             else if (Source is ImageSource si) //to handle when Source is not a BitmapImage
                 size = new Size(si.Width, si.Height);
-            if (size == default || target == null) return;
-            
-            TransformFromDevice = target.TransformFromDevice;
-            RealSize = new Size(Math.Round(size.Width * TransformFromDevice.M11, 3),
-                                Math.Round(size.Height * TransformFromDevice.M22, 3));
+            if (size == default) return;
+
+            //old .Net implementation (v4.6.1)
+            //var parentWindow = Window.GetWindow(this);
+            //var target = parentWindow == null ? PresentationSource.FromVisual(this)?.CompositionTarget :
+            //PresentationSource.FromVisual(parentWindow)?.CompositionTarget;
+            //DpiMultiplier = target.TransformFromDevice;
+            //RealSize = new Size(Math.Round(size.Width * DpiMultiplier.M11, 3),
+            //                    Math.Round(size.Height * DpiMultiplier.M22, 3));
+
+            //new .Net implementation (v4.6.2+)
+            var dpiScale = VisualTreeHelper.GetDpi(this);
+            DpiMultiplier = new Point(1d / dpiScale.DpiScaleX, 1d / dpiScale.DpiScaleY);
+            RealSize = new Size(Math.Round(size.Width * DpiMultiplier.X, 3),
+                                Math.Round(size.Height * DpiMultiplier.Y, 3));
+
+#if DEBUG
+            Console.WriteLine($"{nameof(RealSize)}: {RealSize}; Scale: {DpiMultiplier.X};");
+#endif
+        }
+
+        protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
+            UpdateRealSize();
+            base.OnDpiChanged(oldDpi, newDpi);
         }
 
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
@@ -67,6 +83,7 @@ namespace ZipImageViewer
         }
 
         protected override Size MeasureOverride(Size constraint) {
+            if (RealSize == default) UpdateRealSize();
             return MeasureArrangeHelper(constraint);
         }
 
@@ -76,15 +93,14 @@ namespace ZipImageViewer
 
         private Size MeasureArrangeHelper(Size constraint) {
             if (Source == null) return new Size();
-            if (RealSize == default) UpdateRealSize();
-
-            //get computed scale factor
+            
+            //get computed scale factor (source from Reference Source)
             Size scaleFactor = Helpers.ComputeScaleFactor(constraint, RealSize, Stretch, StretchDirection);
 
             // Returns our minimum size & sets DesiredSize.
             return new Size(RealSize.Width * scaleFactor.Width, RealSize.Height * scaleFactor.Height);
 
-
+            //old implementation without support for StretchDirection
             //Size size = default;
             //switch (Stretch) {
             //    case Stretch.Fill:

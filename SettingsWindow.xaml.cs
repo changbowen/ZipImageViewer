@@ -12,7 +12,8 @@ namespace ZipImageViewer
 {
     public partial class SettingsWindow : Window
     {
-        public SettingsWindow() {
+        public SettingsWindow(Window owner) {
+            Owner = owner;
             InitializeComponent();
         }
 
