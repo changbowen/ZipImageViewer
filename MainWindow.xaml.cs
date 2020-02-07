@@ -19,8 +19,13 @@ namespace ZipImageViewer
         public ObservableKeyedCollection<string, ObjectInfo> ObjectList { get; } =
             new ObservableKeyedCollection<string, ObjectInfo>(o => o.VirtualPath);
 
-        public Size ThumbSize_Wpf => new Size(PresentationSource.FromVisual(this).CompositionTarget.TransformFromDevice.M11 * Setting.ThumbnailSize.Width,
-                                              PresentationSource.FromVisual(this).CompositionTarget.TransformFromDevice.M22 * Setting.ThumbnailSize.Height);
+        public Size ThumbSize_Wpf {
+            get {
+                var dpi = VisualTreeHelper.GetDpi(this);
+                return new Size(Setting.ThumbnailSize.Width / dpi.DpiScaleX, Setting.ThumbnailSize.Height / dpi.DpiScaleY);
+            }
+        }
+        
 
         private string currentPath = "";
         public string CurrentPath {
@@ -62,6 +67,10 @@ namespace ZipImageViewer
         private void MainWin_Unloaded(object sender, RoutedEventArgs e) {
             tknSrc_LoadThumb?.Cancel();
             ObjectList.Clear();
+        }
+
+        private void MainWin_DpiChanged(object sender, DpiChangedEventArgs e) {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbSize_Wpf)));
         }
 
         private void MainWin_Drop(object sender, DragEventArgs e)
@@ -120,7 +129,7 @@ namespace ZipImageViewer
                         isThumb: false,
                         fileNames: new[] { objInfo.FileName },
                         cldInfoCb: oi => Dispatcher.Invoke(() => {
-                            if (viewWin == null) new ViewWindow() { ObjectInfo = oi }.Show();
+                            if (viewWin == null) new ViewWindow(this) { ObjectInfo = oi }.Show();
                             else viewWin.ObjectInfo = oi;
                         }));
                 }
@@ -145,7 +154,7 @@ namespace ZipImageViewer
                 LoadFile(objInfo.FileSystemPath, objInfo.Flags,
                     isThumb: false,
                     objInfoCb: oi => Dispatcher.Invoke(() => {
-                        if (viewWin == null) new ViewWindow() { ObjectInfo = oi }.Show();
+                        if (viewWin == null) new ViewWindow(this) { ObjectInfo = oi }.Show();
                         else viewWin.ObjectInfo = oi;
                     }));
             }
@@ -409,7 +418,8 @@ namespace ZipImageViewer
         }
 
         private void Show_Options(object sender, RoutedEventArgs e) {
-            new SettingsWindow().ShowDialog();
+            new SettingsWindow(this).ShowDialog();
         }
+
     }
 }

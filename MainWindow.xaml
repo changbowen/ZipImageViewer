@@ -7,7 +7,7 @@
         xmlns:fa="http://schemas.fontawesome.com/icons/"
         mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" Foreground="LightGray"
         Title="{Binding ElementName=MainWin, Path=CurrentPath}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
-        Loaded="MainWin_Loaded" PreviewMouseDown="MainWin_MouseDown" Unloaded="MainWin_Unloaded">
+        Loaded="MainWin_Loaded" PreviewMouseDown="MainWin_MouseDown" Unloaded="MainWin_Unloaded" DpiChanged="MainWin_DpiChanged">
     <Window.Resources>
         <!--<CollectionViewSource x:Key="ObjectListViewSource"
                               Source="{Binding ElementName=MainWin, Path=ObjectList, Mode=OneTime}">
@@ -52,8 +52,8 @@
                         <StackPanel x:Name="SP1" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" UseLayoutRounding="True">
                             <local:Thumbnail x:Name="TN1" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1"
                                              ObjectInfo="{Binding}" Margin="10"
-                                             Width="{Binding ElementName=MainWin, Path=ThumbSize_Wpf.Width, Mode=OneTime}"
-                                             Height="{Binding ElementName=MainWin, Path=ThumbSize_Wpf.Height, Mode=OneTime}"
+                                             Width="{Binding ElementName=MainWin, Path=ThumbSize_Wpf.Width, Mode=OneWay}"
+                                             Height="{Binding ElementName=MainWin, Path=ThumbSize_Wpf.Width, Mode=OneWay}"
                                              MouseUp="TN1_MouseUp">
                                 <local:Thumbnail.Style>
                                     <Style TargetType="local:Thumbnail" BasedOn="{StaticResource S_RiseOnHover}"/>

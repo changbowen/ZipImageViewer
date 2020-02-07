@@ -90,8 +90,9 @@ namespace ZipImageViewer
         //public Point CenterPoint =>
         //    new Point((CA.ActualWidth - IM.ActualWidth) / 2, (CA.ActualHeight - IM.ActualHeight) / 2);
 
-        public ViewWindow()
+        public ViewWindow(Window owner)
         {
+            Owner = owner;
             Opacity = 0d;
             InitializeComponent();
         }
@@ -111,54 +112,55 @@ namespace ZipImageViewer
             var isLarge = false;
             //process resizing
             if (newSize.HasValue) {
-                var rW = newSize.Value.Width / IM.Width;
-                var rH = newSize.Value.Height / IM.Height;
-                var showScale = true;
                 if (double.IsNaN(IM.Width) || double.IsNaN(IM.Height)) {
                     //skip animation when Width or Height is not set
                     IM.Width = newSize.Value.Width;
                     IM.Height = newSize.Value.Height;
-                    showScale = false;
-                }
-                else if ((!altAnim.HasValue || altAnim.Value) &&
-                         (rW < 0.5d || 2d < rW) && (rH < 0.5d || 2d < rH))
-                {
-                    isLarge = true;
-                    //for large images, use alternate animation to reduce stutter
-                    var animOp = new DoubleAnimationUsingKeyFrames();
-                    animOp.KeyFrames.Add(new EasingDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150)), new CubicEase() { EasingMode = EasingMode.EaseIn }));
-                    animOp.KeyFrames.Add(new LinearDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 + 20))));
-                    animOp.KeyFrames.Add(new EasingDoubleKeyFrame(1d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 * 3 + 20)), new CubicEase() { EasingMode = EasingMode.EaseOut }));
-                    Storyboard.SetTargetProperty(animOp, new PropertyPath(nameof(Opacity)));
-                    var animW = new DoubleAnimationUsingKeyFrames();
-                    animW.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Width, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 + 1))));
-                    Storyboard.SetTargetProperty(animW, new PropertyPath(nameof(Width)));
-                    var animH = new DoubleAnimationUsingKeyFrames();
-                    animH.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Height, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 + 1))));
-                    Storyboard.SetTargetProperty(animH, new PropertyPath(nameof(Height)));
-                    sb.Children.Add(animOp);
-                    sb.Children.Add(animW);
-                    sb.Children.Add(animH);
                 }
                 else {
-                    //for normal sized images
-                    var animW = new DoubleAnimation(newSize.Value.Width, new Duration(TimeSpan.FromMilliseconds(ms)))
-                    { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-                    var animH = new DoubleAnimation(newSize.Value.Height, new Duration(TimeSpan.FromMilliseconds(ms)))
-                    { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-                    Storyboard.SetTargetProperty(animW, new PropertyPath(nameof(Width)));
-                    Storyboard.SetTargetProperty(animH, new PropertyPath(nameof(Height)));
-                    sb.Children.Add(animW);
-                    sb.Children.Add(animH);
-                }
-                if (showScale) {
-                    sb.Completed += (o1, e1) => BM.Show($"{IM.Scale:P1}");
+                    var rW = newSize.Value.Width / IM.Width;
+                    var rH = newSize.Value.Height / IM.Height;
+                    if (ms > 0 &&
+                        (!altAnim.HasValue || altAnim.Value) &&
+                        (rW < 0.5d || 2d < rW) && (rH < 0.5d || 2d < rH)) {
+                        isLarge = true;
+                        //for large images, use alternate animation to reduce stutter
+                        var animOp = new DoubleAnimationUsingKeyFrames();
+                        animOp.KeyFrames.Add(new EasingDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150)), App.CE_EaseIn));
+                        animOp.KeyFrames.Add(new LinearDoubleKeyFrame(0.01d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 + 20))));
+                        animOp.KeyFrames.Add(new EasingDoubleKeyFrame(1d, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 * 3 + 20)), App.CE_EaseOut));
+                        Storyboard.SetTargetProperty(animOp, new PropertyPath(nameof(Opacity)));
+                        var animW = new DoubleAnimationUsingKeyFrames();
+                        animW.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Width, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 + 1))));
+                        Storyboard.SetTargetProperty(animW, new PropertyPath(nameof(Width)));
+                        var animH = new DoubleAnimationUsingKeyFrames();
+                        animH.KeyFrames.Add(new DiscreteDoubleKeyFrame(newSize.Value.Height, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150 + 1))));
+                        Storyboard.SetTargetProperty(animH, new PropertyPath(nameof(Height)));
+                        sb.Children.Add(animOp);
+                        sb.Children.Add(animW);
+                        sb.Children.Add(animH);
+                    }
+                    else {
+                        //for normal sized images
+                        var animW = new DoubleAnimation(newSize.Value.Width, new Duration(TimeSpan.FromMilliseconds(ms)));
+                        var animH = new DoubleAnimation(newSize.Value.Height, new Duration(TimeSpan.FromMilliseconds(ms)));
+                        if (ms > 0) {
+                            animW.EasingFunction = App.CE_EaseOut;
+                            animH.EasingFunction = App.CE_EaseOut;
+                        }
+                        Storyboard.SetTargetProperty(animW, new PropertyPath(nameof(Width)));
+                        Storyboard.SetTargetProperty(animH, new PropertyPath(nameof(Height)));
+                        sb.Children.Add(animW);
+                        sb.Children.Add(animH);
+                    }
+                    if (ms > 0)
+                        sb.Completed += (o1, e1) => BM.Show($"{newSize.Value.Width / IM.RealSize.Width:P1}");
                 }
             }
             //process moving
             if (transPoint.HasValue) {
-                transPoint = new Point(transPoint.Value.X.RoundToMultiplesOf(IM.TransformFromDevice.M11),
-                                       transPoint.Value.Y.RoundToMultiplesOf(IM.TransformFromDevice.M22));
+                transPoint = new Point(transPoint.Value.X.RoundToMultiplesOf(IM.DpiMultiplier.X),
+                                       transPoint.Value.Y.RoundToMultiplesOf(IM.DpiMultiplier.Y));
                 DoubleAnimation animX, animY;
                 if (isLarge) {
                     //for large images, move instantly when invisible
@@ -168,10 +170,12 @@ namespace ZipImageViewer
                     { BeginTime = TimeSpan.FromMilliseconds(150 + 1) };
                 }
                 else {
-                    animX = new DoubleAnimation(transPoint.Value.X, new Duration(TimeSpan.FromMilliseconds(ms)))
-                    { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-                    animY = new DoubleAnimation(transPoint.Value.Y, new Duration(TimeSpan.FromMilliseconds(ms)))
-                    { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+                    animX = new DoubleAnimation(transPoint.Value.X, new Duration(TimeSpan.FromMilliseconds(ms)));
+                    animY = new DoubleAnimation(transPoint.Value.Y, new Duration(TimeSpan.FromMilliseconds(ms)));
+                    if (ms > 0) {
+                        animX.EasingFunction = App.CE_EaseOut;
+                        animY.EasingFunction = App.CE_EaseOut;
+                    }
                 }
                 Storyboard.SetTargetProperty(animX, new PropertyPath("RenderTransform.Children[0].X"));
                 Storyboard.SetTargetProperty(animY, new PropertyPath("RenderTransform.Children[0].Y"));
@@ -194,7 +198,7 @@ namespace ZipImageViewer
         }
 
         private void scaleToCanvas(int ms = 400) {
-            var uniSize = Helpers.UniformScale(IM.RealSize, new Size(CA.ActualWidth, CA.ActualHeight));
+            var uniSize = Helpers.UniformScaleDown(IM.RealSize, new Size(CA.ActualWidth, CA.ActualHeight));
             transform(ms, uniSize, new Point(0d, 0d));
         }
 
@@ -227,8 +231,8 @@ namespace ZipImageViewer
         private void CA_PreviewMouseMove(object sender, MouseEventArgs e) {
             if (!CA.IsMouseCaptured) return;
             transform(50, transPoint:
-                new Point(existingTranslate.OffsetX + ((e.GetPosition(CA).X - mouseCapturePoint.X) * IM.Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M11),
-                          existingTranslate.OffsetY + ((e.GetPosition(CA).Y - mouseCapturePoint.Y) * IM.Scale * 2d).RoundToMultiplesOf(IM.TransformFromDevice.M22)));
+                new Point(existingTranslate.OffsetX + ((e.GetPosition(CA).X - mouseCapturePoint.X) * IM.Scale * 2d).RoundToMultiplesOf(IM.DpiMultiplier.X),
+                          existingTranslate.OffsetY + ((e.GetPosition(CA).Y - mouseCapturePoint.Y) * IM.Scale * 2d).RoundToMultiplesOf(IM.DpiMultiplier.Y)));
         }
 
         private void CA_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)

@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
-        Background="#FF333333" Foreground="LightGray" SizeToContent="WidthAndHeight"
+        Background="#FF333333" Foreground="LightGray" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner"
         Title="Settings" UseLayoutRounding="True" Loaded="SettingsWin_Loaded">
     <local:PaddedGrid Padding="4" VerticalChildrenAlignment="Stretch" HorizontalChildrenAlignment="Stretch">
         <local:PaddedGrid.ColumnDefinitions>

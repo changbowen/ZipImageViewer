@@ -16,7 +16,18 @@ namespace ZipImageViewer
         public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp, double toVal, int ms, EasingMode ease,
             HandoffBehavior handOff = HandoffBehavior.Compose, int begin = 0, EventHandler completed = null)
         {
-            var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = new CubicEase { EasingMode = ease } };
+            var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)));
+            switch (ease) {
+                case EasingMode.EaseIn:
+                    anim.EasingFunction = App.CE_EaseIn;
+                    break;
+                case EasingMode.EaseOut:
+                    anim.EasingFunction = App.CE_EaseOut;
+                    break;
+                case EasingMode.EaseInOut:
+                    anim.EasingFunction = App.CE_EaseInOut;
+                    break;
+            }
             if (begin > 0) anim.BeginTime = TimeSpan.FromMilliseconds(begin);
             if (completed != null) anim.Completed += completed;
             target.BeginAnimation(propdp, anim, handOff);
@@ -265,9 +276,9 @@ namespace ZipImageViewer
         }
 
         /// <summary>
-        /// Same behavior as Image.Stretch = Uniform. Useful for custom Measure and Arrange passes, as well as scaling on Canvas.
+        /// Uniform scale origional size to target size. Does not scale up.
         /// </summary>
-        public static Size UniformScale(Size original, Size target) {
+        public static Size UniformScaleDown(Size original, Size target) {
             if (original.Width == 0d || original.Height == 0d) return original;
 
             var ratio = original.Width / original.Height;
