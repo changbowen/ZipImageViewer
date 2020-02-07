@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,6 +47,19 @@ namespace ZipImageViewer
             fa_exclamation = FontAwesome5.ImageAwesome.CreateImageSource(
                 FontAwesome5.EFontAwesomeIcon.Solid_ExclamationCircle,
                 new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
+
+            //create thumb database if not exist
+            using (var con = new SQLiteConnection("Data Source=thumb_database.sqlite;Version=3;")) {
+                con.Open();
+                using (var cmd = new SQLiteCommand(con)) {
+                    cmd.CommandText =
+@"create table if not exists [thumbs_data] (
+[fileSystemPath] TEXT NOT NULL,
+[thumbData] BLOB)";
+                    cmd.ExecuteNonQuery();
+                }
+                con.Close();
+            }
 
             //show mainwindow
             MainWin = new MainWindow();

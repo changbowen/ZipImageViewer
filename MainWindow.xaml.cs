@@ -301,65 +301,59 @@ namespace ZipImageViewer
                 ext = options.Password == null ? new SevenZipExtractor(options.FilePath) :
                                                  new SevenZipExtractor(options.FilePath, options.Password);
                 var sources = new List<ImageSource>();
+                var isThumb = options.DecodeSize.Width + options.DecodeSize.Height > 0;
 
-                //extract all or by ExtractCount
-                if (options.FileNames == null || options.FileNames.Length == 0) {
-                    int extractCount = 0;
-                    //if (options.ExtractCount > 0)
-                    //    objInfo.Flags |= FileFlags.Archive_OpenSelf;
+                //get files in archive to extract
+                int[] toExtract;
+                if (options.FileNames?.Length > 0) {
+                    if (options.FileNames.Length == 1)
+                        toExtract = new[] { ext.ArchiveFileData.First(d => d.FileName == options.FileNames[0]).Index };
+                    else
+                        toExtract = ext.ArchiveFileData
+                            .Where(d => options.FileNames.Contains(d.FileName))
+                            .Select(d => d.Index).ToArray();
+                }
+                else
+                    toExtract = ext.ArchiveFileData
+                        .Where(d => !d.IsDirectory && Helpers.GetPathType(d.FileName) == FileFlags.Image)
+                        .Select(d => d.Index).ToArray();
 
-                    for (int i = 0; i < ext.ArchiveFileData.Count; i++) {
-                        if (tknSrc?.IsCancellationRequested == true) return false;
+                int extractCount = 0;
+                foreach (var i in toExtract) {
+                    if (tknSrc?.IsCancellationRequested == true) return false;
 
-                        //check if file is supported
-                        var imgfile = ext.ArchiveFileData[i];
-                        if (imgfile.IsDirectory || Helpers.GetPathType(imgfile.FileName) != FileFlags.Image) continue;
+                    //check if file is supported
+                    var fileName = ext.ArchiveFileData[i].FileName;
 #if DEBUG
-                        Console.WriteLine("Extracting " + imgfile.FileName);
+                    Console.WriteLine("Extracting " + fileName);
 #endif
-                        ImageSource source;
-                        using (var ms = new MemoryStream())
-                        {
+                    ImageSource source = null;
+                    var thumbPath = Path.Combine(options.FilePath, fileName);
+                    if (isThumb) {
+                        //try load from cache
+                        source = Helpers.GetFromThumbDB(thumbPath);
+                    }
+                    if (source == null) {
+                        //load from disk
+                        using (var ms = new MemoryStream()) {
                             ext.ExtractFile(i, ms);
                             source = Helpers.GetImageSource(ms, options.DecodeSize);
                         }
-                        sources.Add(source);
-                        extractCount++;
-
-                        if (tknSrc?.IsCancellationRequested == true) return false;
-                        if (options.CldInfoCallback != null) {
-                            var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive, new[] { source })
-                            { FileName = imgfile.FileName };
-                            options.CldInfoCallback.Invoke(cldInfo);
-                        }
-
-                        if (options.ExtractCount > 0 && extractCount >= options.ExtractCount)
-                            break;
+                        if (isThumb && source != null) Helpers.AddToThumbDB(source, thumbPath);
                     }
-                }
-                //extract specified
-                else {
-                    foreach (var fileName in options.FileNames) {
-                        if (tknSrc?.IsCancellationRequested == true) return false;
-#if DEBUG
-                        Console.WriteLine("Extracting " + fileName);
-#endif
-                        ImageSource source;
-                        using (var ms = new MemoryStream())
-                        {
-                            ext.ExtractFile(fileName, ms);
-                            source = Helpers.GetImageSource(ms, options.DecodeSize);
-                        }
-                        sources.Add(source);
+                    sources.Add(source);
+                    extractCount++;
 
-                        if (tknSrc?.IsCancellationRequested == true) return false;
-                        if (options.CldInfoCallback != null) {
-                            var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive, new[] { source })
-                            { FileName = fileName };
-                            options.CldInfoCallback.Invoke(cldInfo);
-                        }
+                    if (tknSrc?.IsCancellationRequested == true) return false;
+                    if (options.CldInfoCallback != null) {
+                        var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive, new[] { source }) { FileName = fileName };
+                        options.CldInfoCallback.Invoke(cldInfo);
                     }
+
+                    if (options.ExtractCount > 0 && extractCount >= options.ExtractCount)
+                        break;
                 }
+
                 //update objInfo
                 objInfo.ImageSources = sources.ToArray();
 

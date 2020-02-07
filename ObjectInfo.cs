@@ -63,7 +63,7 @@ namespace ZipImageViewer
         public string VirtualPath {
             get {
                 if (Flags.HasFlag(FileFlags.Archive))
-                    return FileSystemPath + @"\" + FileName;
+                    return Path.Combine(FileSystemPath, FileName);
                 return FileSystemPath;
             }
         }
