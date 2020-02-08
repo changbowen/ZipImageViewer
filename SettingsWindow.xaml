@@ -32,7 +32,7 @@
                     <Setter Property="FontSize" Value="10"/>
                     <Setter Property="FontStyle" Value="Italic"/>
                     <Setter Property="Padding" Value="0 2"/>
-                    <Setter Property="MaxWidth" Value="240"/>
+                    <Setter Property="MaxWidth" Value="300"/>
                     <Setter Property="TextWrapping" Value="Wrap"/>
                 </Style.Setters>
             </Style>
@@ -44,13 +44,15 @@
 
         <TextBlock  Grid.Row="1" Grid.Column="0" Text="Thumbnail Size"/>
         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-            <TextBox x:Name="TB_ThumbWidth" MinWidth="32"/>
+            <TextBox x:Name="TB_ThumbWidth" MinWidth="32" VerticalAlignment="Top"/>
             <TextBlock Text=" x "/>
-            <TextBox x:Name="TB_ThumbHeight" MinWidth="32"/>
+            <TextBox x:Name="TB_ThumbHeight" MinWidth="32" VerticalAlignment="Top"/>
         </StackPanel>
         <TextBlock  Grid.Row="1" Grid.Column="2" Style="{StaticResource TipTextStyle}">
             <TextBlock.Inlines>
-                <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.
+                <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.<LineBreak/>
+                The size ensures a minimum width or height (depending on the aspect ratio of the image) for decoding images to provide a higher thumbnail quality.<LineBreak/>
+                <Bold>Changing this value invalidates the entire thumbnail cache.</Bold>
             </TextBlock.Inlines>
         </TextBlock>
 

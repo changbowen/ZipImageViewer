@@ -111,6 +111,7 @@
     </ApplicationDefinition>
     <Compile Include="ObjectInfo.cs" />
     <Compile Include="Setting.cs" />
+    <Compile Include="SQLiteHelper.cs" />
     <Compile Include="UserControls\BubbleMessage.xaml.cs">
       <DependentUpon>BubbleMessage.xaml</DependentUpon>
     </Compile>

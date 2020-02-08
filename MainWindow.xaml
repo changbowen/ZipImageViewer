@@ -53,7 +53,7 @@
                             <local:Thumbnail x:Name="TN1" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1"
                                              ObjectInfo="{Binding}" Margin="10"
                                              Width="{Binding ElementName=MainWin, Path=ThumbSize_Wpf.Width, Mode=OneWay}"
-                                             Height="{Binding ElementName=MainWin, Path=ThumbSize_Wpf.Width, Mode=OneWay}"
+                                             Height="{Binding ElementName=MainWin, Path=ThumbSize_Wpf.Height, Mode=OneWay}"
                                              MouseUp="TN1_MouseUp">
                                 <local:Thumbnail.Style>
                                     <Style TargetType="local:Thumbnail" BasedOn="{StaticResource S_RiseOnHover}"/>

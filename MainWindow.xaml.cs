@@ -331,7 +331,7 @@ namespace ZipImageViewer
                     var thumbPath = Path.Combine(options.FilePath, fileName);
                     if (isThumb) {
                         //try load from cache
-                        source = Helpers.GetFromThumbDB(thumbPath);
+                        source = SQLiteHelper.GetFromThumbDB(thumbPath, options.DecodeSize);
                     }
                     if (source == null) {
                         //load from disk
@@ -339,7 +339,7 @@ namespace ZipImageViewer
                             ext.ExtractFile(i, ms);
                             source = Helpers.GetImageSource(ms, options.DecodeSize);
                         }
-                        if (isThumb && source != null) Helpers.AddToThumbDB(source, thumbPath);
+                        if (isThumb && source != null) SQLiteHelper.AddToThumbDB(source, thumbPath, options.DecodeSize);
                     }
                     sources.Add(source);
                     extractCount++;

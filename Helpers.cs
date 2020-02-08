@@ -183,7 +183,7 @@ namespace ZipImageViewer
             var isThumb = decodeSize.Width + decodeSize.Height > 0;
             if (isThumb) {
                 //try load from cache when decodeSize is non-zero
-                bs = GetFromThumbDB(path);
+                bs = SQLiteHelper.GetFromThumbDB(path, decodeSize);
                 if (bs != null) return bs;
             }
 
@@ -191,7 +191,7 @@ namespace ZipImageViewer
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
                 bs = GetImageSource(fs, decodeSize);
             }
-            if (isThumb && bs != null) AddToThumbDB(bs, path);
+            if (isThumb && bs != null) SQLiteHelper.AddToThumbDB(bs, path, decodeSize);
 
             return bs;
         }
@@ -263,69 +263,6 @@ namespace ZipImageViewer
             tb.EndInit();
             tb.Freeze();
             return tb;
-        }
-
-
-        internal static int AddToThumbDB(ImageSource source, string path) {
-            if (!(source is BitmapSource bs)) throw new NotSupportedException();
-
-            byte[] png;
-            var enc = new PngBitmapEncoder();
-            enc.Frames.Add(BitmapFrame.Create(bs));
-            using (var ms = new MemoryStream()) {
-                enc.Save(ms);
-                png = ms.ToArray();
-            }
-            if (png.Length == 0) return 0;
-
-            int affected = 0;
-            using (var con = new SQLiteConnection("Data Source=thumb_database.sqlite;Version=3;")) {
-                con.Open();
-                using (var cmd = new SQLiteCommand(con)) {
-                    //remove existing
-                    cmd.CommandText = @"delete from thumbs_data where fileSystemPath = @path";
-                    cmd.Parameters.Add(new SQLiteParameter("@path", System.Data.DbType.String) { Value = path });
-                    cmd.ExecuteNonQuery();
-                    //insert new
-                    cmd.CommandText = @"insert into thumbs_data (fileSystemPath, thumbData) values (@path, @png)";
-                    cmd.Parameters.Add(new SQLiteParameter("@png", System.Data.DbType.Binary) { Value = png });
-                    affected += cmd.ExecuteNonQuery();
-                }
-                con.Close();
-            }
-            return affected;
-        }
-
-        /// <summary>
-        /// Returns null if thumb is not available in DB.
-        /// </summary>
-        internal static BitmapSource GetFromThumbDB(string path) {
-            byte[] png = null;
-            using (var con = new SQLiteConnection("Data Source=thumb_database.sqlite;Version=3;")) {
-                con.Open();
-                using (var cmd = new SQLiteCommand(con)) {
-                    cmd.CommandText = $"select thumbData from thumbs_data where fileSystemPath = @path";
-                    cmd.Parameters.Add(new SQLiteParameter("@path", System.Data.DbType.String) { Value = path });
-                    using (var reader = cmd.ExecuteReader()) {
-                        while (reader.Read()) {
-                            png = (byte[])reader["thumbData"];
-                            break;
-                        }
-                    }
-                }
-                con.Close();
-            }
-
-            if (png == null || png.Length == 0) return null;
-            using (var ms = new MemoryStream(png)) {
-                var bi = new BitmapImage();
-                bi.BeginInit();
-                bi.CacheOption = BitmapCacheOption.OnLoad;
-                bi.StreamSource = ms;
-                bi.EndInit();
-                bi.Freeze();
-                return bi;
-            }
         }
 
 

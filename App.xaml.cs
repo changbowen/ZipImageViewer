@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using static ZipImageViewer.SQLiteHelper;
 
 namespace ZipImageViewer
 {
-    public partial class App : Application {
+    public partial class App : Application
+    {
         public static MainWindow MainWin;
         public static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] {
@@ -48,19 +50,42 @@ namespace ZipImageViewer
                 FontAwesome5.EFontAwesomeIcon.Solid_ExclamationCircle,
                 new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
 
-            //create thumb database if not exist
-            using (var con = new SQLiteConnection("Data Source=thumb_database.sqlite;Version=3;")) {
-                con.Open();
-                using (var cmd = new SQLiteCommand(con)) {
-                    cmd.CommandText =
-@"create table if not exists [thumbs_data] (
-[fileSystemPath] TEXT NOT NULL,
-[thumbData] BLOB)";
-                    cmd.ExecuteNonQuery();
-                }
-                con.Close();
-            }
+            //create thumb database if not exist and update columns if not correct
+            var aff1 = Execute(
+                con => {
+                    using (var cmd = new SQLiteCommand(con)) {
+                        cmd.CommandText =
+$@"create table if not exists [{Table_ThumbsData.Name}] (
+[{Table_ThumbsData.Col_VirtualPath}] TEXT NOT NULL,
+[{Table_ThumbsData.Col_DecodeWidth}] INTEGER,
+[{Table_ThumbsData.Col_DecodeHeight}] INTEGER,
+[{Table_ThumbsData.Col_ThumbData}] BLOB)";
+                        return cmd.ExecuteNonQuery();
+                    }
+                });
 
+            if (aff1.Length > 0 && aff1[0].Equals(-1)) {//-1 means table already exists
+                Execute(con => {
+                    using (var cmd = new SQLiteCommand(con)) {
+                        cmd.CommandText =
+$@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_VirtualPath}] TEXT NOT NULL;";
+                        try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
+
+                        cmd.CommandText =
+$@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_DecodeWidth}] INTEGER;";
+                        try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
+
+                        cmd.CommandText =
+$@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_DecodeHeight}] INTEGER;";
+                        try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
+
+                        cmd.CommandText =
+$@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_ThumbData}] BLOB;";
+                        try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
+                    }
+                    return 0;
+                });
+            }
             //show mainwindow
             MainWin = new MainWindow();
             MainWin.Show();
