@@ -64,7 +64,8 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
                     }
                 });
 
-            if (aff1.Length > 0 && aff1[0].Equals(-1)) {//-1 means table already exists
+            //add columns if not exist
+            if (aff1[0] != null && aff1[0].Equals(-1)) {//-1 means table already exists
                 Execute(con => {
                     using (var cmd = new SQLiteCommand(con)) {
                         cmd.CommandText =
@@ -86,14 +87,44 @@ $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_Thumb
                     return 0;
                 });
             }
+
             //show mainwindow
-            MainWin = new MainWindow();
+            MainWin = new MainWindow() {
+                Width = Setting.LastWindowSize.Width,
+                Height = Setting.LastWindowSize.Height,
+            };
             MainWin.Show();
         }
 
 
         private void App_Exit(object sender, ExitEventArgs e) {
             Setting.SaveConfigToFile();
+
+            //db maintenance
+            Execute(con => {
+                using (var cmd = new SQLiteCommand(con)) {
+                    //chech size limit on thumb db
+                    if (Setting.ThumbDbSize < 10240) {
+                        long pageCount, pageSize;
+                        while (true) {
+                            cmd.CommandText = $@"pragma page_count";
+                            using (var reader = cmd.ExecuteReader()) { reader.Read(); pageCount = (long)reader["page_count"]; }
+                            cmd.CommandText = $@"pragma page_size";
+                            using (var reader = cmd.ExecuteReader()) { reader.Read(); pageSize = (long)reader["page_size"]; }
+                            if (pageCount * pageSize < Setting.ThumbDbSize * 1048576) break;
+
+                            cmd.CommandText = $@"delete from {Table_ThumbsData.Name} where rowid in
+(select rowid from {Table_ThumbsData.Name} order by rowid asc limit 50)";
+                            cmd.ExecuteNonQuery();
+                            cmd.CommandText = "vacuum";
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    return 0;
+                }
+            });
+
         }
     }
 }

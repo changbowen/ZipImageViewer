@@ -64,6 +64,7 @@ namespace ZipImageViewer
 
         private void cycleImageSource() {
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
+
             if (ObjectInfo.ImageSources == null || ObjectInfo.ImageSources.Length == 0) {
                 ThumbImageSource = App.fa_meh;
                 return;
@@ -82,8 +83,11 @@ namespace ZipImageViewer
 
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
             Task.Run(() => {
-                Thread.Sleep(App.MainWin.ThumbChangeDelay);
-                Dispatcher.Invoke(cycleImageSource);
+                try {
+                    Thread.Sleep(App.MainWin.ThumbChangeDelay);
+                    Dispatcher.Invoke(cycleImageSource);
+                }
+                catch (TaskCanceledException) { }
             });
         }
 

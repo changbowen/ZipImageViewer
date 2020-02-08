@@ -5,13 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer"
         xmlns:fa="http://schemas.fontawesome.com/icons/"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" Foreground="LightGray"
         Title="{Binding ElementName=MainWin, Path=CurrentPath}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
         Loaded="MainWin_Loaded" PreviewMouseDown="MainWin_MouseDown" Unloaded="MainWin_Unloaded" DpiChanged="MainWin_DpiChanged">
     <Window.Resources>
-        <!--<CollectionViewSource x:Key="ObjectListViewSource"
+        <CollectionViewSource x:Key="ObjectListViewSource"
                               Source="{Binding ElementName=MainWin, Path=ObjectList, Mode=OneTime}">
-        </CollectionViewSource>-->
+        </CollectionViewSource>
     </Window.Resources>
     <Grid>
         <StackPanel HorizontalAlignment="Right" Panel.ZIndex="10000" Margin="0 10 20 0">
@@ -41,7 +42,7 @@
             </TextBlock>
         </StackPanel>
         <ScrollViewer x:Name="SV1">
-            <ItemsControl x:Name="LB1" ItemsSource="{Binding ElementName=MainWin, Path=ObjectList, Mode=OneTime}">
+            <ItemsControl x:Name="LB1" ItemsSource="{Binding Source={StaticResource ObjectListViewSource}, Mode=OneTime}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <WrapPanel Width="{Binding ElementName=LB1, Path=ActualWidth, Mode=OneWay}"/>

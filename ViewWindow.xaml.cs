@@ -154,7 +154,7 @@ namespace ZipImageViewer
                         sb.Children.Add(animH);
                     }
                     if (ms > 0)
-                        sb.Completed += (o1, e1) => BM.Show($"{newSize.Value.Width / IM.RealSize.Width:P1}");
+                        BM.Show($"{newSize.Value.Width / IM.RealSize.Width:P1}");
                 }
             }
             //process moving

@@ -56,9 +56,33 @@
             </TextBlock.Inlines>
         </TextBlock>
 
-        <TextBlock  Grid.Row="2" Grid.Column="0" Text="Saved Passwords"/>
-        <TextBox    Grid.Row="2" Grid.Column="1" x:Name="TB_SavedPasswords" AcceptsReturn="True" Height="170" VerticalScrollBarVisibility="Auto"/>
+        <TextBlock  Grid.Row="2" Grid.Column="0" Text="Thumbnail Database Size"/>
+        <DockPanel  Grid.Row="2" Grid.Column="1">
+            <Slider x:Name="SL_ThumbDbSize" Value="2" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"/>
+            <TextBlock HorizontalAlignment="Center">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Text" Value="{Binding ElementName=SL_ThumbDbSize, Path=Value, Mode=OneWay, StringFormat='\{0:#,0.0} GB'}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=SL_ThumbDbSize, Path=Value, Mode=OneWay}" Value="10">
+                                <Setter Property="Text" Value="Unlimited"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </DockPanel>
         <TextBlock  Grid.Row="2" Grid.Column="2" Style="{StaticResource TipTextStyle}">
+            <TextBlock.Inlines>
+                Maximum size limit of the thumbnail database.<LineBreak/>
+                Setting it to Unlimited removes the limit on the application level.<LineBreak/>
+                The database file is located at the same folder as the application executable.
+            </TextBlock.Inlines>
+        </TextBlock>
+
+        <TextBlock  Grid.Row="3" Grid.Column="0" Text="Saved Passwords"/>
+        <TextBox    Grid.Row="3" Grid.Column="1" x:Name="TB_SavedPasswords" AcceptsReturn="True" Height="170" VerticalScrollBarVisibility="Auto"/>
+        <TextBlock  Grid.Row="3" Grid.Column="2" Style="{StaticResource TipTextStyle}">
             <TextBlock.Inlines>
                 Saved passwords for zipped files.<LineBreak/>
                 One on each line with the below formats:<LineBreak/>
@@ -70,15 +94,15 @@
             </TextBlock.Inlines>
         </TextBlock>
 
-        <TextBlock  Grid.Row="3" Grid.Column="0" Text="Transition Animation"/>
-        <StackPanel Grid.Row="3" Grid.Column="1">
+        <TextBlock  Grid.Row="4" Grid.Column="0" Text="Transition Animation"/>
+        <StackPanel Grid.Row="4" Grid.Column="1">
             <ComboBox x:Name="CB_ViewerTransition"/>
             <DockPanel Margin="0 4 0 0">
                 <TextBlock Text="Speed" VerticalAlignment="Center"/>
                 <ComboBox x:Name="CB_AnimSpeed" Margin="10 0 0 0" MinWidth="32"/>
             </DockPanel>
         </StackPanel>
-        <TextBlock  Grid.Row="3" Grid.Column="2" Style="{StaticResource TipTextStyle}">
+        <TextBlock  Grid.Row="4" Grid.Column="2" Style="{StaticResource TipTextStyle}">
             <TextBlock.Inlines>
                 The transition animation used in the viewer.<LineBreak/>
                 Speed affects the length of time the animations are played.

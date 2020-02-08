@@ -18,11 +18,11 @@
         <local:DpiImage x:Name="IM1" HorizontalAlignment="Center" VerticalAlignment="Center"
                         RenderOptions.BitmapScalingMode="HighQuality" Stretch="None"
                         Source="{Binding ElementName=TN, Path=ThumbImageSource, Mode=OneWay}"
-                        ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo, Mode=OneTime}"
+                        ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo, Mode=OneWay}"
                         ToolTipService.ShowDuration="20000"/>
         <!--Source="{Binding ElementName=TN, Path=ObjectInfo.ImageSources, Mode=OneWay, Converter={StaticResource ImageSourceFallbackConverter}}"-->
         <fa:ImageAwesome VerticalAlignment="Top" HorizontalAlignment="Right" Width="48" Height="48" Margin="0 20 20 0" Foreground="#AAFFFFFF"
-                         Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}, Mode=OneTime}"
+                         Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}, Mode=OneWay}"
                          Effect="{StaticResource DS_Below}">
         </fa:ImageAwesome>
     </Grid>

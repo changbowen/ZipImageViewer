@@ -7,6 +7,7 @@ using System.Windows;
 using IniParser;
 using IniParser.Model;
 using SevenZip;
+using SizeInt = System.Drawing.Size;
 
 namespace ZipImageViewer
 {
@@ -15,13 +16,16 @@ namespace ZipImageViewer
         public enum Transition { None, Random, ZoomFadeBlur, Fade, HorizontalSwipe }
         public enum TransitionSpeed { Fast, Medium, Slow }
 
-        public static IniData iniData;
         public static string SevenZipDllPath = @"C:\Program Files\7-Zip\7z.dll";
-        public static System.Drawing.Size ThumbnailSize { get; set; } = new System.Drawing.Size(300, 200);
-        public static string[] FallbackPasswords;
-        public static Dictionary<string, string> MappedPasswords;
+        public static SizeInt ThumbnailSize = new SizeInt(300, 200);
         public static Transition ViewerTransition = Transition.ZoomFadeBlur;
         public static TransitionSpeed ViewerTransitionSpeed = TransitionSpeed.Fast;
+        public static int ThumbDbSize = 2048;
+        public static Size LastWindowSize = new Size(1200, 640);
+        public static string LastPath = "";
+
+        public static string[] FallbackPasswords;
+        public static Dictionary<string, string> MappedPasswords;
 
 
         public static void LoadConfigFromFile(string path = "config.ini") {
@@ -32,21 +36,15 @@ namespace ZipImageViewer
             }
             
             //parse config file
-            iniData = new FileIniDataParser().ReadFile(path, System.Text.Encoding.UTF8);
-            //parse dll path
-            SevenZipDllPath = iniData["App Config"][nameof(SevenZipDllPath)];
-            //parse thumb size
-            var thumbsize = iniData["App Config"][nameof(ThumbnailSize)]?.Split('x', '*', ',');
-            if (thumbsize?.Length == 2)
-                ThumbnailSize = new System.Drawing.Size(int.Parse(thumbsize[0]), int.Parse(thumbsize[1]));
-            //parse transition
-            var viewerTrans = iniData["App Config"][nameof(ViewerTransition)];
-            if (viewerTrans != null && !Enum.TryParse(viewerTrans, out ViewerTransition))
-                ViewerTransition = Transition.ZoomFadeBlur; //default value
-            //parse transition speed
-            var viewerTransSpd = iniData["App Config"][nameof(ViewerTransitionSpeed)];
-            if (viewerTransSpd != null && !Enum.TryParse(viewerTransSpd, out ViewerTransitionSpeed))
-                ViewerTransitionSpeed = TransitionSpeed.Fast; //default value
+            var iniData = new FileIniDataParser().ReadFile(path, System.Text.Encoding.UTF8);
+
+            ParseConfig(iniData, nameof(SevenZipDllPath),       ref SevenZipDllPath);
+            ParseConfig(iniData, nameof(ThumbnailSize),         ref ThumbnailSize);
+            ParseConfig(iniData, nameof(ThumbDbSize),           ref ThumbDbSize);
+            ParseConfig(iniData, nameof(ViewerTransition),      ref ViewerTransition);
+            ParseConfig(iniData, nameof(ViewerTransitionSpeed), ref ViewerTransitionSpeed);
+            ParseConfig(iniData, nameof(LastWindowSize),        ref LastWindowSize);
+            ParseConfig(iniData, nameof(LastPath),              ref LastPath);
 
             //parse saved passwords at last
             FallbackPasswords = iniData["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => d.KeyName).ToArray();
@@ -60,13 +58,52 @@ namespace ZipImageViewer
 
         }
 
+        private static void ParseConfig<T>(IniData iniData, string key, ref T output) {
+            var value = iniData["App Config"][key];
+            if (value == null) return;
+            object result = null;
+            switch (output) {
+                case string _:
+                    result = value;
+                    break;
+                case SizeInt _:
+                    int iW, iH;
+                    var split1 = value.Split('x', '*', ',');
+                    if (split1.Length == 2 && int.TryParse(split1[0], out iW) && int.TryParse(split1[1], out iH))
+                        result = new SizeInt(iW, iH);
+                    break;
+                case Size _:
+                    double dW, dH;
+                    var split2 = value.Split('x', '*', ',');
+                    if (split2.Length == 2 && double.TryParse(split2[0], out dW) && double.TryParse(split2[1], out dH))
+                        result = new Size(dW, dH);
+                    break;
+                case int _:
+                    int i;
+                    if (int.TryParse(value, out i)) result = i;
+                    break;
+                case Transition _:
+                    Transition t;
+                    if (Enum.TryParse(value, out t)) result = t;
+                    break;
+                case TransitionSpeed _:
+                    TransitionSpeed ts;
+                    if (Enum.TryParse(value, out ts)) result = ts;
+                    break;
+            }
+            output = (T)result;
+        }
+
         public static void SaveConfigToFile(string path = "config.ini", string serPwds = null) {
             File.WriteAllText(path, $@"
 [App Config]
 {nameof(SevenZipDllPath)}={SevenZipDllPath}
 {nameof(ThumbnailSize)}={ThumbnailSize.Width}x{ThumbnailSize.Height}
+{nameof(ThumbDbSize)}={ThumbDbSize}
 {nameof(ViewerTransition)}={ViewerTransition}
 {nameof(ViewerTransitionSpeed)}={ViewerTransitionSpeed}
+{nameof(LastWindowSize)}={LastWindowSize.Width}x{LastWindowSize.Height}
+{nameof(LastPath)}={LastPath}
 
 ;Saved passwords for zipped files. Supported formats:
 ;password=

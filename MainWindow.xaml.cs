@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Windows.Media;
 using System.Linq;
+using System.Windows.Data;
 
 namespace ZipImageViewer
 {
@@ -52,21 +53,32 @@ namespace ZipImageViewer
 
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
         {
+            var view = (ListCollectionView)((CollectionViewSource)FindResource("ObjectListViewSource")).View;
+            view.CustomSort = new Helpers.FolderSorter();
+
             ObjectList.CollectionChanged += (o1, e1) => {
                 if (e1.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
                     SV1.ScrollToTop();
             };
 
-#if DEBUG
-            Task.Run(() => LoadPath(@"E:\Pictures\zipviewertest"));
-#else
-            if (Helpers.OpenFolderDialog(this) is string path) Task.Run(() => LoadPath(path));
-#endif
+            if (Setting.LastPath?.Length > 0)
+                Task.Run(() => LoadPath(Setting.LastPath));
+            else if (Helpers.OpenFolderDialog(this) is string path)
+                Task.Run(() => LoadPath(path));
         }
 
         private void MainWin_Unloaded(object sender, RoutedEventArgs e) {
             tknSrc_LoadThumb?.Cancel();
             ObjectList.Clear();
+
+            Setting.LastPath = CurrentPath;
+            if (WindowState != WindowState.Maximized) {
+                Setting.LastWindowSize.Width = Width;
+                Setting.LastWindowSize.Height = Height;
+            }
+
+            if (Application.Current.Windows.Count == 0)
+                Application.Current.Shutdown();
         }
 
         private void MainWin_DpiChanged(object sender, DpiChangedEventArgs e) {

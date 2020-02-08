@@ -10,6 +10,7 @@ using SizeInt = System.Drawing.Size;
 using System.Windows.Controls;
 using System.Data.SQLite;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace ZipImageViewer
 {
@@ -72,39 +73,16 @@ namespace ZipImageViewer
         }
     }
 
-/*    public class DpiDecorator : Decorator
-    {
-        public DpiDecorator()
-        {
-            Loaded += OnLoaded;
-            Unloaded -= OnLoaded;
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            if (null != e) e.Handled = true;
-
-            var source = PresentationSource.FromVisual(this);
-            if (source?.CompositionTarget != null)
-            {
-                var matrix = source.CompositionTarget.TransformToDevice;
-                var dpiTransform = new ScaleTransform(1 / matrix.M11, 1 / matrix.M22);
-                if (dpiTransform.CanFreeze) dpiTransform.Freeze();
-                LayoutTransform = dpiTransform;
-            }
-        }
-    }*/
-
     [Flags]
     public enum FileFlags {
         Unknown = 0,
         Image = 1,
         Archive = 2,
         Directory = 4,
-        /// <summary>
-        /// Indicate to load all archive content instead of a single image
-        /// </summary>
-        Archive_OpenSelf = 8
+        ///// <summary>
+        ///// Indicate to load all archive content instead of a single image
+        ///// </summary>
+        //Archive_OpenSelf = 8
     }
 
 
@@ -149,15 +127,13 @@ namespace ZipImageViewer
         //}
     }
 
-    public class Helpers
-    {
+    public class Helpers {
         /// <summary>
         /// Get file type based on extension. Assumes fileName points to a file.
         /// </summary>
         /// <param name="fileName">A full or not full path of the file.</param>
         /// <returns></returns>
-        public static FileFlags GetPathType(string fileName)
-        {
+        public static FileFlags GetPathType(string fileName) {
             var ft = FileFlags.Unknown;
             var extension = Path.GetExtension(fileName)?.TrimStart('.').ToLowerInvariant();
             if (extension?.Length == 0) return ft;
@@ -177,8 +153,7 @@ namespace ZipImageViewer
             return FileFlags.Unknown;
         }
 
-        public static BitmapSource GetImageSource(string path, SizeInt decodeSize)
-        {
+        public static BitmapSource GetImageSource(string path, SizeInt decodeSize) {
             BitmapSource bs = null;
             var isThumb = decodeSize.Width + decodeSize.Height > 0;
             if (isThumb) {
@@ -196,8 +171,7 @@ namespace ZipImageViewer
             return bs;
         }
 
-        public static BitmapSource GetImageSource(Stream stream, SizeInt decodeSize)
-        {
+        public static BitmapSource GetImageSource(Stream stream, SizeInt decodeSize) {
             stream.Position = 0;
             var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
             var frameSize = new Size(frame.PixelWidth, frame.PixelHeight);
@@ -228,8 +202,7 @@ namespace ZipImageViewer
             var tb = new TransformedBitmap();
             tb.BeginInit();
             tb.Source = bi;
-            switch (orien)
-            {
+            switch (orien) {
                 case 2:
                     tb.Transform = new ScaleTransform(-1d, 1d);
                     break;
@@ -311,7 +284,7 @@ namespace ZipImageViewer
         /// </summary>
         public static Size UniformScaleToFill(Size original, Size target) {
             if (original.Width == 0d || original.Height == 0d) return original;
-            
+
             var ratio = original.Width / original.Height;
             if (ratio > 1d) {//wide image
                 if (!double.IsInfinity(target.Height) && original.Height > target.Height) {
@@ -390,6 +363,21 @@ namespace ZipImageViewer
             }
             //Return this as a size now
             return new Size(scaleX, scaleY);
+        }
+
+        public class FolderSorter : IComparer
+        {
+            public int Compare(object x, object y) {
+                var ox = (ObjectInfo)x;
+                var oy = (ObjectInfo)y;
+
+                if (ox.Flags != oy.Flags)
+                    return oy.Flags - ox.Flags;
+                else {
+                    return string.Compare(ox.VirtualPath, oy.VirtualPath);
+                }
+                
+            }
         }
 
 
