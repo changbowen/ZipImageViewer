@@ -22,6 +22,6 @@ Microsoft Photos 2019.19071.17920.0 unable to handle proper rendering after zoom
 (Come on Microsoft... Is that the best you can do? And please let me scale to 100% by double clicking!)
 <img src="https://github.com/changbowen/Misc/raw/master/ZipImageViewer/chroma_photos.png"/>
 
-ZipImageViewer is always true to the image.
+ZipImageViewer is always true to the image at 100% scaling.
 <img src="https://github.com/changbowen/Misc/raw/master/ZipImageViewer/chroma_zipimageviewer.png"/>
 
