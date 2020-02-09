@@ -17,6 +17,7 @@ Need .Net Framework 4.7.2 (included in Windows 10 April 2018 Update)
 ## Screenshots
 **Be sure to scale the page properly to see the difference.**
 **For example if your display is set to 125% scaling, you need to scale the webpage to 80%.**
+**And this is actually a chroma test image so you also want to use RGB instead of YCbCr color format on your monitor.**
 
 Microsoft Photos 2019.19071.17920.0 unable to handle proper rendering after zooming and panning.
 (Come on Microsoft... Is that the best you can do? And please let me scale to 100% by double clicking!)
