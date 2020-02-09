@@ -4,12 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
-        Background="#FF333333" Foreground="LightGray" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner"
+        Width="800" Height="600"
+        Background="#FF333333" Foreground="LightGray" WindowStartupLocation="CenterOwner"
         Title="Settings" UseLayoutRounding="True" Loaded="SettingsWin_Loaded">
     <local:PaddedGrid Padding="4" VerticalChildrenAlignment="Stretch" HorizontalChildrenAlignment="Stretch">
         <local:PaddedGrid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="Auto"/>
         </local:PaddedGrid.ColumnDefinitions>
         <local:PaddedGrid.RowDefinitions>
@@ -17,13 +18,14 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="2*"/>
             <RowDefinition Height="Auto"/>
         </local:PaddedGrid.RowDefinitions>
         <local:PaddedGrid.Resources>
             <Style TargetType="TextBox">
                 <Style.Setters>
-                    <Setter Property="MinWidth" Value="200"/>
+                    <Setter Property="MinWidth" Value="300"/>
                     <Setter Property="MaxWidth" Value="500"/>
                 </Style.Setters>
             </Style>
@@ -38,10 +40,13 @@
             </Style>
         </local:PaddedGrid.Resources>
 
+        
         <TextBlock  Grid.Row="0" Grid.Column="0" Text="7-Zip Dll Path"/>
-        <TextBox    Grid.Row="0" Grid.Column="1" x:Name="TB_7zDllPath"/>
+        <TextBox    Grid.Row="0" Grid.Column="1"
+                    Text="{Binding Source={x:Static local:App.Setting}, Path=SevenZipDllPath}"/>
         <TextBlock  Grid.Row="0" Grid.Column="2" Style="{StaticResource TipTextStyle}" Text="The path to 7z.dll on the PC."/>
 
+        
         <TextBlock  Grid.Row="1" Grid.Column="0" Text="Thumbnail Size"/>
         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
             <TextBox x:Name="TB_ThumbWidth" MinWidth="32" VerticalAlignment="Top"/>
@@ -56,6 +61,7 @@
             </TextBlock.Inlines>
         </TextBlock>
 
+        
         <TextBlock  Grid.Row="2" Grid.Column="0" Text="Thumbnail Database Size"/>
         <DockPanel  Grid.Row="2" Grid.Column="1">
             <Slider x:Name="SL_ThumbDbSize" Value="2" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"/>
@@ -80,9 +86,28 @@
             </TextBlock.Inlines>
         </TextBlock>
 
-        <TextBlock  Grid.Row="3" Grid.Column="0" Text="Saved Passwords"/>
-        <TextBox    Grid.Row="3" Grid.Column="1" x:Name="TB_SavedPasswords" AcceptsReturn="True" Height="170" VerticalScrollBarVisibility="Auto"/>
-        <TextBlock  Grid.Row="3" Grid.Column="2" Style="{StaticResource TipTextStyle}">
+        
+        <TextBlock  Grid.Row="4" Grid.Column="0" Text="Saved Passwords"/>
+        <TabControl Grid.Row="4" Grid.Column="1">
+            <TabItem Header="Fallback Passwords">
+                <DataGrid AutoGenerateColumns="False"
+                          ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=FallbackPasswords}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Password" Binding="{Binding}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem Header="Mapped Passwords">
+                <DataGrid AutoGenerateColumns="False"
+                          ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=MappedPasswords}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Password" Binding="{Binding Value}"/>
+                        <DataGridTextColumn Header="File Path" Binding="{Binding Key}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+        <TextBlock  Grid.Row="4" Grid.Column="2" Style="{StaticResource TipTextStyle}">
             <TextBlock.Inlines>
                 Saved passwords for zipped files.<LineBreak/>
                 One on each line with the below formats:<LineBreak/>
@@ -94,18 +119,35 @@
             </TextBlock.Inlines>
         </TextBlock>
 
-        <TextBlock  Grid.Row="4" Grid.Column="0" Text="Transition Animation"/>
-        <StackPanel Grid.Row="4" Grid.Column="1">
+        
+        <TextBlock  Grid.Row="3" Grid.Column="0" Text="Transition Animation"/>
+        <StackPanel Grid.Row="3" Grid.Column="1">
             <ComboBox x:Name="CB_ViewerTransition"/>
             <DockPanel Margin="0 4 0 0">
                 <TextBlock Text="Speed" VerticalAlignment="Center"/>
                 <ComboBox x:Name="CB_AnimSpeed" Margin="10 0 0 0" MinWidth="32"/>
             </DockPanel>
         </StackPanel>
-        <TextBlock  Grid.Row="4" Grid.Column="2" Style="{StaticResource TipTextStyle}">
+        <TextBlock  Grid.Row="3" Grid.Column="2" Style="{StaticResource TipTextStyle}">
             <TextBlock.Inlines>
                 The transition animation used in the viewer.<LineBreak/>
                 Speed affects the length of time the animations are played.
+            </TextBlock.Inlines>
+        </TextBlock>
+
+        
+        <TextBlock  Grid.Row="5" Grid.Column="0" Text="Custom Commands"/>
+        <DataGrid   Grid.Row="5" Grid.Column="1" AutoGenerateColumns="False"
+                    ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=CustomCommands}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Path" Binding="{Binding Item1}"/>
+                <DataGridTextColumn Header="Arguments" Binding="{Binding Item2}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <TextBlock  Grid.Row="5" Grid.Column="2" Style="{StaticResource TipTextStyle}">
+            <TextBlock.Inlines>
+                Commands used in right-click menu. One in each line.<LineBreak/>
+                <Bold>%file%</Bold> - Path to the current file.
             </TextBlock.Inlines>
         </TextBlock>
 

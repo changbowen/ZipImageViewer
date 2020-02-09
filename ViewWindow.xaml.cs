@@ -8,12 +8,31 @@ using System.Windows.Media.Animation;
 
 namespace ZipImageViewer
 {
-    public struct TransParam
-    {
-        public double Double1 { get; set; }
-        public double Double2 { get; set; }
-        public Duration Duration1 { get; set; }
-        
+    public class TransParam : DependencyObject {
+        public double Double1 {
+            get { return (double)GetValue(Double1Property); }
+            set { SetValue(Double1Property, value); }
+        }
+        public static readonly DependencyProperty Double1Property =
+            DependencyProperty.Register("Double1", typeof(double), typeof(TransParam));
+
+
+        public double Double2 {
+            get { return (double)GetValue(Double2Property); }
+            set { SetValue(Double2Property, value); }
+        }
+        public static readonly DependencyProperty Double2Property =
+            DependencyProperty.Register("Double2", typeof(double), typeof(TransParam));
+
+
+        public Duration Duration1 {
+            get { return (Duration)GetValue(Duration1Property); }
+            set { SetValue(Duration1Property, value); }
+        }
+        public static readonly DependencyProperty Duration1Property =
+            DependencyProperty.Register("Duration1", typeof(Duration), typeof(TransParam));
+
+
         /// <param name="dur1">Value in milliseconds for Duration1.</param>
         public TransParam(double dbl1 = default, double dbl2 = default, int dur1 = default) {
             Double1 = dbl1;
@@ -22,8 +41,11 @@ namespace ZipImageViewer
         }
     }
 
+
     public partial class ViewWindow : Window, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public ObjectInfo ObjectInfo
         {
             get { return (ObjectInfo)GetValue(ObjectInfoProperty); }
@@ -69,21 +91,13 @@ namespace ZipImageViewer
             DependencyProperty.Register("ViewImageSource", typeof(ImageSource), typeof(ViewWindow), new PropertyMetadata(null));
 
 
-        private Tuple<TransParam, TransParam> transParams;
-        /// <summary>
-        /// Item1 is used in "out" animations (before changing ImageSource).
-        /// Item2 is used in "in" animations (after changing ImageSource).
-        /// </summary>
-        public Tuple<TransParam, TransParam> TransParams {
-            get => transParams;
-            set {
-                transParams = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TransParams)));
-            }
+        public ObservablePair<TransParam, TransParam> TransParams {
+            get { return (ObservablePair<TransParam, TransParam>)GetValue(TransParamsProperty); }
+            set { SetValue(TransParamsProperty, value); }
         }
+        public static readonly DependencyProperty TransParamsProperty =
+            DependencyProperty.Register("TransParams", typeof(ObservablePair<TransParam, TransParam>), typeof(ViewWindow));
 
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         private Setting.Transition LastTransition = Setting.Transition.None;
 
@@ -283,20 +297,20 @@ namespace ZipImageViewer
                         }
                         switch (LastTransition) {
                             case Setting.Transition.ZoomFadeBlur:
-                                TransParams = new Tuple<TransParam, TransParam>(
+                                TransParams = new ObservablePair<TransParam, TransParam>(
                                     new TransParam(1 - 0.05 * increment, dur1: 200 * multi),
                                     new TransParam(dur1: 500 * multi));
                                 break;
 
                             case Setting.Transition.Fade:
-                                TransParams = new Tuple<TransParam, TransParam>(
+                                TransParams = new ObservablePair<TransParam, TransParam>(
                                     new TransParam(dur1: 200 * multi),
                                     new TransParam(dur1: 500 * multi));
                                 break;
 
                             case Setting.Transition.HorizontalSwipe:
                                 //bound to From, To and Duration respectively
-                                TransParams = new Tuple<TransParam, TransParam>(
+                                TransParams = new ObservablePair<TransParam, TransParam>(
                                     new TransParam(0d, (IM_TT.X - IM.Width / 2d) * increment, 400 * multi),
                                     new TransParam(IM.Width / 2d * increment, 0d, 500 * multi));
                                 break;

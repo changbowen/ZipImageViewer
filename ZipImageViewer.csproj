@@ -109,16 +109,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ObjectInfo.cs" />
-    <Compile Include="Setting.cs" />
-    <Compile Include="SQLiteHelper.cs" />
+    <Compile Include="Helpers\ObjectInfo.cs" />
+    <Compile Include="Helpers\Setting.cs" />
+    <Compile Include="Helpers\SQLiteHelper.cs" />
     <Compile Include="UserControls\BubbleMessage.xaml.cs">
       <DependentUpon>BubbleMessage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Converters.cs" />
+    <Compile Include="Helpers\Converters.cs" />
     <Compile Include="UserControls\DpiImage.cs" />
-    <Compile Include="Helpers.cs" />
-    <Compile Include="UserControls\ObservableKeyedCollection.cs" />
+    <Compile Include="Helpers\Helpers.cs" />
+    <Compile Include="Helpers\ObservableClasses.cs" />
     <Compile Include="UserControls\PaddedGrid.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
@@ -178,6 +178,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include=".editorconfig" />
     <None Include="app.manifest">
       <SubType>Designer</SubType>
     </None>

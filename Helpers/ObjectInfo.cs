@@ -11,7 +11,6 @@ namespace ZipImageViewer
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-
         private string fileName;
         /// <summary>
         /// For archives, relative path of the file inside the archive. Otherwise name of the file.
@@ -131,10 +130,10 @@ namespace ZipImageViewer
         }
 
 
-        public ObjectInfo(string fileSystemPath, FileFlags flags = FileFlags.Unknown, ImageSource[] sources = null) {
-            FileSystemPath = fileSystemPath;
-            Flags = flags;
-            ImageSources = sources;
+        public ObjectInfo(string fsPath, FileFlags flag = FileFlags.Unknown, ImageSource[] sources = null) {
+            FileSystemPath = fsPath;
+            flags = flag;
+            imageSources = sources;
         }
     }
 }

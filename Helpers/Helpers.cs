@@ -11,6 +11,7 @@ using System.Windows.Controls;
 using System.Data.SQLite;
 using System.Collections.Generic;
 using System.Collections;
+using System.Diagnostics;
 
 namespace ZipImageViewer
 {
@@ -390,5 +391,10 @@ namespace ZipImageViewer
             return cofd.ShowDialog(owner) == CommonFileDialogResult.Ok ? cofd.FileName : null;
         }
 
+        public static void Run(string path, string args) {
+            var info = new ProcessStartInfo(path, args);
+            info.WorkingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            Process.Start(path, args);
+        }
     }
 }

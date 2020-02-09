@@ -35,6 +35,7 @@ namespace ZipImageViewer
         public static CubicEase CE_EaseOut => (CubicEase)Current.FindResource("CE_EaseOut");
         public static CubicEase CE_EaseInOut => (CubicEase)Current.FindResource("CE_EaseInOut");
 
+        public static Setting Setting { get; } = new Setting();
 
         private void App_Startup(object sender, StartupEventArgs e) {
             Setting.LoadConfigFromFile();

@@ -17,16 +17,16 @@ namespace ZipImageViewer
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public ObservableKeyedCollection<string, ObjectInfo> ObjectList { get; } =
             new ObservableKeyedCollection<string, ObjectInfo>(o => o.VirtualPath);
 
-        public Size ThumbSize_Wpf {
-            get {
-                var dpi = VisualTreeHelper.GetDpi(this);
-                return new Size(Setting.ThumbnailSize.Width / dpi.DpiScaleX, Setting.ThumbnailSize.Height / dpi.DpiScaleY);
-            }
-        }
-        
+
+        private DpiScale DpiScale;
+        public double ThumbRealWidth => Setting.ThumbnailSize.Width / DpiScale.DpiScaleX;
+        public double ThumbRealHeight => Setting.ThumbnailSize.Height / DpiScale.DpiScaleY;
+
 
         private string currentPath = "";
         public string CurrentPath {
@@ -37,8 +37,6 @@ namespace ZipImageViewer
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentPath)));
             }
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public int ThumbChangeDelay => ObjectList.Count(oi => oi.ImageSources?.Length > 1) * 200 + App.Random.Next(2, 5) * 1000;
 
@@ -51,8 +49,13 @@ namespace ZipImageViewer
             InitializeComponent();
         }
 
+        #region MainWindow Event Handlers
+
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
         {
+            DpiScale = VisualTreeHelper.GetDpi(this);
+            Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
+
             var view = (ListCollectionView)((CollectionViewSource)FindResource("ObjectListViewSource")).View;
             view.CustomSort = new Helpers.FolderSorter();
 
@@ -67,14 +70,22 @@ namespace ZipImageViewer
                 Task.Run(() => LoadPath(path));
         }
 
+        private void Setting_StaticPropertyChanged(object sender, PropertyChangedEventArgs e) {
+            if (e.PropertyName != nameof(Setting.ThumbnailSize) ||
+                PropertyChanged == null) return;
+            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealWidth)));
+            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealHeight)));
+        }
+
         private void MainWin_Unloaded(object sender, RoutedEventArgs e) {
+            Setting.StaticPropertyChanged -= Setting_StaticPropertyChanged;
+
             tknSrc_LoadThumb?.Cancel();
             ObjectList.Clear();
 
             Setting.LastPath = CurrentPath;
             if (WindowState != WindowState.Maximized) {
-                Setting.LastWindowSize.Width = Width;
-                Setting.LastWindowSize.Height = Height;
+                Setting.LastWindowSize = new Size(Width, Height);
             }
 
             if (Application.Current.Windows.Count == 0)
@@ -82,7 +93,11 @@ namespace ZipImageViewer
         }
 
         private void MainWin_DpiChanged(object sender, DpiChangedEventArgs e) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbSize_Wpf)));
+            DpiScale = VisualTreeHelper.GetDpi(this);
+
+            if (PropertyChanged == null) return;
+            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealWidth)));
+            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealHeight)));
         }
 
         private void MainWin_Drop(object sender, DragEventArgs e)
@@ -93,10 +108,23 @@ namespace ZipImageViewer
             Task.Run(() => LoadPath(paths[0]));
         }
 
+        private void MainWin_MouseDown(object sender, MouseButtonEventArgs e) {
+            if (!(e.OriginalSource is ScrollViewer)) return;
+            if (e.ClickCount == 1 && e.ChangedButton == MouseButton.Right)
+                Nav_Up(null, null);
+            if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left) {
+                if (Helpers.OpenFolderDialog(this) is string path) Task.Run(() => LoadPath(path));
+            }
+            e.Handled = true;
+        }
+
+        #endregion
+
         private void Callback_AddToImageList(ObjectInfo objInfo) {
             //ObjectList.Add(new ObjectInfo(objInfo.FileSystemPath, FileFlags.Unknown));
             ObjectList.Add(objInfo);
         }
+
 
         /// <summary>
         /// Display file system objects in the path as thumbnails, or open viewer depending on the file type and parameters.
@@ -388,16 +416,6 @@ namespace ZipImageViewer
         }
 
 
-        private void MainWin_MouseDown(object sender, MouseButtonEventArgs e) {
-            if (!(e.OriginalSource is ScrollViewer)) return;
-            if (e.ClickCount == 1 && e.ChangedButton == MouseButton.Right)
-                Nav_Up(null, null);
-            if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left) {
-                if (Helpers.OpenFolderDialog(this) is string path) Task.Run(() => LoadPath(path));
-            }
-            e.Handled = true;
-        }
-
         private void TN1_MouseUp(object sender, MouseButtonEventArgs e) {
             var tn = (Thumbnail)sender;
             var objInfo = tn.ObjectInfo;
@@ -411,13 +429,6 @@ namespace ZipImageViewer
             }
         }
 
-        //private void CTM1_Clicked(object sender, RoutedEventArgs e) {
-        //    switch (((MenuItem)sender).Header) {
-        //        case "Options":
-        //            new SettingsWindow().ShowDialog();
-        //            break;
-        //    }
-        //}
 
         private void Nav_Up(object sender, RoutedEventArgs e) {
             Task.Run(() => LoadPath(Path.GetDirectoryName(CurrentPath)));
@@ -427,5 +438,16 @@ namespace ZipImageViewer
             new SettingsWindow(this).ShowDialog();
         }
 
+        private void CTM_Click(object sender, RoutedEventArgs e) {
+            var mi = (MenuItem)sender;
+            var tn = (Thumbnail)mi.CommandTarget;
+            switch (mi.Header) {
+                case "View in Explorer":
+                    Helpers.Run("explorer", $"/select, \"{tn.ObjectInfo.FileSystemPath}\"");
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }
