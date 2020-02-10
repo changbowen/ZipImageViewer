@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
@@ -45,6 +46,8 @@ namespace ZipImageViewer
     public partial class ViewWindow : Window, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private KeyedCollection<string, ObjectInfo> objectList;
 
         public ObjectInfo ObjectInfo
         {
@@ -104,8 +107,9 @@ namespace ZipImageViewer
         //public Point CenterPoint =>
         //    new Point((CA.ActualWidth - IM.ActualWidth) / 2, (CA.ActualHeight - IM.ActualHeight) / 2);
 
-        public ViewWindow(Window owner)
+        public ViewWindow(Window owner, KeyedCollection<string, ObjectInfo> objList)
         {
+            objectList = objList;
             Owner = owner;
             Opacity = 0d;
             InitializeComponent();
@@ -266,14 +270,13 @@ namespace ZipImageViewer
                 case Key.Left:
                 case Key.Right:
                 case Key.Space:
-                    var list = App.MainWin.ObjectList;
                     //get direction for the next items.
                     //also used to determine direction for some animations.
                     var increment = e.Key == Key.Left ? -1 : 1;
                     //get index of the next item
-                    var i = list.IndexOf(list[ObjectInfo.VirtualPath]) + increment;
-                    while (i > -1 && i < list.Count) {
-                        var next = list[i];
+                    var i = objectList.IndexOf(objectList[ObjectInfo.VirtualPath]) + increment;
+                    while (i > -1 && i < objectList.Count) {
+                        var next = objectList[i];
                         //check for non-images and skip
                         if (!next.Flags.HasFlag(FileFlags.Image)) {
                             i += increment;
@@ -335,6 +338,7 @@ namespace ZipImageViewer
         }
 
         private void ViewWin_Unloaded(object sender, RoutedEventArgs e) {
+            objectList = null;
             ViewImageSource = null;
             ObjectInfo.ImageSources = null;
             ObjectInfo = null;

@@ -16,6 +16,8 @@
         <ContextMenu x:Key="ThumbContextMenu">
             <MenuItem Header="View in Explorer" Click="CTM_Click"
                       CommandTarget="{Binding PlacementTarget, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}"/>
+            <MenuItem Header="Open in New Window" Click="CTM_Click"
+                      CommandTarget="{Binding PlacementTarget, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}"/>
         </ContextMenu>
     </Window.Resources>
     <Grid>
@@ -46,6 +48,9 @@
             </TextBlock>
         </StackPanel>
         <ScrollViewer x:Name="SV1">
+            <ScrollViewer.Resources>
+                <Style TargetType="ScrollBar" BasedOn="{StaticResource AppleStyleScrollBar}"/>
+            </ScrollViewer.Resources>
             <ItemsControl x:Name="LB1" ItemsSource="{Binding Source={StaticResource ObjectListViewSource}, Mode=OneTime}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

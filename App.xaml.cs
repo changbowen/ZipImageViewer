@@ -105,19 +105,29 @@ $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_Thumb
             Execute(con => {
                 using (var cmd = new SQLiteCommand(con)) {
                     //chech size limit on thumb db
-                    if (Setting.ThumbDbSize < 10240) {
-                        long pageCount, pageSize;
+                    if (Setting.ThumbDbSize < 10d) {
+                        long pageCount, pageSize, rowCount;
+                        long targetSize = (long)(Setting.ThumbDbSize * 1073741824);
+                        cmd.CommandText = $@"select count(*) from {Table_ThumbsData.Name}";
+                        using (var reader = cmd.ExecuteReader()) { reader.Read(); rowCount = (long)reader["count(*)"]; }
+
                         while (true) {
-                            cmd.CommandText = $@"pragma page_count";
+                            cmd.CommandText = @"pragma page_count";
                             using (var reader = cmd.ExecuteReader()) { reader.Read(); pageCount = (long)reader["page_count"]; }
-                            cmd.CommandText = $@"pragma page_size";
+                            cmd.CommandText = @"pragma page_size";
                             using (var reader = cmd.ExecuteReader()) { reader.Read(); pageSize = (long)reader["page_size"]; }
-                            if (pageCount * pageSize < Setting.ThumbDbSize * 1048576) break;
+                            
+                            var dbSize = pageCount * pageSize;
+                            if (dbSize < targetSize) break;
+
+                            //calculate how many rows to delete
+                            var delCount = (dbSize - targetSize) / (dbSize / rowCount) * 2;
+                            if (delCount < 50) delCount = 50L;
 
                             cmd.CommandText = $@"delete from {Table_ThumbsData.Name} where rowid in
-(select rowid from {Table_ThumbsData.Name} order by rowid asc limit 50)";
+(select rowid from {Table_ThumbsData.Name} order by rowid asc limit {delCount})";
                             cmd.ExecuteNonQuery();
-                            cmd.CommandText = "vacuum";
+                            cmd.CommandText = @"vacuum";
                             cmd.ExecuteNonQuery();
                         }
                     }

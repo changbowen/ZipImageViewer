@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
-        Width="800" Height="600"
+        Width="1000" Height="600"
         Background="#FF333333" Foreground="LightGray" WindowStartupLocation="CenterOwner"
         Title="Settings" UseLayoutRounding="True" Loaded="SettingsWin_Loaded">
     <local:PaddedGrid Padding="4" VerticalChildrenAlignment="Stretch" HorizontalChildrenAlignment="Stretch">
@@ -23,20 +23,16 @@
             <RowDefinition Height="Auto"/>
         </local:PaddedGrid.RowDefinitions>
         <local:PaddedGrid.Resources>
-            <Style TargetType="TextBox">
-                <Style.Setters>
-                    <Setter Property="MinWidth" Value="300"/>
-                    <Setter Property="MaxWidth" Value="500"/>
-                </Style.Setters>
-            </Style>
             <Style x:Key="TipTextStyle" TargetType="TextBlock">
-                <Style.Setters>
-                    <Setter Property="FontSize" Value="10"/>
-                    <Setter Property="FontStyle" Value="Italic"/>
-                    <Setter Property="Padding" Value="0 2"/>
-                    <Setter Property="MaxWidth" Value="300"/>
-                    <Setter Property="TextWrapping" Value="Wrap"/>
-                </Style.Setters>
+                <Setter Property="FontSize" Value="10"/>
+                <Setter Property="FontStyle" Value="Italic"/>
+                <Setter Property="Padding" Value="0 2"/>
+                <Setter Property="MaxWidth" Value="300"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+            <Style TargetType="DataGrid">
+                <Setter Property="HorizontalGridLinesBrush" Value="#FFAAAAAA"/>
+                <Setter Property="VerticalGridLinesBrush" Value="#FFAAAAAA"/>
             </Style>
         </local:PaddedGrid.Resources>
 
@@ -49,9 +45,11 @@
         
         <TextBlock  Grid.Row="1" Grid.Column="0" Text="Thumbnail Size"/>
         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-            <TextBox x:Name="TB_ThumbWidth" MinWidth="32" VerticalAlignment="Top"/>
+            <TextBox MinWidth="32" VerticalAlignment="Top"
+                     Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item1}"/>
             <TextBlock Text=" x "/>
-            <TextBox x:Name="TB_ThumbHeight" MinWidth="32" VerticalAlignment="Top"/>
+            <TextBox MinWidth="32" VerticalAlignment="Top"
+                     Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item2}"/>
         </StackPanel>
         <TextBlock  Grid.Row="1" Grid.Column="2" Style="{StaticResource TipTextStyle}">
             <TextBlock.Inlines>
@@ -64,7 +62,8 @@
         
         <TextBlock  Grid.Row="2" Grid.Column="0" Text="Thumbnail Database Size"/>
         <DockPanel  Grid.Row="2" Grid.Column="1">
-            <Slider x:Name="SL_ThumbDbSize" Value="2" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"/>
+            <Slider x:Name="SL_ThumbDbSize" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"
+                    Value="{Binding Source={x:Static local:App.Setting}, Path=ThumbDbSize}"/>
             <TextBlock HorizontalAlignment="Center">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
@@ -90,19 +89,21 @@
         <TextBlock  Grid.Row="4" Grid.Column="0" Text="Saved Passwords"/>
         <TabControl Grid.Row="4" Grid.Column="1">
             <TabItem Header="Fallback Passwords">
-                <DataGrid AutoGenerateColumns="False"
+                <DataGrid AutoGenerateColumns="False" RowEditEnding="DataGrid_RowEditEnding"
+                          EnableRowVirtualization="True" EnableColumnVirtualization="True"
                           ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=FallbackPasswords}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Password" Binding="{Binding}"/>
+                        <DataGridTextColumn Header="Password" Binding="{Binding Item, TargetNullValue=(Enter value)}"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
             <TabItem Header="Mapped Passwords">
-                <DataGrid AutoGenerateColumns="False"
+                <DataGrid AutoGenerateColumns="False" RowEditEnding="DataGrid_RowEditEnding"
+                          EnableRowVirtualization="True" EnableColumnVirtualization="True"
                           ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=MappedPasswords}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Password" Binding="{Binding Value}"/>
-                        <DataGridTextColumn Header="File Path" Binding="{Binding Key}"/>
+                        <DataGridTextColumn Header="File Path" Binding="{Binding Item1, TargetNullValue=(Enter value)}"/>
+                        <DataGridTextColumn Header="Password" Binding="{Binding Item2, TargetNullValue=(Enter value)}"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -110,7 +111,7 @@
         <TextBlock  Grid.Row="4" Grid.Column="2" Style="{StaticResource TipTextStyle}">
             <TextBlock.Inlines>
                 Saved passwords for zipped files.<LineBreak/>
-                One on each line with the below formats:<LineBreak/>
+                In the configuration file passwords are saved one on each line, with the below formats:<LineBreak/>
                 <Bold>password</Bold>=<LineBreak/>
                 <Bold>file_full_path</Bold>=<Bold>password</Bold>
                 <LineBreak/>
@@ -137,10 +138,11 @@
 
         
         <TextBlock  Grid.Row="5" Grid.Column="0" Text="Custom Commands"/>
-        <DataGrid   Grid.Row="5" Grid.Column="1" AutoGenerateColumns="False"
+        <DataGrid   Grid.Row="5" Grid.Column="1" RowEditEnding="DataGrid_RowEditEnding"
+                    AutoGenerateColumns="False" EnableRowVirtualization="True" EnableColumnVirtualization="True"
                     ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=CustomCommands}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Path" Binding="{Binding Item1}"/>
+                <DataGridTextColumn Header="Path" Binding="{Binding Item1, TargetNullValue=(Enter value)}"/>
                 <DataGridTextColumn Header="Arguments" Binding="{Binding Item2}"/>
             </DataGrid.Columns>
         </DataGrid>
@@ -154,7 +156,7 @@
         
         <StackPanel Grid.Row="100" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="Btn_OK" Content="OK" MinWidth="50" MinHeight="22" Click="Btn_OK_Click"/>
-            <Button x:Name="Btn_Cancel" Content="Cancel" MinWidth="50" MinHeight="22" Margin="4 0 0 0" IsCancel="True" Click="Btn_Cancel_Click"/>
+            <Button x:Name="Btn_Cancel" Content="Cancel" MinWidth="50" MinHeight="22" Margin="4 0 0 0" Click="Btn_Cancel_Click"/>
         </StackPanel>
     </local:PaddedGrid>
 </Window>

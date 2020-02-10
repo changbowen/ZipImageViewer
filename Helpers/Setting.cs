@@ -34,8 +34,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static SizeInt thumbnailSize = new SizeInt(300, 200);
-        public static SizeInt ThumbnailSize {
+        private static ObservablePair<int, int> thumbnailSize = new ObservablePair<int, int>(300, 200);
+        public static ObservablePair<int, int> ThumbnailSize {
             get => thumbnailSize;
             set {
                 if (thumbnailSize == value) return;
@@ -64,8 +64,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static int thumbDbSize = 2048;
-        public static int ThumbDbSize {
+        private static double thumbDbSize = 2d;
+        public static double ThumbDbSize {
             get => thumbDbSize;
             set {
                 if (thumbDbSize == value) return;
@@ -104,8 +104,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static ObservableCollection<string> fallbackPasswords;
-        public static ObservableCollection<string> FallbackPasswords {
+        private static ObservableCollection<Observable<string>> fallbackPasswords;
+        public static ObservableCollection<Observable<string>> FallbackPasswords {
             get => fallbackPasswords;
             set {
                 if (fallbackPasswords == value) return;
@@ -114,8 +114,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static ObservableDictionary<string, string> mappedPasswords;
-        public static ObservableDictionary<string, string> MappedPasswords {
+        private static ObservableKeyedCollection<string, ObservablePair<string, string>> mappedPasswords;
+        public static ObservableKeyedCollection<string, ObservablePair<string, string>> MappedPasswords {
             get => mappedPasswords;
             set {
                 if (mappedPasswords == value) return;
@@ -151,13 +151,16 @@ namespace ZipImageViewer
                 CustomCommands = new ObservableCollection<ObservablePair<string, string>>();
                 foreach (var row in iniCmd) {
                     var cells = row.Value.Split('\t');
+                    if (cells.Length < 2) continue;
                     CustomCommands.Add(new ObservablePair<string, string>(cells[0], cells[1]));
                 }
             }
 
             //parse saved passwords at last
-            FallbackPasswords = new ObservableCollection<string>(iniData["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => d.KeyName));
-            MappedPasswords = new ObservableDictionary<string, string>(iniData["Saved Passwords"].Where(d => d.Value.Length > 0).ToDictionary(d => d.KeyName, d => d.Value));
+            FallbackPasswords = new ObservableCollection<Observable<string>>(
+                iniData["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
+            MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1,
+                iniData["Saved Passwords"].Where(d => d.Value.Length > 0).Select(d => new ObservablePair<string, string>(d.KeyName, d.Value)));
 
             //apply dll path
             if (string.IsNullOrEmpty(SevenZipDllPath))
@@ -170,26 +173,38 @@ namespace ZipImageViewer
         private static T ParseConfig<T>(IniData iniData, string key, T defaultVal) {
             var value = iniData["App Config"][key];
             if (value == null) return defaultVal;
-            object result = null;
+            object result = defaultVal;
             switch (defaultVal) {
                 case string _:
                     result = value;
                     break;
                 case SizeInt _:
+                case ObservablePair<int, int> _:
                     int iW, iH;
                     var split1 = value.Split('x', '*', ',');
-                    if (split1.Length == 2 && int.TryParse(split1[0], out iW) && int.TryParse(split1[1], out iH))
+                    if (split1.Length != 2 || !int.TryParse(split1[0], out iW) || !int.TryParse(split1[1], out iH)) break;
+                    if (defaultVal is SizeInt)
                         result = new SizeInt(iW, iH);
+                    else
+                        result = new ObservablePair<int, int>(iW, iH);
                     break;
                 case Size _:
+                case ObservablePair<double, double> _:
                     double dW, dH;
                     var split2 = value.Split('x', '*', ',');
-                    if (split2.Length == 2 && double.TryParse(split2[0], out dW) && double.TryParse(split2[1], out dH))
+                    if (split2.Length != 2 || !double.TryParse(split2[0], out dW) || !double.TryParse(split2[1], out dH)) break;
+                    if (defaultVal is Size)
                         result = new Size(dW, dH);
+                    else
+                        result = new ObservablePair<double, double>(dW, dH);
                     break;
                 case int _:
                     int i;
                     if (int.TryParse(value, out i)) result = i;
+                    break;
+                case double _:
+                    double d;
+                    if (double.TryParse(value, out d)) result = d;
                     break;
                 case Transition _:
                     Transition t;
@@ -207,12 +222,14 @@ namespace ZipImageViewer
             var savedPwds = "";
             if (FallbackPasswords != null && FallbackPasswords.Count > 0) {
                 foreach (var s in FallbackPasswords) {
-                    savedPwds += s + "=\r\n";
+                    if (string.IsNullOrWhiteSpace(s.Item)) continue;
+                    savedPwds += s.Item + "=\r\n";
                 }
             }
-            if (MappedPasswords != null && MappedPasswords.Keys.Count > 0) {
-                foreach (var kvp in MappedPasswords) {
-                    savedPwds += kvp.Key + "=" + kvp.Value + "\r\n";
+            if (MappedPasswords != null && MappedPasswords.Count > 0) {
+                foreach (var p in MappedPasswords) {
+                    if (string.IsNullOrWhiteSpace(p.Item1) || string.IsNullOrWhiteSpace(p.Item2)) continue;
+                    savedPwds += p.Item1 + "=" + p.Item2 + "\r\n";
                 }
             }
 
@@ -220,7 +237,7 @@ namespace ZipImageViewer
             File.WriteAllText(path, $@"
 [App Config]
 {nameof(SevenZipDllPath)}={SevenZipDllPath}
-{nameof(ThumbnailSize)}={ThumbnailSize.Width}x{ThumbnailSize.Height}
+{nameof(ThumbnailSize)}={ThumbnailSize.Item1}x{ThumbnailSize.Item2}
 {nameof(ThumbDbSize)}={ThumbDbSize}
 {nameof(ViewerTransition)}={ViewerTransition}
 {nameof(ViewerTransitionSpeed)}={ViewerTransitionSpeed}

@@ -25,12 +25,12 @@ namespace ZipImageViewer {
         /// Using a delegate should be faster than the property name which will use reflection.
         /// If TItem implements both INotifyCollectionChanged and INotifyCollectionChanging, the name of the key property is also needed for key updating to work.
         /// </summary>
-        public ObservableKeyedCollection(Func<TItem, TKey> getKeyForItemDelegate = null, string keyPropName = null) {
-            if (getKeyForItemDelegate == null && keyPropName == null)
+        public ObservableKeyedCollection(Func<TItem, TKey> getKeyFunc = null, string keyPropName = null) {
+            if (getKeyFunc == null && keyPropName == null)
                 throw new ArgumentException(@"getKeyForItemDelegate and KeyPropertyName cannot both be null.");
             keyPropertyName = keyPropName;
-            _getKeyForItemDelegate = getKeyForItemDelegate;
-
+            _getKeyForItemDelegate = getKeyFunc;
+			
             if (keyPropertyName != null &&
                 typeof(TItem).GetInterface(nameof(INotifyPropertyChanged)) != null &&
                 typeof(TItem).GetInterface(nameof(INotifyPropertyChanging)) != null) {
@@ -47,7 +47,18 @@ namespace ZipImageViewer {
             }
         }
 
-        protected override TKey GetKeyForItem(TItem item) {
+		public ObservableKeyedCollection(Func<TItem, TKey> getKeyFunc, IEnumerable < TItem> collection) : this(getKeyFunc) {
+			IList<TItem> items = Items;
+			if (collection != null && items != null) {
+				using (IEnumerator<TItem> enumerator = collection.GetEnumerator()) {
+					while (enumerator.MoveNext()) {
+						items.Add(enumerator.Current);
+					}
+				}
+			}
+		}
+
+		protected override TKey GetKeyForItem(TItem item) {
             if (_getKeyForItemDelegate != null)//delegate is faster than reflection.
                 return _getKeyForItemDelegate(item);
             if (keyPropertyName != null)
@@ -55,7 +66,24 @@ namespace ZipImageViewer {
             throw new ArgumentException(@"getKeyForItemDelegate and KeyPropertyName cannot both be null.");
         }
 
-        protected override void SetItem(int index, TItem newitem) {
+		public new TItem this[TKey key] {
+			get => base[key];
+			set {
+				Remove(key);
+				Add(value);
+			}
+		}
+
+		public bool TryGetValue(TKey key, out TItem value) {
+			if (Contains(key)) {
+				value = base[key];
+				return true;
+			}
+			value = default;
+			return false;
+		}
+
+		protected override void SetItem(int index, TItem newitem) {
             //need old item to use Replace action below.
             TItem olditem = base[index];
             UpdatePropChangeHandlers(olditem, false);
@@ -187,7 +215,37 @@ namespace ZipImageViewer {
 	}
 
 
-    public class ObservablePair<TItem1, TItem2> : INotifyPropertyChanged
+	public class Observable<T> : INotifyPropertyChanged
+	{
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private T item;
+		public T Item {
+			get => item;
+			set {
+				if (value == null || value.Equals(item)) return;
+				item = value;
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Item)));
+			}
+		}
+
+		public override string ToString() {
+			return item.ToString();
+		}
+
+		public static implicit operator T(Observable<T> obs) {
+			return obs.Item;
+		}
+
+		//for DataGrid to have a new row placeholder
+		public Observable() { }
+
+		public Observable(T i) {
+			item = i;
+		}
+	}
+
+	public class ObservablePair<TItem1, TItem2> : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -195,7 +253,7 @@ namespace ZipImageViewer {
         public TItem1 Item1 {
             get => item1;
             set {
-                if (item1.Equals(value)) return;
+                if (value == null || value.Equals(item1)) return;
                 item1 = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Item1)));
             }
@@ -205,17 +263,32 @@ namespace ZipImageViewer {
         public TItem2 Item2 {
             get => item2;
             set {
-                if (item2.Equals(value)) return;
+                if (value == null || value.Equals(item2)) return;
                 item2 = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Item2)));
             }
         }
 
-        //public static implicit operator System.Drawing.Size(ObservablePair<TItem1, TItem2> pair) {
-        //    return new System.Drawing.Size(Convert.ToInt32(pair.Item1), Convert.ToInt32(pair.Item2));
-        //}
+		public override string ToString() {
+			return $@"({item1.ToString()}, {item2.ToString()})";
+		}
 
-        public ObservablePair(TItem1 i1, TItem2 i2) {
+		public static explicit operator System.Drawing.Size(ObservablePair<TItem1, TItem2> pair) {
+			return new System.Drawing.Size(Convert.ToInt32(pair.Item1), Convert.ToInt32(pair.Item2));
+		}
+
+		public static explicit operator Size(ObservablePair<TItem1, TItem2> pair) {
+			return new Size(Convert.ToDouble(pair.Item1), Convert.ToDouble(pair.Item2));
+		}
+
+		public static explicit operator Point(ObservablePair<TItem1, TItem2> pair) {
+			return new Point(Convert.ToDouble(pair.Item1), Convert.ToDouble(pair.Item2));
+		}
+
+		//for DataGrid to have a new row placeholder
+		public ObservablePair() { }
+
+		public ObservablePair(TItem1 i1, TItem2 i2) {
             item1 = i1;
             item2 = i2;
         }
@@ -383,7 +456,7 @@ namespace ZipImageViewer {
 		}
 
 		void ICollection<KeyValuePair<TKey, TValue>>.Clear() {
-			((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Clear();
+			dictionary.Clear();
 
 			CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
 			PropertyChanged(this, new PropertyChangedEventArgs("Count"));
@@ -392,19 +465,19 @@ namespace ZipImageViewer {
 		}
 
 		bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item) {
-			return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
+			return dictionary.Contains(item);
 		}
 
 		void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex) {
-			((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
+			dictionary.CopyTo(array, arrayIndex);
 		}
 
 		int ICollection<KeyValuePair<TKey, TValue>>.Count {
-			get { return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Count; }
+			get { return dictionary.Count; }
 		}
 
 		bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly {
-			get { return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).IsReadOnly; }
+			get { return dictionary.IsReadOnly; }
 		}
 
 		bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item) {
@@ -416,11 +489,11 @@ namespace ZipImageViewer {
 		#region IEnumerable<KeyValuePair<TKey,TValue>> Members
 
 		IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() {
-			return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
+			return dictionary.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() {
-			return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
+			return dictionary.GetEnumerator();
 		}
 
 		#endregion
