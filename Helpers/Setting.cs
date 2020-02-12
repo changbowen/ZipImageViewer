@@ -34,6 +34,16 @@ namespace ZipImageViewer
             }
         }
 
+        private static string thumbDbDir = App.ExeDir;
+        public static string ThumbDbDir {
+            get => thumbDbDir;
+            set {
+                if (thumbDbDir == value) return;
+                thumbDbDir = value;
+                OnStaticPropertyChanged(nameof(ThumbDbDir));
+            }
+        }
+
         private static ObservablePair<int, int> thumbnailSize = new ObservablePair<int, int>(300, 200);
         public static ObservablePair<int, int> ThumbnailSize {
             get => thumbnailSize;
@@ -94,8 +104,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static ObservableCollection<ObservablePair<string, string>> customCommands;
-        public static ObservableCollection<ObservablePair<string, string>> CustomCommands {
+        private static ObservableCollection<ObservableObj> customCommands;
+        public static ObservableCollection<ObservableObj> CustomCommands {
             get => customCommands;
             set {
                 if (customCommands == value) return;
@@ -138,6 +148,7 @@ namespace ZipImageViewer
             var iniData = new FileIniDataParser().ReadFile(path, System.Text.Encoding.UTF8);
 
             SevenZipDllPath =       ParseConfig(iniData, nameof(SevenZipDllPath),       SevenZipDllPath);
+            ThumbDbDir =            ParseConfig(iniData, nameof(ThumbDbDir),            ThumbDbDir);
             ThumbnailSize =         ParseConfig(iniData, nameof(ThumbnailSize),         ThumbnailSize);
             ThumbDbSize =           ParseConfig(iniData, nameof(ThumbDbSize),           ThumbDbSize);
             ViewerTransition =      ParseConfig(iniData, nameof(ViewerTransition),      ViewerTransition);
@@ -146,13 +157,13 @@ namespace ZipImageViewer
             LastPath =              ParseConfig(iniData, nameof(LastPath),              LastPath);
 
             //parse custom commands
+            CustomCommands = new ObservableCollection<ObservableObj>();
             var iniCmd = iniData["Custom Commands"];
             if (iniCmd?.Count > 0) {
-                CustomCommands = new ObservableCollection<ObservablePair<string, string>>();
                 foreach (var row in iniCmd) {
                     var cells = row.Value.Split('\t');
-                    if (cells.Length < 2) continue;
-                    CustomCommands.Add(new ObservablePair<string, string>(cells[0], cells[1]));
+                    if (cells.Length < 3) continue;
+                    CustomCommands.Add(new ObservableObj(cells[0], cells[1], cells[2]));
                 }
             }
 
@@ -237,6 +248,7 @@ namespace ZipImageViewer
             File.WriteAllText(path, $@"
 [App Config]
 {nameof(SevenZipDllPath)}={SevenZipDllPath}
+{nameof(ThumbDbDir)}={ThumbDbDir}
 {nameof(ThumbnailSize)}={ThumbnailSize.Item1}x{ThumbnailSize.Item2}
 {nameof(ThumbDbSize)}={ThumbDbSize}
 {nameof(ViewerTransition)}={ViewerTransition}
@@ -246,7 +258,7 @@ namespace ZipImageViewer
 
 [Custom Commands]
 {(CustomCommands?.Count > 0 ?
-    string.Join("\r\n", CustomCommands.Select(pair => $"{nameof(CustomCommands)}.{CustomCommands.IndexOf(pair)}={pair.Item1}\t{pair.Item2}")) :
+    string.Join("\r\n", CustomCommands.Select(oo => $"{nameof(CustomCommands)}.{CustomCommands.IndexOf(oo)}={oo.Str1}\t{oo.Str2}\t{oo.Str3}")) :
     null)}
 
 ;Saved passwords for zipped files. Supported formats:

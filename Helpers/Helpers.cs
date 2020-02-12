@@ -391,10 +391,26 @@ namespace ZipImageViewer
             return cofd.ShowDialog(owner) == CommonFileDialogResult.Ok ? cofd.FileName : null;
         }
 
+
         public static void Run(string path, string args) {
-            var info = new ProcessStartInfo(path, args);
-            info.WorkingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            var info = new ProcessStartInfo(path, args) {
+                WorkingDirectory = App.ExeDir
+            };
             Process.Start(path, args);
+        }
+
+        public static string BytesToString(long byteCount) {
+            string[] suf = { " B", " KB", " MB", " GB", " TB", " PB", " EB" }; //Longs run out around EB
+            if (byteCount == 0)
+                return "0" + suf[0];
+            long bytes = Math.Abs(byteCount);
+            int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
+            double num = Math.Round(bytes / Math.Pow(1024, place), 1);
+            return (Math.Sign(byteCount) * num).ToString() + suf[place];
+        }
+
+        public static string CustomCmdArgsReplace(string input, ObjectInfo objInfo) {
+            return input.Replace(@"%FileSystemPath%", objInfo.FileSystemPath);
         }
     }
 }

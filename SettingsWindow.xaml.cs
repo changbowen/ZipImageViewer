@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using IniParser;
@@ -28,7 +29,37 @@ namespace ZipImageViewer
             CB_AnimSpeed.ItemsSource =          Enum.GetValues(typeof(Setting.TransitionSpeed));
             CB_AnimSpeed.SelectedItem =         Setting.ViewerTransitionSpeed;
 
-            //TB_SavedPasswords.Text =            Setting.SerializePasswords();
+            T_CurrentDbSize.Text = $"Current DB size: {Helpers.BytesToString(new FileInfo(SQLiteHelper.DbFileFullPath).Length)}";
+        }
+
+        private void CB_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            var cb = (ComboBox)sender;
+            switch (cb.Name) {
+                case nameof(CB_ViewerTransition):
+                    Setting.ViewerTransition = (Setting.Transition)cb.SelectedItem;
+                    break;
+                case nameof(CB_AnimSpeed):
+                    Setting.ViewerTransitionSpeed = (Setting.TransitionSpeed)cb.SelectedItem;
+                    break;
+            }
+        }
+
+        private async void Btn_Move_Click(object sender, RoutedEventArgs e) {
+            if (string.IsNullOrWhiteSpace(TB_ThumbDbDir.Text)) return;
+
+            var targetDir = TB_ThumbDbDir.Text;
+            var btn = (Button)sender;
+            btn.IsEnabled = false;
+            try {
+                await Task.Run(() => File.Move(SQLiteHelper.DbFileFullPath, Path.Combine(targetDir, SQLiteHelper.dbFileName)));
+
+                Setting.ThumbDbDir = targetDir;
+                MessageBox.Show("Thumbnail database file moved successfully.", "Move Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                btn.IsEnabled = true;
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message, "Move Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Btn_OK_Click(object sender, RoutedEventArgs e) {
@@ -36,8 +67,8 @@ namespace ZipImageViewer
                 //Setting.SevenZipDllPath = TB_7zDllPath.Text;
                 //Setting.ThumbnailSize = new ObservablePair<int, int>(int.Parse(TB_ThumbWidth.Text), int.Parse(TB_ThumbHeight.Text));
                 //Setting.ThumbDbSize = (int)(SL_ThumbDbSize.Value * 1024);
-                Setting.ViewerTransition = (Setting.Transition)CB_ViewerTransition.SelectedItem;
-                Setting.ViewerTransitionSpeed = (Setting.TransitionSpeed)CB_AnimSpeed.SelectedItem;
+                //Setting.ViewerTransition = (Setting.Transition)CB_ViewerTransition.SelectedItem;
+                //Setting.ViewerTransitionSpeed = (Setting.TransitionSpeed)CB_AnimSpeed.SelectedItem;
                 Setting.SaveConfigToFile();
                 Close();
             }
@@ -71,6 +102,7 @@ namespace ZipImageViewer
                     break;
             }
         }
+
     }
 
     //public class ObservablesValidationRule : ValidationRule

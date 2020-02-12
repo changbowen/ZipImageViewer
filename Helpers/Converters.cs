@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 
@@ -23,18 +24,36 @@ namespace ZipImageViewer
         }
     }
 
+    //public class RectConverter : IMultiValueConverter
+    //{
+    //    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    //    {
+    //        return new Rect(0d, 0d, (double)values[0], (double)values[1]);
+    //    }
+
+    //    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+    //    {
+    //        throw new NotSupportedException();
+    //    }
+    //}
+
     public class RectConverter : IMultiValueConverter
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
-            //if (values[0] == DependencyProperty.UnsetValue) values[0] = 0d;
-            //if (values[1] == DependencyProperty.UnsetValue) values[1] = 0d;
-            return new Rect(0d, 0d, (double)values[0], (double)values[1]);
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+            //parameter is the clipped width to preserve
+            var offset = 0d; var thickness = 20d;
+            if (parameter is string paraStr) {
+                var paraAry = paraStr.Split(',', ' ');
+                if (paraAry.Length > 0) offset = double.Parse(paraAry[0]);
+                if (paraAry.Length > 1) thickness = double.Parse(paraAry[1]);
+            }
+            var width = (double)values[0];
+            var height = (double)values[1];
+            return new Rect(new Point(-offset, -offset), new Point(width + offset - thickness, height + offset - thickness));//20是两边空隙总和
         }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotSupportedException();
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
         }
     }
 
@@ -85,4 +104,29 @@ namespace ZipImageViewer
     //        throw new NotImplementedException();
     //    }
     //}
+
+    //public class ContextMenuTemplateSelector : DataTemplateSelector
+    //{
+    //    public override DataTemplate SelectTemplate(object item, DependencyObject container) {
+    //        if (item == CollectionView.NewItemPlaceholder)
+    //            return (container as FrameworkElement).TryFindResource("EmptyDataTemplate") as DataTemplate;
+    //        else
+    //            return (container as FrameworkElement).TryFindResource("ContextMenuDataTemplate") as DataTemplate;
+    //    }
+    //}
+
+    public class CustomCmdArgsConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+            var str = values[0] as string;
+            var tn = values[1] as Thumbnail;
+            if (string.IsNullOrWhiteSpace(str) || tn == null || tn.ObjectInfo == null)
+                return str;
+            return Helpers.CustomCmdArgsReplace(str, tn.ObjectInfo);
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
 }

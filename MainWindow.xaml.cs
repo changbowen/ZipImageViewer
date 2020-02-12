@@ -452,22 +452,40 @@ namespace ZipImageViewer
         private void CTM_Click(object sender, RoutedEventArgs e) {
             var mi = (MenuItem)sender;
             var tn = (Thumbnail)mi.CommandTarget;
-            switch (mi.Header) {
-                case "View in Explorer":
-                    Helpers.Run("explorer", $"/select, \"{tn.ObjectInfo.FileSystemPath}\"");
-                    break;
-                case "Open in New Window":
-                    if (tn.ObjectInfo.Flags.HasFlag(FileFlags.Directory) ||
-                        tn.ObjectInfo.Flags.HasFlag(FileFlags.Archive)) {
-                        var win = new MainWindow {
-                            InitialPath = tn.ObjectInfo.FileSystemPath
-                        };
-                        win.Show();
+            if (tn == null) return;
+            switch (mi.DataContext) {
+                case ObjectInfo oi:
+                    switch (mi.Header) {
+                        case "View in Explorer":
+                            Helpers.Run("explorer", $"/select, \"{oi.FileSystemPath}\"");
+                            break;
+                        case "Open in New Window":
+                            if (oi.Flags.HasFlag(FileFlags.Directory) ||
+                                oi.Flags.HasFlag(FileFlags.Archive)) {
+                                var win = new MainWindow {
+                                    InitialPath = oi.FileSystemPath
+                                };
+                                win.Show();
+                            }
+                            break;
                     }
                     break;
-                default:
+                case ObservablePair<string, string> op:
+                    Helpers.Run(op.Item1, Helpers.CustomCmdArgsReplace(op.Item2, tn.ObjectInfo));
                     break;
             }
+            
+        }
+
+        private void CTM_Opened(object sender, RoutedEventArgs e) {
+            //var ctm = (ContextMenu)sender;
+            //var tn = (Thumbnail)ctm.PlacementTarget;
+            //ctm.Tag = tn.ObjectInfo.FileSystemPath;
+
+            //foreach (MenuItem item in mi.Items) {
+            //    var op = (ObservablePair<string, string>)item.DataContext;
+            //    item.DataContext = new ObservablePair<string, string>(op.Item1, op.Item2.Replace(@"%FileSystemPath%", tn.ObjectInfo.FileSystemPath));
+            //}
         }
     }
 }

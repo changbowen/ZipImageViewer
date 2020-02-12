@@ -223,7 +223,8 @@ namespace ZipImageViewer {
 		public T Item {
 			get => item;
 			set {
-				if (value == null || value.Equals(item)) return;
+				if (value == null && item == null) return;
+				if (item != null && item.Equals(value)) return;
 				item = value;
 				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Item)));
 			}
@@ -245,26 +246,28 @@ namespace ZipImageViewer {
 		}
 	}
 
-	public class ObservablePair<TItem1, TItem2> : INotifyPropertyChanged
+	public class ObservablePair<T1, T2> : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private TItem1 item1;
-        public TItem1 Item1 {
+        private T1 item1;
+        public T1 Item1 {
             get => item1;
             set {
-                if (value == null || value.Equals(item1)) return;
-                item1 = value;
+				if (value == null && item1 == null) return;
+				if (item1 != null && item1.Equals(value)) return;
+				item1 = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Item1)));
             }
         }
 
-        private TItem2 item2;
-        public TItem2 Item2 {
+        private T2 item2;
+        public T2 Item2 {
             get => item2;
             set {
-                if (value == null || value.Equals(item2)) return;
-                item2 = value;
+				if (value == null && item2 == null) return;
+				if (item2 != null && item2.Equals(value)) return;
+				item2 = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Item2)));
             }
         }
@@ -273,26 +276,109 @@ namespace ZipImageViewer {
 			return $@"({item1.ToString()}, {item2.ToString()})";
 		}
 
-		public static explicit operator System.Drawing.Size(ObservablePair<TItem1, TItem2> pair) {
+		public static explicit operator System.Drawing.Size(ObservablePair<T1, T2> pair) {
 			return new System.Drawing.Size(Convert.ToInt32(pair.Item1), Convert.ToInt32(pair.Item2));
 		}
 
-		public static explicit operator Size(ObservablePair<TItem1, TItem2> pair) {
+		public static explicit operator Size(ObservablePair<T1, T2> pair) {
 			return new Size(Convert.ToDouble(pair.Item1), Convert.ToDouble(pair.Item2));
 		}
 
-		public static explicit operator Point(ObservablePair<TItem1, TItem2> pair) {
+		public static explicit operator Point(ObservablePair<T1, T2> pair) {
 			return new Point(Convert.ToDouble(pair.Item1), Convert.ToDouble(pair.Item2));
 		}
 
 		//for DataGrid to have a new row placeholder
 		public ObservablePair() { }
 
-		public ObservablePair(TItem1 i1, TItem2 i2) {
+		public ObservablePair(T1 i1, T2 i2) {
             item1 = i1;
             item2 = i2;
         }
     }
+
+
+	/// <summary>
+	/// Notifying class for binding arbitrary data.
+	/// Add properties like int1, int2 etc. for additional data types.
+	/// </summary>
+	public class ObservableObj : INotifyPropertyChanged
+	{
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private string str1;
+		public string Str1 {
+			get => str1;
+			set {
+				if (str1 == value) return;
+				str1 = value;
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Str1)));
+			}
+		}
+
+		private string str2;
+		public string Str2 {
+			get => str2;
+			set {
+				if (str2 == value) return;
+				str2 = value;
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Str2)));
+			}
+		}
+
+		private string str3;
+		public string Str3 {
+			get => str3;
+			set {
+				if (str3 == value) return;
+				str3 = value;
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Str3)));
+			}
+		}
+
+		public ObservableObj() { }
+
+		public ObservableObj(string _str1 = null, string _str2 = null, string _str3 = null) {
+			str1 = _str1;
+			str2 = _str2;
+			str3 = _str3;
+		}
+	}
+
+
+	public class DependencyProps : DependencyObject
+	{
+		public double Dbl1 {
+			get { return (double)GetValue(Double1Property); }
+			set { SetValue(Double1Property, value); }
+		}
+		public static readonly DependencyProperty Double1Property =
+			DependencyProperty.Register("Double1", typeof(double), typeof(DependencyProps));
+
+
+		public double Dbl2 {
+			get { return (double)GetValue(Double2Property); }
+			set { SetValue(Double2Property, value); }
+		}
+		public static readonly DependencyProperty Double2Property =
+			DependencyProperty.Register("Double2", typeof(double), typeof(DependencyProps));
+
+
+		public Duration Dur1 {
+			get { return (Duration)GetValue(Duration1Property); }
+			set { SetValue(Duration1Property, value); }
+		}
+		public static readonly DependencyProperty Duration1Property =
+			DependencyProperty.Register("Duration1", typeof(Duration), typeof(DependencyProps));
+
+
+		/// <param name="dur1">Value in milliseconds for Duration1.</param>
+		public DependencyProps(double dbl1 = default, double dbl2 = default, int dur1 = default) {
+			Dbl1 = dbl1;
+			Dbl2 = dbl2;
+			Dur1 = new Duration(TimeSpan.FromMilliseconds(dur1));
+		}
+	}
 
 
 	/// <summary>

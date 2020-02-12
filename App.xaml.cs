@@ -13,6 +13,7 @@ namespace ZipImageViewer
 {
     public partial class App : Application
     {
+        public static readonly string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         public static MainWindow MainWin;
         public static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] {
@@ -95,6 +96,10 @@ $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_Thumb
                 Height = Setting.LastWindowSize.Height,
             };
             MainWin.Show();
+
+#if DEBUG
+            //new SettingsWindow(MainWin).ShowDialog();
+#endif
         }
 
 

@@ -26,6 +26,12 @@ namespace ZipImageViewer
 
         private int thumbIndex = -1;
 
+        private int thumbTransAnimCount;
+        private string thumbTransAnimName;
+        private Storyboard thumbTransAnimOut => (Storyboard)FindResource($"{thumbTransAnimName}_Out");
+        private Storyboard thumbTransAnimIn => (Storyboard)FindResource($"{thumbTransAnimName}_In");
+
+        private ImageSource nextSource;
 
         private ImageSource thumbImageSource = App.fa_spinner;
         public ImageSource ThumbImageSource {
@@ -33,33 +39,51 @@ namespace ZipImageViewer
             set {
                 if (thumbImageSource == value) return;
                 Dispatcher.Invoke(() => {
+                    nextSource = value;
+                    if (thumbImageSource == App.fa_spinner)
+                        //use simpler animation for initial animation to reduce performance hit
+                        thumbTransAnimName = @"SB_ThumbTransInit";
+                    else
+                        thumbTransAnimName = $@"SB_ThumbTrans_{App.Random.Next(0, thumbTransAnimCount)}";
+                    GR1.BeginStoryboard(thumbTransAnimOut);
                     //fade out
-                    IM1.AnimateDoubleCubicEase(OpacityProperty, 0d, 500, EasingMode.EaseIn,
-                        completed: (o1, e1) => {
-                            thumbImageSource = value;
-                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbImageSource)));
-                        });
+                    //IM1.AnimateDoubleCubicEase(OpacityProperty, 0d, 500, EasingMode.EaseIn,
+                    //    completed: (o1, e1) => {
+                    //        thumbImageSource = value;
+                    //        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbImageSource)));
+                    //    });
                     //fade in
-                    IM1.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut, begin: 520);
+                    //IM1.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut, begin: 520);
                 });
             }
         }
 
 
-        //public ImageSource ThumbImageSource {
-        //    get { return (ImageSource)GetValue(ThumbImageSourceProperty); }
-        //    set { SetValue(ThumbImageSourceProperty, value); }
-        //}
-        //public static readonly DependencyProperty ThumbImageSourceProperty =
-        //    DependencyProperty.Register("ThumbImageSource", typeof(ImageSource), typeof(Thumbnail), new PropertyMetadata(fa_meh));
-
-
         public Thumbnail() {
             InitializeComponent();
+            
+            thumbTransAnimCount = Resources.Keys.Cast<string>().Count(k => k.StartsWith(@"SB_ThumbTrans_")) / 2;
+        }
+
+        private void ThumbTransAnimOut_Completed(object sender, EventArgs e) {
+            thumbImageSource = nextSource;
+            nextSource = null;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbImageSource)));
+            GR1.BeginStoryboard(thumbTransAnimIn);
         }
 
         private void TN_Loaded(object sender, RoutedEventArgs e) {
             cycleImageSource();
+        }
+
+        private void TN_Unloaded(object sender, RoutedEventArgs e) {
+            ThumbImageSource = null;
+            ObjectInfo.ImageSources = null;
+            ObjectInfo = null;
+            IM1.Source = null;
+            IM1.ToolTip = null;
+            IM1 = null;
+            mask = null;
         }
 
         private void cycleImageSource() {
@@ -89,16 +113,6 @@ namespace ZipImageViewer
                 }
                 catch (TaskCanceledException) { }
             });
-        }
-
-        private void TN_Unloaded(object sender, RoutedEventArgs e) {
-            ThumbImageSource = null;
-            ObjectInfo.ImageSources = null;
-            ObjectInfo = null;
-            IM1.Source = null;
-            IM1.ToolTip = null;
-            IM1 = null;
-            mask = null;
         }
     }
 }

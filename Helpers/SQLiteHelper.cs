@@ -10,7 +10,8 @@ namespace ZipImageViewer
 {
     internal class SQLiteHelper
     {
-        internal const string DataSource = @"thumb_database.sqlite";
+        internal const string dbFileName = @"thumb_database.sqlite";
+        internal static string DbFileFullPath => Path.Combine(Setting.ThumbDbDir, dbFileName);
 
         internal static class Table_ThumbsData
         {
@@ -28,7 +29,7 @@ namespace ZipImageViewer
             SQLiteConnection con = null;
             var affected = new object[callbackFuncs.Length];
             try {
-                con = new SQLiteConnection($"Data Source={DataSource};Version=3;");
+                con = new SQLiteConnection($"Data Source={DbFileFullPath};Version=3;");
                 con.Open();
                 for (int i = 0; i < callbackFuncs.Length; i++) {
                     affected[i] = callbackFuncs[i].Invoke(con);

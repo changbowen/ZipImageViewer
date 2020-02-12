@@ -9,39 +9,6 @@ using System.Windows.Media.Animation;
 
 namespace ZipImageViewer
 {
-    public class TransParam : DependencyObject {
-        public double Double1 {
-            get { return (double)GetValue(Double1Property); }
-            set { SetValue(Double1Property, value); }
-        }
-        public static readonly DependencyProperty Double1Property =
-            DependencyProperty.Register("Double1", typeof(double), typeof(TransParam));
-
-
-        public double Double2 {
-            get { return (double)GetValue(Double2Property); }
-            set { SetValue(Double2Property, value); }
-        }
-        public static readonly DependencyProperty Double2Property =
-            DependencyProperty.Register("Double2", typeof(double), typeof(TransParam));
-
-
-        public Duration Duration1 {
-            get { return (Duration)GetValue(Duration1Property); }
-            set { SetValue(Duration1Property, value); }
-        }
-        public static readonly DependencyProperty Duration1Property =
-            DependencyProperty.Register("Duration1", typeof(Duration), typeof(TransParam));
-
-
-        /// <param name="dur1">Value in milliseconds for Duration1.</param>
-        public TransParam(double dbl1 = default, double dbl2 = default, int dur1 = default) {
-            Double1 = dbl1;
-            Double2 = dbl2;
-            Duration1 = new Duration(TimeSpan.FromMilliseconds(dur1));
-        }
-    }
-
 
     public partial class ViewWindow : Window, INotifyPropertyChanged
     {
@@ -54,8 +21,6 @@ namespace ZipImageViewer
             get { return (ObjectInfo)GetValue(ObjectInfoProperty); }
             set { SetValue(ObjectInfoProperty, value); }
         }
-        //public static readonly DependencyProperty ObjectInfoProperty =
-        //    Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(null));
         public static readonly DependencyProperty ObjectInfoProperty =
             Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(new PropertyChangedCallback((o, e) => {
                 if (!(e.NewValue is ObjectInfo objInfo) || objInfo.ImageSources.Length == 0) return;
@@ -94,12 +59,12 @@ namespace ZipImageViewer
             DependencyProperty.Register("ViewImageSource", typeof(ImageSource), typeof(ViewWindow), new PropertyMetadata(null));
 
 
-        public ObservablePair<TransParam, TransParam> TransParams {
-            get { return (ObservablePair<TransParam, TransParam>)GetValue(TransParamsProperty); }
+        public ObservablePair<DependencyProps, DependencyProps> TransParams {
+            get { return (ObservablePair<DependencyProps, DependencyProps>)GetValue(TransParamsProperty); }
             set { SetValue(TransParamsProperty, value); }
         }
         public static readonly DependencyProperty TransParamsProperty =
-            DependencyProperty.Register("TransParams", typeof(ObservablePair<TransParam, TransParam>), typeof(ViewWindow));
+            DependencyProperty.Register("TransParams", typeof(ObservablePair<DependencyProps, DependencyProps>), typeof(ViewWindow));
 
 
         private Setting.Transition LastTransition = Setting.Transition.None;
@@ -300,29 +265,29 @@ namespace ZipImageViewer
                         }
                         switch (LastTransition) {
                             case Setting.Transition.ZoomFadeBlur:
-                                TransParams = new ObservablePair<TransParam, TransParam>(
-                                    new TransParam(1 - 0.05 * increment, dur1: 200 * multi),
-                                    new TransParam(dur1: 500 * multi));
+                                TransParams = new ObservablePair<DependencyProps, DependencyProps>(
+                                    new DependencyProps(1 - 0.05 * increment, dur1: 200 * multi),
+                                    new DependencyProps(dur1: 500 * multi));
                                 break;
 
                             case Setting.Transition.Fade:
-                                TransParams = new ObservablePair<TransParam, TransParam>(
-                                    new TransParam(dur1: 200 * multi),
-                                    new TransParam(dur1: 500 * multi));
+                                TransParams = new ObservablePair<DependencyProps, DependencyProps>(
+                                    new DependencyProps(dur1: 200 * multi),
+                                    new DependencyProps(dur1: 500 * multi));
                                 break;
 
                             case Setting.Transition.HorizontalSwipe:
                                 //bound to From, To and Duration respectively
-                                TransParams = new ObservablePair<TransParam, TransParam>(
-                                    new TransParam(0d, (IM_TT.X - IM.Width / 2d) * increment, 400 * multi),
-                                    new TransParam(IM.Width / 2d * increment, 0d, 500 * multi));
+                                TransParams = new ObservablePair<DependencyProps, DependencyProps>(
+                                    new DependencyProps(0d, (IM_TT.X - IM.Width / 2d) * increment, 400 * multi),
+                                    new DependencyProps(IM.Width / 2d * increment, 0d, 500 * multi));
                                 break;
                             case Setting.Transition.None:
                                 break;
                         }
                         if (LastTransition != Setting.Transition.None) {
                             IM.BeginStoryboard((Storyboard)IM.FindResource($"SB_Trans_{LastTransition}_Out"));
-                            IM.AnimateBool(DpiImage.TransformingProperty, true, false, (int)TransParams.Item1.Duration1.TimeSpan.TotalMilliseconds);
+                            IM.AnimateBool(DpiImage.TransformingProperty, true, false, (int)TransParams.Item1.Dur1.TimeSpan.TotalMilliseconds);
                         }
 
                         //load next or previous image

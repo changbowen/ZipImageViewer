@@ -8,19 +8,126 @@
              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" Loaded="TN_Loaded" Unloaded="TN_Unloaded">
     <UserControl.Resources>
         <local:FlagToImageConverter x:Key="FlagToImageConverter"/>
+        
+        <!--simple initial anim-->
+        <Storyboard x:Key="SB_ThumbTransInit_Out" Completed="ThumbTransAnimOut_Completed">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" Duration="0:0:0.5" To="0" EasingFunction="{StaticResource CE_EaseInOut}"/>
+        </Storyboard>
+        <Storyboard x:Key="SB_ThumbTransInit_In">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" Duration="0:0:0.5" To="1" EasingFunction="{StaticResource CE_EaseInOut}"/>
+        </Storyboard>
+
+        <!--zoom and fade-->
+        <Storyboard x:Key="SB_ThumbTrans_0_Out" Completed="ThumbTransAnimOut_Completed">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="0"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="0.9"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="0.9"/>
+        </Storyboard>
+        <Storyboard x:Key="SB_ThumbTrans_0_In">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" To="1"/>
+        </Storyboard>
+
+        <!--swipe horizontal-->
+        <Storyboard x:Key="SB_ThumbTrans_1_Out" Completed="ThumbTransAnimOut_Completed">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="0"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="0.9"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="0.9"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].X" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="-50"/>
+        </Storyboard>
+        <Storyboard x:Key="SB_ThumbTrans_1_In">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].X" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" From="50" To="0"/>
+        </Storyboard>
+
+        <!--swipe vertical-->
+        <Storyboard x:Key="SB_ThumbTrans_2_Out" Completed="ThumbTransAnimOut_Completed">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="0"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="0.9"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="0.9"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].Y" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="50"/>
+        </Storyboard>
+        <Storyboard x:Key="SB_ThumbTrans_2_In">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].Y" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" From="-50" To="0"/>
+        </Storyboard>
+        
+        <!--flip horizontal--><!--
+        <Storyboard x:Key="SB_ThumbTrans_3_Out" Completed="ThumbTransAnimOut_Completed">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="0"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="0"/>
+        </Storyboard>
+        <Storyboard x:Key="SB_ThumbTrans_3_In">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" To="1"/>
+        </Storyboard>
+
+        --><!--flip vertical--><!--
+        <Storyboard x:Key="SB_ThumbTrans_4_Out" Completed="ThumbTransAnimOut_Completed">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="0"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseIn}"
+                             Duration="0:0:0.5" To="0"/>
+        </Storyboard>
+        <Storyboard x:Key="SB_ThumbTrans_4_In">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
+                             Duration="0:0:0.5" To="1"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseOut}"
+                             Duration="0:0:0.5" To="1"/>
+        </Storyboard>-->
     </UserControl.Resources>
 
     <Grid>
-        <Grid.OpacityMask>
-            <VisualBrush Visual="{Binding ElementName=mask, Mode=OneTime}"/>
-        </Grid.OpacityMask>
-        <Border x:Name="mask" CornerRadius="10" Background="#FF333333"/>
-        <local:DpiImage x:Name="IM1" HorizontalAlignment="Center" VerticalAlignment="Center"
+        <Grid x:Name="GR1" RenderTransformOrigin="0.5 0.5">
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <TranslateTransform/>
+                    <ScaleTransform/>
+                </TransformGroup>
+            </Grid.RenderTransform>
+            <Grid.OpacityMask>
+                <VisualBrush Visual="{Binding ElementName=mask, Mode=OneTime}"/>
+            </Grid.OpacityMask>
+            <Border x:Name="mask" CornerRadius="10" Background="#FF333333"/>
+            <local:DpiImage x:Name="IM1" HorizontalAlignment="Center" VerticalAlignment="Center"
                         RenderOptions.BitmapScalingMode="HighQuality" Stretch="None"
                         Source="{Binding ElementName=TN, Path=ThumbImageSource, Mode=OneWay}"
                         ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo, Mode=OneWay}"
-                        ToolTipService.ShowDuration="20000"/>
-        <!--Source="{Binding ElementName=TN, Path=ObjectInfo.ImageSources, Mode=OneWay, Converter={StaticResource ImageSourceFallbackConverter}}"-->
+                        ToolTipService.ShowDuration="20000">
+            </local:DpiImage>
+        </Grid>
+        
         <fa:ImageAwesome VerticalAlignment="Top" HorizontalAlignment="Right" Width="48" Height="48" Margin="0 20 20 0" Foreground="#AAFFFFFF"
                          Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}, Mode=OneWay}"
                          Effect="{StaticResource DS_Below}">
