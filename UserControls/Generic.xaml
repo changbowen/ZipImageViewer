@@ -96,14 +96,14 @@
                 <ControlTemplate TargetType="local:BorderlessWindow">
                     <Grid Background="{TemplateBinding Background}">
                         <!--window title-->
-                        <TextBlock Margin="10" Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}"
-                                   FontSize="10" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        <TextBlock Margin="10 10 0 0" Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}"
+                                   FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
                         <!--the close button-->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-                            <Button x:Name="minimizeButton" Style="{StaticResource WindowButtonStyle}" Content="0" Visibility="Collapsed" Margin="0,10,10,10"/>
-                            <Button x:Name="restoreButton" Style="{StaticResource WindowButtonStyle}" Content="1" Visibility="Collapsed" Margin="0,10,10,10"/>
-                            <Button x:Name="closeButton" Style="{StaticResource WindowButtonStyle}" Content="r" Visibility="Collapsed" Margin="0,10,10,10"/>
+                            <Button x:Name="minimizeButton" Style="{StaticResource WindowButtonStyle}" Content="0" Visibility="Collapsed" Margin="0,10,10,0"/>
+                            <Button x:Name="restoreButton" Style="{StaticResource WindowButtonStyle}" Content="1" Visibility="Collapsed" Margin="0,10,10,0"/>
+                            <Button x:Name="closeButton" Style="{StaticResource WindowButtonStyle}" Content="r" Visibility="Collapsed" Margin="0,10,10,0"/>
                         </StackPanel>
 
                         <!--the real content-->
@@ -123,8 +123,16 @@
                             <Setter TargetName="minimizeButton" Property="Visibility" Value="Visible"/>
                             <Setter TargetName="WindowContent" Property="Margin" Value="5,30,5,5"/>
                         </Trigger>
+                        <Trigger Property="WindowState" Value="Maximized">
+                            <Setter TargetName="WindowContent" Property="Margin" Value="5,26,5,5"/>
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="WindowChrome.WindowChrome">
+            <Setter.Value>
+                <WindowChrome CaptionHeight="0" ResizeBorderThickness="5" GlassFrameThickness="0" CornerRadius="10"/>
             </Setter.Value>
         </Setter>
         <Setter Property="UseLayoutRounding" Value="True"/>

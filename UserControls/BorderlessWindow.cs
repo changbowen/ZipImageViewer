@@ -41,21 +41,10 @@ namespace ZipImageViewer
             //DefaultStyleKeyProperty.OverrideMetadata(typeof(BorderlessWindow), new FrameworkPropertyMetadata(typeof(BorderlessWindow)));
 
             SetResourceReference(StyleProperty, typeof(BorderlessWindow));
-            WindowStyle = WindowStyle.None;
         }
 
         public override void OnApplyTemplate() {
             base.OnApplyTemplate();
-
-            //override window border
-            var chrome = new System.Windows.Shell.WindowChrome {
-                CaptionHeight = 0,
-                GlassFrameThickness = new Thickness(0d),
-                CornerRadius = new CornerRadius(10d),
-                NonClientFrameEdges = System.Windows.Shell.NonClientFrameEdges.None,
-                ResizeBorderThickness = new Thickness(5d)
-            };
-            System.Windows.Shell.WindowChrome.SetWindowChrome(this, chrome);
 
             //system button click handlers
             if (GetTemplateChild("minimizeButton") is Button minimizeButton) minimizeButton.Click += MinimizeClick;

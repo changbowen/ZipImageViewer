@@ -10,7 +10,7 @@ using System.Windows.Media.Animation;
 namespace ZipImageViewer
 {
 
-    public partial class ViewWindow : Window, INotifyPropertyChanged
+    public partial class ViewWindow : BorderlessWindow, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

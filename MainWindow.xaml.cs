@@ -451,8 +451,7 @@ namespace ZipImageViewer
 
         private void CTM_Click(object sender, RoutedEventArgs e) {
             var mi = (MenuItem)sender;
-            var tn = (Thumbnail)mi.CommandTarget;
-            if (tn == null) return;
+            var ctm = (ContextMenu)mi.CommandParameter;
             switch (mi.DataContext) {
                 case ObjectInfo oi:
                     switch (mi.Header) {
@@ -470,9 +469,9 @@ namespace ZipImageViewer
                             break;
                     }
                     break;
-                case ObservablePair<string, string> op:
-                    Helpers.Run(op.Item1, Helpers.CustomCmdArgsReplace(op.Item2, tn.ObjectInfo));
-                    break;
+                //case ObservablePair<string, string> op:
+                //    Helpers.Run(op.Item1, Helpers.CustomCmdArgsReplace(op.Item2, tn.ObjectInfo));
+                //    break;
             }
             
         }
