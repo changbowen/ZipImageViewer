@@ -136,7 +136,12 @@ namespace ZipImageViewer
 
         private void Callback_AddToImageList(ObjectInfo objInfo) {
             //ObjectList.Add(new ObjectInfo(objInfo.FileSystemPath, FileFlags.Unknown));
-            ObjectList.Add(objInfo);
+            var add = true;
+            Dispatcher.Invoke(() => {
+                if (AuxVisibility == Visibility.Collapsed && (objInfo.ImageSources == null || objInfo.ImageSources.Length == 0))
+                    add = false;
+            });
+            if (add) ObjectList.Add(objInfo);
         }
 
 
@@ -467,12 +472,13 @@ namespace ZipImageViewer
                     ButtonMinVisibility = AuxVisibility;
                     ButtonMaxVisibility = AuxVisibility;
                     TitleVisibility = AuxVisibility;
-                    for (int i = 0; i < LB1.Items.Count; i++) {
-                        var thumb = (ContentPresenter)LB1.ItemContainerGenerator.ContainerFromIndex(i);
-                        var objInfo = (ObjectInfo)thumb.DataContext;
-                        if (objInfo.ImageSources == null || objInfo.ImageSources.Length == 0)
-                            thumb.Visibility = AuxVisibility;
-                    }
+                    //for (int i = 0; i < LB1.Items.Count; i++) {
+                    //    var thumb = (ContentPresenter)LB1.ItemContainerGenerator.ContainerFromIndex(i);
+                    //    var objInfo = (ObjectInfo)thumb.DataContext;
+                    //    if (objInfo.ImageSources == null || objInfo.ImageSources.Length == 0)
+                    //        thumb.Visibility = AuxVisibility;
+                    //}
+
                     if (AuxVisibility == Visibility.Collapsed) {
                         lastWindowPos = new Rect(Left, Top, Width, Height);
                         var info = NativeHelpers.GetMonitorFromWindow(this);
@@ -480,12 +486,17 @@ namespace ZipImageViewer
                         Left = info.Left;
                         Width = info.Width;
                         Height = info.Height;
+                        //remove error thumbs
+                        foreach (var item in ObjectList.Where(oi => oi.ImageSources == null || oi.ImageSources.Length == 0).ToArray()) {
+                            ObjectList.Remove(item);
+                        }
                     }
                     else {
                         Top = lastWindowPos.Top;
                         Left = lastWindowPos.Left;
                         Width = lastWindowPos.Width;
                         Height = lastWindowPos.Height;
+                        Task.Run(() => LoadPath(CurrentPath));
                     }
                     break;
             }
