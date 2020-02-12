@@ -62,6 +62,11 @@ namespace ZipImageViewer
             }
         }
 
+        private void Btn_Reload_Click(object sender, RoutedEventArgs e) {
+            if (!(Owner is MainWindow win)) return;
+            Task.Run(() => win.LoadPath(win.CurrentPath));
+        }
+
         private void Btn_OK_Click(object sender, RoutedEventArgs e) {
             try {
                 //Setting.SevenZipDllPath = TB_7zDllPath.Text;
@@ -102,6 +107,7 @@ namespace ZipImageViewer
                     break;
             }
         }
+
 
     }
 

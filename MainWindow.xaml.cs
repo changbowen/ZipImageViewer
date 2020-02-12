@@ -46,6 +46,15 @@ namespace ZipImageViewer
 
         public string InitialPath;
 
+
+        public Visibility AuxVisibility {
+            get { return (Visibility)GetValue(AuxVisibilityProperty); }
+            set { SetValue(AuxVisibilityProperty, value); }
+        }
+        public static readonly DependencyProperty AuxVisibilityProperty =
+            DependencyProperty.Register("AuxVisibility", typeof(Visibility), typeof(MainWindow), new PropertyMetadata(Visibility.Visible));
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -56,7 +65,7 @@ namespace ZipImageViewer
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
         {
             DpiScale = VisualTreeHelper.GetDpi(this);
-            Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
+            Setting.ThumbnailSize.PropertyChanged += ThumbnailSizeChanged;
 
             var view = (ListCollectionView)((CollectionViewSource)FindResource("ObjectListViewSource")).View;
             view.CustomSort = new Helpers.FolderSorter();
@@ -74,15 +83,16 @@ namespace ZipImageViewer
                 Task.Run(() => LoadPath(path));
         }
 
-        private void Setting_StaticPropertyChanged(object sender, PropertyChangedEventArgs e) {
-            if (e.PropertyName != nameof(Setting.ThumbnailSize) ||
-                PropertyChanged == null) return;
-            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealWidth)));
-            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealHeight)));
+        private void ThumbnailSizeChanged(object sender, PropertyChangedEventArgs e) {
+            if (PropertyChanged == null) return;
+            if (e.PropertyName == nameof(Setting.ThumbnailSize.Item1))
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealWidth)));
+            if (e.PropertyName == nameof(Setting.ThumbnailSize.Item2))
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealHeight)));
         }
 
         private void MainWin_Unloaded(object sender, RoutedEventArgs e) {
-            Setting.StaticPropertyChanged -= Setting_StaticPropertyChanged;
+            Setting.StaticPropertyChanged -= ThumbnailSizeChanged;
 
             tknSrc_LoadThumb?.Cancel();
             ObjectList.Clear();
@@ -445,8 +455,40 @@ namespace ZipImageViewer
             Task.Run(() => LoadPath(Path.GetDirectoryName(CurrentPath)));
         }
 
-        private void Show_Options(object sender, RoutedEventArgs e) {
-            new SettingsWindow(this).ShowDialog();
+        private Rect lastWindowPos;
+        private void Sidebar_Click(object sender, RoutedEventArgs e) {
+            switch (((FrameworkContentElement)sender).Name) {
+                case nameof(HY_Options):
+                    new SettingsWindow(this).ShowDialog();
+                    break;
+                case nameof(HY_ImmersionMode):
+                    AuxVisibility = AuxVisibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+                    ButtonCloseVisibility = AuxVisibility;
+                    ButtonMinVisibility = AuxVisibility;
+                    ButtonMaxVisibility = AuxVisibility;
+                    TitleVisibility = AuxVisibility;
+                    for (int i = 0; i < LB1.Items.Count; i++) {
+                        var thumb = (ContentPresenter)LB1.ItemContainerGenerator.ContainerFromIndex(i);
+                        var objInfo = (ObjectInfo)thumb.DataContext;
+                        if (objInfo.ImageSources == null || objInfo.ImageSources.Length == 0)
+                            thumb.Visibility = AuxVisibility;
+                    }
+                    if (AuxVisibility == Visibility.Collapsed) {
+                        lastWindowPos = new Rect(Left, Top, Width, Height);
+                        var info = NativeHelpers.GetMonitorFromWindow(this);
+                        Top = info.Top;
+                        Left = info.Left;
+                        Width = info.Width;
+                        Height = info.Height;
+                    }
+                    else {
+                        Top = lastWindowPos.Top;
+                        Left = lastWindowPos.Left;
+                        Width = lastWindowPos.Width;
+                        Height = lastWindowPos.Height;
+                    }
+                    break;
+            }
         }
 
         private void CTM_Click(object sender, RoutedEventArgs e) {

@@ -20,7 +20,15 @@ namespace ZipImageViewer
             DependencyProperty.Register("ObjectInfo", typeof(ObjectInfo), typeof(Thumbnail), new PropertyMetadata(null));
 
 
-        //private Timer CycleTimer = new Timer() { AutoReset = false };
+        public Visibility FlagIconVisibility {
+            get { return (Visibility)GetValue(FlagIconVisibilityProperty); }
+            set { SetValue(FlagIconVisibilityProperty, value); }
+        }
+        public static readonly DependencyProperty FlagIconVisibilityProperty =
+            DependencyProperty.Register("FlagIconVisibility", typeof(Visibility), typeof(Thumbnail), new PropertyMetadata(Visibility.Visible));
+
+
+        public bool HasError => thumbImageSource == App.fa_meh || thumbImageSource == App.fa_exclamation;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -38,14 +46,15 @@ namespace ZipImageViewer
             get => thumbImageSource;
             set {
                 if (thumbImageSource == value) return;
+                nextSource = value;
+                if (thumbImageSource == App.fa_spinner)
+                    //use simpler animation for initial animation to reduce performance hit
+                    thumbTransAnimName = @"SB_ThumbTransInit";
+                else
+                    thumbTransAnimName = $@"SB_ThumbTrans_{App.Random.Next(0, thumbTransAnimCount)}";
+
                 Dispatcher.Invoke(() => {
-                    nextSource = value;
-                    if (thumbImageSource == App.fa_spinner)
-                        //use simpler animation for initial animation to reduce performance hit
-                        thumbTransAnimName = @"SB_ThumbTransInit";
-                    else
-                        thumbTransAnimName = $@"SB_ThumbTrans_{App.Random.Next(0, thumbTransAnimCount)}";
-                    GR1.BeginStoryboard(thumbTransAnimOut);
+                    if (IsLoaded) GR1.BeginStoryboard(thumbTransAnimOut);
                     //fade out
                     //IM1.AnimateDoubleCubicEase(OpacityProperty, 0d, 500, EasingMode.EaseIn,
                     //    completed: (o1, e1) => {
@@ -80,6 +89,7 @@ namespace ZipImageViewer
             ThumbImageSource = null;
             ObjectInfo.ImageSources = null;
             ObjectInfo = null;
+            nextSource = null;
             IM1.Source = null;
             IM1.ToolTip = null;
             IM1 = null;

@@ -11,28 +11,36 @@ namespace ZipImageViewer
 {
     public class BorderlessWindow : Window
     {
-        public bool ButtonCloseVisible {
-            get { return (bool)GetValue(ButtonCloseVisibleProperty); }
-            set { SetValue(ButtonCloseVisibleProperty, value); }
+        public Visibility ButtonCloseVisibility {
+            get { return (Visibility)GetValue(ButtonCloseVisibilityProperty); }
+            set { SetValue(ButtonCloseVisibilityProperty, value); }
         }
-        public static readonly DependencyProperty ButtonCloseVisibleProperty =
-            DependencyProperty.Register("ButtonCloseVisible", typeof(bool), typeof(BorderlessWindow), new PropertyMetadata(true));
+        public static readonly DependencyProperty ButtonCloseVisibilityProperty =
+            DependencyProperty.Register("ButtonCloseVisibility", typeof(Visibility), typeof(BorderlessWindow), new PropertyMetadata(Visibility.Visible));
 
 
-        public bool ButtonMaxVisible {
-            get { return (bool)GetValue(ButtonMaxVisibleProperty); }
-            set { SetValue(ButtonMaxVisibleProperty, value); }
+        public Visibility ButtonMinVisibility {
+            get { return (Visibility)GetValue(ButtonMinVisibilityProperty); }
+            set { SetValue(ButtonMinVisibilityProperty, value); }
         }
-        public static readonly DependencyProperty ButtonMaxVisibleProperty =
-            DependencyProperty.Register("ButtonMaxVisible", typeof(bool), typeof(BorderlessWindow), new PropertyMetadata(true));
+        public static readonly DependencyProperty ButtonMinVisibilityProperty =
+            DependencyProperty.Register("ButtonMinVisibility", typeof(Visibility), typeof(BorderlessWindow), new PropertyMetadata(Visibility.Visible));
 
 
-        public bool ButtonMinVisible {
-            get { return (bool)GetValue(ButtonMinVisibleProperty); }
-            set { SetValue(ButtonMinVisibleProperty, value); }
+        public Visibility ButtonMaxVisibility {
+            get { return (Visibility)GetValue(ButtonMaxVisibilityProperty); }
+            set { SetValue(ButtonMaxVisibilityProperty, value); }
         }
-        public static readonly DependencyProperty ButtonMinVisibleProperty =
-            DependencyProperty.Register("ButtonMinVisible", typeof(bool), typeof(BorderlessWindow), new PropertyMetadata(true));
+        public static readonly DependencyProperty ButtonMaxVisibilityProperty =
+            DependencyProperty.Register("ButtonMaxVisibility", typeof(Visibility), typeof(BorderlessWindow), new PropertyMetadata(Visibility.Visible));
+
+
+        public Visibility TitleVisibility {
+            get { return (Visibility)GetValue(TitleVisibilityProperty); }
+            set { SetValue(TitleVisibilityProperty, value); }
+        }
+        public static readonly DependencyProperty TitleVisibilityProperty =
+            DependencyProperty.Register("TitleVisibility", typeof(Visibility), typeof(BorderlessWindow), new PropertyMetadata(Visibility.Visible));
 
 
         public BorderlessWindow() {

@@ -92,18 +92,37 @@ namespace ZipImageViewer
     //    }
     //}
 
-    //public class MathAddConverter : IValueConverter
-    //{
-    //    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-    //        if (!(value is double)) value = System.Convert.ToDouble(value);
-    //        if (!(parameter is double)) parameter = System.Convert.ToDouble(parameter);
-    //        return (double)value + (double)parameter;
-    //    }
+    public class MathMultiplyConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            if (!(value is double)) value = System.Convert.ToDouble(value);
+            if (!(parameter is double)) parameter = System.Convert.ToDouble(parameter);
+            return (double)value * (double)parameter;
+        }
 
-    //    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-    //        throw new NotImplementedException();
-    //    }
-    //}
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ThicknessMultiplyConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            var val = System.Convert.ToDouble(value);
+            var paras = (parameter as string)?.Split(',', ' ');
+            if (paras?.Length == 4)
+                return new Thickness(val * double.Parse(paras[0]),
+                                     val * double.Parse(paras[1]),
+                                     val * double.Parse(paras[2]),
+                                     val * double.Parse(paras[3]));
+            else
+                return new Thickness(val);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
 
     //public class ContextMenuTemplateSelector : DataTemplateSelector
     //{
@@ -114,6 +133,7 @@ namespace ZipImageViewer
     //            return (container as FrameworkElement).TryFindResource("ContextMenuDataTemplate") as DataTemplate;
     //    }
     //}
+
 
     public class CustomCmdArgsConverter : IMultiValueConverter
     {

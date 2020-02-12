@@ -97,34 +97,35 @@
                     <Grid Background="{TemplateBinding Background}">
                         <!--window title-->
                         <TextBlock Margin="10 10 0 0" Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}"
+                                   Visibility="{TemplateBinding TitleVisibility}"
                                    FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
                         <!--the close button-->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-                            <Button x:Name="minimizeButton" Style="{StaticResource WindowButtonStyle}" Content="0" Visibility="Collapsed" Margin="0,10,10,0"/>
-                            <Button x:Name="restoreButton" Style="{StaticResource WindowButtonStyle}" Content="1" Visibility="Collapsed" Margin="0,10,10,0"/>
-                            <Button x:Name="closeButton" Style="{StaticResource WindowButtonStyle}" Content="r" Visibility="Collapsed" Margin="0,10,10,0"/>
+                            <Button x:Name="minimizeButton" Style="{StaticResource WindowButtonStyle}" Content="0"
+                                    Visibility="{TemplateBinding ButtonMinVisibility}" Margin="0,10,10,0"/>
+                            <Button x:Name="restoreButton" Style="{StaticResource WindowButtonStyle}" Content="1"
+                                    Visibility="{TemplateBinding ButtonMaxVisibility}" Margin="0,10,10,0"/>
+                            <Button x:Name="closeButton" Style="{StaticResource WindowButtonStyle}" Content="r"
+                                    Visibility="{TemplateBinding ButtonCloseVisibility}" Margin="0,10,10,0"/>
                         </StackPanel>
 
                         <!--the real content-->
-                        <ContentPresenter x:Name="WindowContent" Margin="10" Content="{TemplateBinding Content}"/>
+                        <ContentPresenter x:Name="WindowContent" Margin="5" Content="{TemplateBinding Content}"/>
                     </Grid>
 
                     <ControlTemplate.Triggers>
-                        <Trigger Property="ButtonCloseVisible" Value="True">
-                            <Setter TargetName="closeButton" Property="Visibility" Value="Visible"/>
+                        <Trigger Property="ButtonCloseVisibility" Value="Visible">
                             <Setter TargetName="WindowContent" Property="Margin" Value="5,30,5,5"/>
                         </Trigger>
-                        <Trigger Property="ButtonMaxVisible" Value="True">
-                            <Setter TargetName="restoreButton" Property="Visibility" Value="Visible"/>
+                        <Trigger Property="ButtonMaxVisibility" Value="Visible">
                             <Setter TargetName="WindowContent" Property="Margin" Value="5,30,5,5"/>
                         </Trigger>
-                        <Trigger Property="ButtonMinVisible" Value="True">
-                            <Setter TargetName="minimizeButton" Property="Visibility" Value="Visible"/>
+                        <Trigger Property="ButtonMinVisibility" Value="Visible">
                             <Setter TargetName="WindowContent" Property="Margin" Value="5,30,5,5"/>
                         </Trigger>
                         <Trigger Property="WindowState" Value="Maximized">
-                            <Setter TargetName="WindowContent" Property="Margin" Value="5,26,5,5"/>
+                            <Setter TargetName="WindowContent" Property="Margin" Value="5,25,5,5"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

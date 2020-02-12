@@ -67,7 +67,8 @@
                     <Setter Property="Height" Value="48"/>
                     <Setter Property="Foreground" Value="#AAFFFFFF"/>
                     <Setter Property="Cursor" Value="Hand"/>
-                    <Setter Property="Opacity" Value="0.5"/>
+                    <Setter Property="Opacity" Value="0.2"/>
+                    <Setter Property="Margin" Value="0 10 0 0"/>
                     <Style.Triggers>
                         <Trigger Property="IsMouseOver" Value="true">
                             <Trigger.EnterActions>
@@ -80,9 +81,15 @@
                     </Style.Triggers>
                 </Style>
             </StackPanel.Resources>
-            <TextBlock>
-                <Hyperlink TextDecorations="{x:Null}" Click="Show_Options">
+            <TextBlock Visibility="{Binding AuxVisibility, ElementName=MainWin, Mode=OneWay}"
+                       ToolTip="Options">
+                <Hyperlink Name="HY_Options" TextDecorations="{x:Null}" Click="Sidebar_Click">
                     <fa:ImageAwesome Icon="Solid_Cog"/>
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock ToolTip="Immsersion Mode">
+                <Hyperlink Name="HY_ImmersionMode" TextDecorations="{x:Null}" Click="Sidebar_Click">
+                    <fa:ImageAwesome Icon="Solid_Film"/>
                 </Hyperlink>
             </TextBlock>
         </StackPanel>
@@ -104,6 +111,7 @@
                                              Width="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
                                              Height="{Binding ElementName=MainWin, Path=ThumbRealHeight, Mode=OneWay}"
                                              ContextMenu="{StaticResource ThumbContextMenu}"
+                                             FlagIconVisibility="{Binding ElementName=MainWin, Path=AuxVisibility, Mode=OneWay}"
                                              MouseUp="TN1_MouseUp">
                                 <local:Thumbnail.Style>
                                     <Style TargetType="local:Thumbnail" BasedOn="{StaticResource S_RiseOnHover}"/>
@@ -112,13 +120,10 @@
 
                             <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10" Foreground="Gray"
                                        MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
-                                       HorizontalAlignment="Center" Panel.ZIndex="0" TextWrapping="Wrap"/>
+                                       HorizontalAlignment="Center" Panel.ZIndex="0" TextWrapping="Wrap"
+                                       Visibility="{Binding ElementName=MainWin, Path=AuxVisibility, Mode=OneWay}">
+                            </TextBlock>
                         </StackPanel>
-                        <!--<DataTemplate.Triggers>
-                            <Trigger SourceName="SP1" Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TN1" Property="Tag" Value="True"/>
-                            </Trigger>
-                        </DataTemplate.Triggers>-->
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
                 <ItemsControl.ItemContainerStyle>

@@ -89,7 +89,7 @@
             <Border Grid.Row="1" Style="{StaticResource SettingBlockStyle}">
                 <StackPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Size"/>
-                    <StackPanel Orientation="Horizontal">
+                    <DockPanel LastChildFill="False">
                         <ContentControl>
                             <TextBox MinWidth="32" VerticalAlignment="Top"
                                      Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item1}"/>
@@ -99,13 +99,15 @@
                             <TextBox MinWidth="32" VerticalAlignment="Top"
                                      Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item2}"/>
                         </ContentControl>
-                    </StackPanel>
+                        <Button DockPanel.Dock="Right" Content="Reload View" VerticalAlignment="Center" Click="Btn_Reload_Click"/>
+                    </DockPanel>
                 </StackPanel>
             </Border>
             <TextBlock  Grid.Row="1" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <TextBlock.Inlines>
                     <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.<LineBreak/>
-                    The size ensures a minimum width or height (depending on the aspect ratio of the image) for decoding images to provide a higher thumbnail quality.<LineBreak/>
+                    The size ensures a minimum width or height (depending on the aspect ratio of the image) for decoding images to provide a higher thumbnail quality.
+                    Use the reload button to reload the thumbnails.<LineBreak/>
                     <Bold>Changing this value invalidates the entire thumbnail cache.</Bold>
                 </TextBlock.Inlines>
             </TextBlock>

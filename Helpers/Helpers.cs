@@ -128,7 +128,7 @@ namespace ZipImageViewer
         //}
     }
 
-    public class Helpers {
+    public static class Helpers {
         /// <summary>
         /// Get file type based on extension. Assumes fileName points to a file.
         /// </summary>
@@ -412,5 +412,6 @@ namespace ZipImageViewer
         public static string CustomCmdArgsReplace(string input, ObjectInfo objInfo) {
             return input.Replace(@"%FileSystemPath%", objInfo.FileSystemPath);
         }
+
     }
 }
