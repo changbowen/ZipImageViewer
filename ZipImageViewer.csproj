@@ -112,6 +112,7 @@
     <Compile Include="Helpers\ObjectInfo.cs" />
     <Compile Include="Helpers\Setting.cs" />
     <Compile Include="Helpers\SQLiteHelper.cs" />
+    <Compile Include="UserControls\BorderlessWindow.cs" />
     <Compile Include="UserControls\BubbleMessage.xaml.cs">
       <DependentUpon>BubbleMessage.xaml</DependentUpon>
     </Compile>
@@ -129,6 +130,10 @@
     <Compile Include="ViewWindow.xaml.cs">
       <DependentUpon>ViewWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="UserControls\StylesAndAnimations.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\AppleStyleScrollBar.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

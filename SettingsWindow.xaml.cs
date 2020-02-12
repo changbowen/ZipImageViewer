@@ -11,7 +11,7 @@ using SevenZip;
 
 namespace ZipImageViewer
 {
-    public partial class SettingsWindow : Window
+    public partial class SettingsWindow : BorderlessWindow
     {
         public SettingsWindow(Window owner) {
             Owner = owner;

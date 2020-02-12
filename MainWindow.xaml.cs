@@ -16,7 +16,7 @@ using SizeInt = System.Drawing.Size;
 
 namespace ZipImageViewer
 {
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class MainWindow : BorderlessWindow, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
