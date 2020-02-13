@@ -8,7 +8,6 @@ using System.Windows.Media.Imaging;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using SizeInt = System.Drawing.Size;
 using System.Windows.Controls;
-using System.Data.SQLite;
 using System.Collections.Generic;
 using System.Collections;
 using System.Diagnostics;
@@ -74,16 +73,46 @@ namespace ZipImageViewer
         }
     }
 
+    /// <summary>
+    /// FileFlags also determines the sorting order (defined in FolderSorter).
+    /// Being casted to int, lower number comes in the front. Except for Unknown which comes last;
+    /// </summary>
     [Flags]
     public enum FileFlags {
         Unknown = 0,
-        Image = 1,
-        Archive = 2,
-        Directory = 4,
+        Error = 1,
+        Directory = 2,
+        Archive = 4,
+        Image = 8,
         ///// <summary>
         ///// Indicate to load all archive content instead of a single image
         ///// </summary>
         //Archive_OpenSelf = 8
+    }
+
+    /// <summary>
+    /// Sort based on int value of FileFlag.
+    /// For same flags (same type of file), do string compare on VirtualPath.
+    /// </summary>
+    public class FolderSorter : IComparer
+    {
+        public int Compare(object x, object y) {
+            var oX = (ObjectInfo)x;
+            var oY = (ObjectInfo)y;
+
+            //strip supporting bits
+            var baseX = oX.Flags & ~FileFlags.Error;
+            var baseY = oY.Flags & ~FileFlags.Error;
+
+            if (baseX != baseY) {
+                if (baseX == FileFlags.Unknown) return 1; //put unknowns in last
+                if (baseY == FileFlags.Unknown) return -1; //put unknowns in last
+                return baseX - baseY;
+            }
+            else {
+                return string.Compare(oX.VirtualPath, oY.VirtualPath);
+            }
+        }
     }
 
 
@@ -364,21 +393,6 @@ namespace ZipImageViewer
             }
             //Return this as a size now
             return new Size(scaleX, scaleY);
-        }
-
-        public class FolderSorter : IComparer
-        {
-            public int Compare(object x, object y) {
-                var ox = (ObjectInfo)x;
-                var oy = (ObjectInfo)y;
-
-                if (ox.Flags != oy.Flags)
-                    return oy.Flags - ox.Flags;
-                else {
-                    return string.Compare(ox.VirtualPath, oy.VirtualPath);
-                }
-                
-            }
         }
 
 

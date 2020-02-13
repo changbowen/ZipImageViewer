@@ -100,7 +100,10 @@ namespace ZipImageViewer
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
 
             if (ObjectInfo.ImageSources == null || ObjectInfo.ImageSources.Length == 0) {
-                ThumbImageSource = App.fa_meh;
+                if (ObjectInfo.Flags.HasFlag(FileFlags.Error))
+                    ThumbImageSource = App.fa_exclamation;
+                else
+                    ThumbImageSource = App.fa_meh;
                 return;
             }
 #if DEBUG

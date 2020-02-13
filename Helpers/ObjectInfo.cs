@@ -61,7 +61,7 @@ namespace ZipImageViewer
         /// </summary>
         public string VirtualPath {
             get {
-                if (Flags.HasFlag(FileFlags.Archive))
+                if (Flags.HasFlag(FileFlags.Archive) && Flags.HasFlag(FileFlags.Image))
                     return Path.Combine(FileSystemPath, FileName);
                 return FileSystemPath;
             }

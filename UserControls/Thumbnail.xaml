@@ -81,7 +81,7 @@
                              Duration="0:0:0.5" From="-50" To="0"/>
         </Storyboard>
         
-        <!--flip horizontal-->
+        <!--flip horizontal--><!--
         <Storyboard x:Key="SB_ThumbTrans_3_Out" Completed="ThumbTransAnimOut_Completed">
             <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
                              Duration="0:0:0.5" To="0"/>
@@ -95,7 +95,7 @@
                              Duration="0:0:0.5" To="1"/>
         </Storyboard>
 
-        <!--flip vertical-->
+        --><!--flip vertical--><!--
         <Storyboard x:Key="SB_ThumbTrans_4_Out" Completed="ThumbTransAnimOut_Completed">
             <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
                              Duration="0:0:0.5" To="0"/>
@@ -107,7 +107,7 @@
                              Duration="0:0:0.5" To="1"/>
             <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseOut}"
                              Duration="0:0:0.5" To="1"/>
-        </Storyboard>
+        </Storyboard>-->
     </UserControl.Resources>
 
     <Grid>
@@ -125,9 +125,9 @@
                     CornerRadius="{Binding ActualWidth, Mode=OneWay, RelativeSource={RelativeSource Self}, Converter={StaticResource MathMultiplyConverter}, ConverterParameter=0.05}"/>
             <local:DpiImage x:Name="IM1" HorizontalAlignment="Center" VerticalAlignment="Center"
                         RenderOptions.BitmapScalingMode="HighQuality" Stretch="None"
-                        Source="{Binding ElementName=TN, Path=ThumbImageSource, Mode=OneWay}">
-                <!--ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo, Mode=OneWay}"
-                        ToolTipService.ShowDuration="20000">-->
+                        Source="{Binding ElementName=TN, Path=ThumbImageSource, Mode=OneWay}"
+                ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo, Mode=OneWay}"
+                        ToolTipService.ShowDuration="20000">
             </local:DpiImage>
         </Grid>
 

@@ -68,7 +68,7 @@ namespace ZipImageViewer
             Setting.ThumbnailSize.PropertyChanged += ThumbnailSizeChanged;
 
             var view = (ListCollectionView)((CollectionViewSource)FindResource("ObjectListViewSource")).View;
-            view.CustomSort = new Helpers.FolderSorter();
+            view.CustomSort = new FolderSorter();
 
             ObjectList.CollectionChanged += (o1, e1) => {
                 if (e1.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
@@ -135,7 +135,6 @@ namespace ZipImageViewer
         #endregion
 
         private void Callback_AddToImageList(ObjectInfo objInfo) {
-            //ObjectList.Add(new ObjectInfo(objInfo.FileSystemPath, FileFlags.Unknown));
             var add = true;
             Dispatcher.Invoke(() => {
                 if (AuxVisibility == Visibility.Collapsed && (objInfo.ImageSources == null || objInfo.ImageSources.Length == 0))
@@ -331,7 +330,7 @@ namespace ZipImageViewer
                             //if all fails mark with icon and when clicked
                             //prompt for a generic or dedicated password then extract with it
                             //-------------logic needed here-------------
-                            Dispatcher.Invoke(() => objInfo.ImageSources = new[] { App.fa_exclamation });
+                            objInfo.Flags |= FileFlags.Error;
                             objInfo.Comments = $"Extraction failed. Bad password or not supported image formats.";
                             break;
                     }
