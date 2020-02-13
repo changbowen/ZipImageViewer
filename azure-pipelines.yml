@@ -42,8 +42,8 @@ steps:
     repositoryName: '$(Build.Repository.Name)'
     action: 'create'
     target: '$(Build.SourceVersion)'
-    tagSource: 'gitTag'
-    tagPattern: '$(Build.SourceVersion)'
+    tagSource: 'userSpecifiedTag'
+    tag: 'Release_$(Build.SourceVersion)'
     assets: '$(System.DefaultWorkingDirectory)/$(Build.Repository.Name).zip'
     isDraft: true
     changeLogCompareToRelease: 'lastFullRelease'
