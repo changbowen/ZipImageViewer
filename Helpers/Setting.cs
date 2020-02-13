@@ -44,7 +44,7 @@ namespace ZipImageViewer
             }
         }
 
-        private static ObservablePair<int, int> thumbnailSize = new ObservablePair<int, int>(300, 200);
+        private static ObservablePair<int, int> thumbnailSize = new ObservablePair<int, int>(300, 300);
         public static ObservablePair<int, int> ThumbnailSize {
             get => thumbnailSize;
             set {
