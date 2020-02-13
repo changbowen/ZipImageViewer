@@ -30,10 +30,10 @@ steps:
 
 - task: ArchiveFiles@2
   inputs:
-    rootFolderOrFile: '$(Build.StagingDirectory)/bin/x64/Release'
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/bin/x64/Release'
     includeRootFolder: false
     archiveType: 'zip'
-    archiveFile: '$(Build.StagingDirectory)/$(Build.Repository.Name).zip'
+    archiveFile: '$(System.DefaultWorkingDirectory)/$(Build.Repository.Name).zip'
     replaceExistingArchive: true
 
 - task: GitHubRelease@1
@@ -44,7 +44,7 @@ steps:
     target: '$(Build.SourceVersion)'
     tagSource: 'gitTag'
     tagPattern: 'v1.*'
-    assets: '$(Build.StagingDirectory)/$(Build.Repository.Name).zip'
+    assets: '$(System.DefaultWorkingDirectory)/$(Build.Repository.Name).zip'
     isDraft: true
     changeLogCompareToRelease: 'lastFullRelease'
     changeLogType: 'commitBased'
