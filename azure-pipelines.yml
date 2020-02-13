@@ -15,6 +15,10 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
+- task: AssembyInfoReader@2
+  inputs:
+    searchPattern: '**\AssemblyInfo.cs'
+
 - task: NuGetToolInstaller@1
 
 - task: NuGetCommand@2
@@ -43,7 +47,7 @@ steps:
     action: 'create'
     target: '$(Build.SourceVersion)'
     tagSource: 'userSpecifiedTag'
-    tag: 'Release_$(Build.SourceVersion)'
+    tag: 'v$(AssemblyInfo.AssemblyVersion.Major).$(AssemblyInfo.AssemblyVersion.Minor).$(AssemblyInfo.AssemblyVersion.Build)'
     assets: '$(System.DefaultWorkingDirectory)/$(Build.Repository.Name).zip'
     isDraft: true
     changeLogCompareToRelease: 'lastFullRelease'
