@@ -125,9 +125,7 @@
                     CornerRadius="{Binding ActualWidth, Mode=OneWay, RelativeSource={RelativeSource Self}, Converter={StaticResource MathMultiplyConverter}, ConverterParameter=0.05}"/>
             <local:DpiImage x:Name="IM1" HorizontalAlignment="Center" VerticalAlignment="Center"
                         RenderOptions.BitmapScalingMode="HighQuality" Stretch="None"
-                        Source="{Binding ElementName=TN, Path=ThumbImageSource, Mode=OneWay}"
-                ToolTip="{Binding ElementName=TN, Path=ObjectInfo.DebugInfo, Mode=OneWay}"
-                        ToolTipService.ShowDuration="20000">
+                        Source="{Binding ElementName=TN, Path=ThumbImageSource, Mode=OneWay}">
             </local:DpiImage>
         </Grid>
 

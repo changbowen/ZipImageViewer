@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Data;
 
 namespace ZipImageViewer
 {
@@ -70,7 +71,14 @@ namespace ZipImageViewer
 
         public Thumbnail() {
             InitializeComponent();
-            
+#if DEBUG
+            IM1.SetBinding(ToolTipProperty, new Binding() {
+                ElementName = @"TN",
+                Path = new PropertyPath($@"{nameof(ObjectInfo)}.{nameof(ObjectInfo.DebugInfo)}"),
+                Mode = BindingMode.OneWay,
+            });
+            ToolTipService.SetShowDuration(IM1, 20000);
+#endif
             thumbTransAnimCount = Resources.Keys.Cast<string>().Count(k => k.StartsWith(@"SB_ThumbTrans_")) / 2;
         }
 
