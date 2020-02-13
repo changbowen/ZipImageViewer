@@ -47,7 +47,7 @@ steps:
     action: 'create'
     target: '$(Build.SourceVersion)'
     tagSource: 'userSpecifiedTag'
-    tag: '$(AssemblyInfo.AssemblyVersion)'
+    tag: 'v$(AssemblyInfo.AssemblyVersion.Major).$(AssemblyInfo.AssemblyVersion.Minor).$(AssemblyInfo.AssemblyVersion.Build)'
     assets: '$(System.DefaultWorkingDirectory)/$(Build.Repository.Name).zip'
     isDraft: true
     changeLogCompareToRelease: 'lastFullRelease'
