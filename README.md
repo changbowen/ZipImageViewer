@@ -3,6 +3,8 @@ Minimalistic image viewer that introduce no "DPI blurriness" and views contents 
 
 Need .Net Framework 4.7.2 (included in Windows 10 April 2018 Update)
 
+[![Build Status](https://changb0wen.visualstudio.com/ZipImageViewer/_apis/build/status/changbowen.ZipImageViewer?branchName=master)](https://changb0wen.visualstudio.com/ZipImageViewer/_build/latest?definitionId=4&branchName=master)
+
 ## Features
 - Opens all archives supported by 7z.
 - Saves password of each archive for later.
