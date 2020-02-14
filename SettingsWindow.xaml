@@ -6,15 +6,15 @@
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
         Width="800" Height="600" Icon="Resources/ZipImageViewer.ico"
         Background="#FF333333" Foreground="LightGray" WindowStartupLocation="CenterOwner"
-        Title="Settings" UseLayoutRounding="True" Loaded="SettingsWin_Loaded">
+        Title="Settings" UseLayoutRounding="True" Loaded="SettingsWin_Loaded" Closing="SettingsWin_Closing" PreviewKeyDown="SettingsWin_PreviewKeyDown">
     <ScrollViewer>
         <ScrollViewer.Resources>
             <Style TargetType="ScrollBar" BasedOn="{StaticResource AppleStyleScrollBar}"/>
         </ScrollViewer.Resources>
         <local:PaddedGrid Padding="4" VerticalChildrenAlignment="Stretch" HorizontalChildrenAlignment="Stretch">
             <local:PaddedGrid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
                 <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="1*"/>
             </local:PaddedGrid.ColumnDefinitions>
             <local:PaddedGrid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -22,9 +22,10 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="3*"/>
                 <RowDefinition Height="2*"/>
-                <RowDefinition Height="Auto"/>
             </local:PaddedGrid.RowDefinitions>
             <local:PaddedGrid.Resources>
                 <Style x:Key="TipTextStyle" TargetType="TextBlock">
@@ -113,6 +114,18 @@
             </TextBlock>
 
             <Border Grid.Row="2" Style="{StaticResource SettingBlockStyle}">
+                <DockPanel LastChildFill="False">
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Swap Delay Multiplier" Margin="0"/>
+                    <ContentControl DockPanel.Dock="Right">
+                        <TextBox Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbSwapDelayMultiplier}"
+                                 Width="40"/>
+                    </ContentControl>
+                </DockPanel>
+            </Border>
+            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource TipTextStyle}"
+                       Text="The delay of thumbnail change on folders and archives. Higher value results in longer delay."/>
+
+            <Border Grid.Row="3" Style="{StaticResource SettingBlockStyle}">
                 <StackPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Database Directory"/>
                     <DockPanel>
@@ -123,9 +136,10 @@
                     </DockPanel>
                 </StackPanel>
             </Border>
-            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="The path to 7z.dll on the PC."/>
+            <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource TipTextStyle}"
+                       Text="The folder to save the thumbnail database file."/>
 
-            <Border Grid.Row="3" Style="{StaticResource SettingBlockStyle}">
+            <Border Grid.Row="4" Style="{StaticResource SettingBlockStyle}">
                 <StackPanel>
                     <DockPanel>
                         <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Database Size"/>
@@ -149,7 +163,7 @@
                     </DockPanel>
                 </StackPanel>
             </Border>
-            <TextBlock  Grid.Row="3" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock  Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <TextBlock.Inlines>
                     Maximum size limit of the thumbnail database.
                     <LineBreak/>
@@ -159,7 +173,21 @@
                 </TextBlock.Inlines>
             </TextBlock>
 
-            <Border Grid.Row="4" Style="{StaticResource SettingBlockStyle}">
+            <Border Grid.Row="5" Style="{StaticResource SettingBlockStyle}">
+                <DockPanel LastChildFill="False">
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Lite Mode" Margin="0"/>
+                    <CheckBox Content="Enabled" VerticalAlignment="Center" DockPanel.Dock="Right"
+                              Foreground="{Binding Foreground, ElementName=SettingsWin, Mode=OneTime}"
+                              IsChecked="{Binding Source={x:Static local:App.Setting}, Path=LiteMode}"/>
+                </DockPanel>
+            </Border>
+            <TextBlock  Grid.Row="5" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+                <TextBlock.Inlines>
+                    Disables most effects that affect performance.
+                </TextBlock.Inlines>
+            </TextBlock>
+
+            <Border Grid.Row="6" Style="{StaticResource SettingBlockStyle}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
@@ -180,7 +208,7 @@
                     </StackPanel>
                 </Grid>
             </Border>
-            <TextBlock  Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock  Grid.Row="6" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <TextBlock.Inlines>
                     The transition animation used in the viewer.
                     <LineBreak/>
@@ -188,7 +216,7 @@
                 </TextBlock.Inlines>
             </TextBlock>
 
-            <Border Grid.Row="5" Style="{StaticResource SettingBlockStyle}">
+            <Border Grid.Row="7" Style="{StaticResource SettingBlockStyle}">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="Saved Passwords"/>
                     <TabControl>
@@ -218,7 +246,7 @@
                     </TabControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="5" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <TextBlock.Inlines>
                     Saved passwords for zipped files.
                     <LineBreak/>
@@ -235,7 +263,7 @@
                 </TextBlock.Inlines>
             </TextBlock>
 
-            <Border Grid.Row="6" Grid.RowSpan="2" Style="{StaticResource SettingBlockStyle}" Margin="8 4 8 8">
+            <Border Grid.Row="8" Grid.RowSpan="2" Style="{StaticResource SettingBlockStyle}" Margin="8 4 8 8">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="Custom Commands"/>
                     <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
@@ -251,17 +279,17 @@
                     </ContentControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="6" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <TextBlock.Inlines>
                     Commands used in right-click menu. One in each line.<LineBreak/>
                     <Bold>%FileSystemPath%</Bold> - Path to the current file or folder.
                 </TextBlock.Inlines>
             </TextBlock>
 
-            <StackPanel Grid.Row="100" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <!--<StackPanel Grid.Row="100" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button x:Name="Btn_OK" Content="OK" MinWidth="60" MinHeight="30" Click="Btn_OK_Click"/>
                 <Button x:Name="Btn_Cancel" Content="Cancel" MinWidth="60" MinHeight="30" Margin="4 0 0 0" Click="Btn_Cancel_Click"/>
-            </StackPanel>
+            </StackPanel>-->
         </local:PaddedGrid>
     </ScrollViewer>
 </local:BorderlessWindow>

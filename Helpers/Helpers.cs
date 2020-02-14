@@ -219,10 +219,19 @@ namespace ZipImageViewer
             var bi = new BitmapImage();
             bi.BeginInit();
             bi.CacheOption = BitmapCacheOption.OnLoad;
-            if (frameSize.Width > frameSize.Height)
-                bi.DecodePixelHeight = decodeSize.Height;
-            else
-                bi.DecodePixelWidth = decodeSize.Width;
+            if (frameSize.Width > 0 && frameSize.Height > 0) {
+                var frameRatio = frameSize.Width / frameSize.Height;
+                if (decodeSize.Width > 0 && decodeSize.Height > 0) {
+                    if (frameRatio > (double)decodeSize.Width / decodeSize.Height)
+                        bi.DecodePixelHeight = decodeSize.Height;
+                    else
+                        bi.DecodePixelWidth = decodeSize.Width;
+                }
+                else if (decodeSize.Width == 0 && decodeSize.Height > 0)
+                    bi.DecodePixelHeight = decodeSize.Height;
+                else if (decodeSize.Height == 0 && decodeSize.Width > 0)
+                    bi.DecodePixelWidth = decodeSize.Width;
+            }
             bi.StreamSource = stream;
             bi.EndInit();
             bi.Freeze();
@@ -427,5 +436,30 @@ namespace ZipImageViewer
             return input.Replace(@"%FileSystemPath%", objInfo.FileSystemPath);
         }
 
+
+        public static T GetVisualChild<T>(DependencyObject parent) where T : Visual {
+            T child = default;
+
+            int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < numVisuals; i++) {
+                Visual v = (Visual)VisualTreeHelper.GetChild(parent, i);
+                child = v as T;
+                if (child == null) {
+                    child = GetVisualChild<T>(v);
+                }
+                if (child != null) {
+                    break;
+                }
+            }
+            return child;
+        }
+    }
+
+
+    public class VirtualizingWrapPanel : WpfToolkit.Controls.VirtualizingWrapPanel
+    {
+        public int TotalRowCount => rowCount;
+        public int RowItemCount => itemsPerRowCount;
+        public new int VisualChildrenCount => base.VisualChildrenCount;
     }
 }

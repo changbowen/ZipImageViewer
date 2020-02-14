@@ -74,6 +74,16 @@ namespace ZipImageViewer
             }
         }
 
+        private static double thumbSwapDelayMultiplier = 1d;
+        public static double ThumbSwapDelayMultiplier {
+            get => thumbSwapDelayMultiplier;
+            set {
+                if (thumbSwapDelayMultiplier == value) return;
+                thumbSwapDelayMultiplier = value;
+                OnStaticPropertyChanged(nameof(ThumbSwapDelayMultiplier));
+            }
+        }
+
         private static double thumbDbSize = 2d;
         public static double ThumbDbSize {
             get => thumbDbSize;
@@ -103,6 +113,17 @@ namespace ZipImageViewer
                 OnStaticPropertyChanged(nameof(LastPath));
             }
         }
+
+        private static bool liteMode = false;
+        public static bool LiteMode {
+            get => liteMode;
+            set {
+                if (liteMode == value) return;
+                liteMode = value;
+                OnStaticPropertyChanged(nameof(LiteMode));
+            }
+        }
+
 
         private static ObservableCollection<ObservableObj> customCommands;
         public static ObservableCollection<ObservableObj> CustomCommands {
@@ -147,14 +168,16 @@ namespace ZipImageViewer
             //parse config file
             var iniData = new FileIniDataParser().ReadFile(path, System.Text.Encoding.UTF8);
 
-            SevenZipDllPath =       ParseConfig(iniData, nameof(SevenZipDllPath),       SevenZipDllPath);
-            ThumbDbDir =            ParseConfig(iniData, nameof(ThumbDbDir),            ThumbDbDir);
-            ThumbnailSize =         ParseConfig(iniData, nameof(ThumbnailSize),         ThumbnailSize);
-            ThumbDbSize =           ParseConfig(iniData, nameof(ThumbDbSize),           ThumbDbSize);
-            ViewerTransition =      ParseConfig(iniData, nameof(ViewerTransition),      ViewerTransition);
-            ViewerTransitionSpeed = ParseConfig(iniData, nameof(ViewerTransitionSpeed), ViewerTransitionSpeed);
-            LastWindowSize =        ParseConfig(iniData, nameof(LastWindowSize),        LastWindowSize);
-            LastPath =              ParseConfig(iniData, nameof(LastPath),              LastPath);
+            SevenZipDllPath =          ParseConfig(iniData, nameof(SevenZipDllPath),       SevenZipDllPath);
+            ThumbDbDir =               ParseConfig(iniData, nameof(ThumbDbDir),            ThumbDbDir);
+            ThumbnailSize =            ParseConfig(iniData, nameof(ThumbnailSize),         ThumbnailSize);
+            ThumbSwapDelayMultiplier = ParseConfig(iniData, nameof(ThumbSwapDelayMultiplier), ThumbSwapDelayMultiplier);
+            ThumbDbSize =              ParseConfig(iniData, nameof(ThumbDbSize),           ThumbDbSize);
+            ViewerTransition =         ParseConfig(iniData, nameof(ViewerTransition),      ViewerTransition);
+            ViewerTransitionSpeed =    ParseConfig(iniData, nameof(ViewerTransitionSpeed), ViewerTransitionSpeed);
+            LastWindowSize =           ParseConfig(iniData, nameof(LastWindowSize),        LastWindowSize);
+            LastPath =                 ParseConfig(iniData, nameof(LastPath),              LastPath);
+            LiteMode =                 ParseConfig(iniData, nameof(LiteMode),              LiteMode);
 
             //parse custom commands
             CustomCommands = new ObservableCollection<ObservableObj>();
@@ -188,6 +211,9 @@ namespace ZipImageViewer
             switch (defaultVal) {
                 case string _:
                     result = value;
+                    break;
+                case bool _:
+                    result = bool.Parse(value);
                     break;
                 case SizeInt _:
                 case ObservablePair<int, int> _:
@@ -250,11 +276,13 @@ namespace ZipImageViewer
 {nameof(SevenZipDllPath)}={SevenZipDllPath}
 {nameof(ThumbDbDir)}={ThumbDbDir}
 {nameof(ThumbnailSize)}={ThumbnailSize.Item1}x{ThumbnailSize.Item2}
+{nameof(ThumbSwapDelayMultiplier)}={ThumbSwapDelayMultiplier}
 {nameof(ThumbDbSize)}={ThumbDbSize}
 {nameof(ViewerTransition)}={ViewerTransition}
 {nameof(ViewerTransitionSpeed)}={ViewerTransitionSpeed}
 {nameof(LastWindowSize)}={LastWindowSize.Width}x{LastWindowSize.Height}
 {nameof(LastPath)}={LastPath}
+{nameof(LiteMode)}={LiteMode}
 
 [Custom Commands]
 {(CustomCommands?.Count > 0 ?

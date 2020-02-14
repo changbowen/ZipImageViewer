@@ -124,8 +124,8 @@
             <Border x:Name="mask" Background="#FF333333"
                     CornerRadius="{Binding ActualWidth, Mode=OneWay, RelativeSource={RelativeSource Self}, Converter={StaticResource MathMultiplyConverter}, ConverterParameter=0.05}"/>
             <local:DpiImage x:Name="IM1" HorizontalAlignment="Center" VerticalAlignment="Center"
-                        RenderOptions.BitmapScalingMode="HighQuality" Stretch="None"
-                        Source="{Binding ElementName=TN, Path=ThumbImageSource, Mode=OneWay}">
+                            RenderOptions.BitmapScalingMode="HighQuality" Stretch="None"
+                            Source="{Binding ElementName=TN, Path=ThumbImageSource, Mode=OneWay}">
             </local:DpiImage>
         </Grid>
 
@@ -133,8 +133,11 @@
                          Visibility="{Binding FlagIconVisibility, ElementName=TN, Mode=OneWay}"
                          Margin="{Binding ActualWidth, ElementName=mask, Mode=OneWay, Converter={StaticResource ThicknessMultiplyConverter}, ConverterParameter=0 0.06 0.06 0}"
                          Width="{Binding ActualWidth, ElementName=mask, Mode=OneWay, Converter={StaticResource MathMultiplyConverter}, ConverterParameter=0.16}"
-                         Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}, Mode=OneWay}"
-                         Effect="{StaticResource DS_Below}">
+                         Height="{Binding Width, RelativeSource={RelativeSource Self}, Mode=OneWay}"
+                         Icon="{Binding ElementName=TN, Path=ObjectInfo.Flags, Converter={StaticResource FlagToImageConverter}, Mode=OneWay}">
+            <fa:ImageAwesome.Style>
+                <Style TargetType="fa:ImageAwesome" BasedOn="{StaticResource S_DropShadow}"/>
+            </fa:ImageAwesome.Style>
         </fa:ImageAwesome>
     </Grid>
     

@@ -9,6 +9,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="UserControls/AppleStyleScrollBar.xaml"/>
                 <ResourceDictionary Source="UserControls/StylesAndAnimations.xaml"/>
+                <ResourceDictionary Source="UserControls/BorderlessWindow.xaml"/>
                 <ResourceDictionary Source="UserControls/Generic.xaml"/>
                 <!--<ResourceDictionary>
                     --><!--<FontFamily x:Key="FontAwesomeRegular">/ZipImageViewer;component/Resources/FontAwesome5FreeRegular400.otf#Font Awesome 5 Free Regular</FontFamily>

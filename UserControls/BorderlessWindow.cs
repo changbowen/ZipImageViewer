@@ -62,7 +62,11 @@ namespace ZipImageViewer
 
         protected override void OnMouseDown(MouseButtonEventArgs e) {
             base.OnMouseDown(e);
-            if (e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Pressed) DragMove();
+            if (e.Source is Window &&
+                e.ChangedButton == MouseButton.Left &&
+                e.ButtonState == MouseButtonState.Pressed) {
+                DragMove();
+            }
         }
 
         protected void MinimizeClick(object sender, RoutedEventArgs e) {

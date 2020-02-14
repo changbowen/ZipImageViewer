@@ -6,10 +6,11 @@
         xmlns:local="clr-namespace:ZipImageViewer"
         xmlns:fa="http://schemas.fontawesome.com/icons/"
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        xmlns:vir="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
         Icon="Resources/ZipImageViewer.ico"
-        mc:Ignorable="d" Background="#FF1F1F1F" UseLayoutRounding="True" Foreground="LightGray"
+        mc:Ignorable="d" UseLayoutRounding="True" Background="#FF1F1F1F" Foreground="LightGray"
         Title="{Binding ElementName=MainWin, Path=CurrentPath, Mode=OneWay}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
-        Loaded="MainWin_Loaded" PreviewMouseDown="MainWin_MouseDown" Unloaded="MainWin_Unloaded" DpiChanged="MainWin_DpiChanged">
+        Loaded="MainWin_Loaded" Unloaded="MainWin_Unloaded" DpiChanged="MainWin_DpiChanged">
     <Window.Resources>
         <CollectionViewSource x:Key="ObjectListViewSource"
                               Source="{Binding ElementName=MainWin, Path=ObjectList, Mode=OneTime}">
@@ -58,85 +59,145 @@
                 </MenuItem.ItemTemplate>
             </MenuItem>-->
         </ContextMenu>
+        
+        <DataTemplate x:Key="ThumbDataTemplate" DataType="{x:Type local:ObjectInfo}">
+            <StackPanel x:Name="SP1" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" UseLayoutRounding="True">
+                <local:Thumbnail x:Name="TN1" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1"
+                                 ObjectInfo="{Binding Mode=OneTime}" Margin="10"
+                                 Width="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
+                                 Height="{Binding ElementName=MainWin, Path=ThumbRealHeight, Mode=OneWay}"
+                                 ContextMenu="{StaticResource ThumbContextMenu}"
+                                 FlagIconVisibility="{Binding ElementName=MainWin, Path=AuxVisibility, Mode=OneWay}"
+                                 PreviewMouseDown="TN1_Click">
+                    <local:Thumbnail.Style>
+                        <Style TargetType="local:Thumbnail" BasedOn="{StaticResource S_RiseOnHover}"/>
+                    </local:Thumbnail.Style>
+                </local:Thumbnail>
+
+                <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10" Foreground="Gray"
+                           MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
+                           HorizontalAlignment="Center" Panel.ZIndex="0" TextWrapping="Wrap"
+                           Visibility="{Binding ElementName=MainWin, Path=AuxVisibility, Mode=OneWay}">
+                </TextBlock>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
     <Grid>
-        <StackPanel HorizontalAlignment="Right" Panel.ZIndex="10000" Margin="0 10 20 0">
-            <StackPanel.Resources>
-                <Style TargetType="fa:ImageAwesome" BasedOn="{StaticResource S_RiseOnHover}">
-                    <Setter Property="Width" Value="48"/>
-                    <Setter Property="Height" Value="48"/>
-                    <Setter Property="Foreground" Value="#AAFFFFFF"/>
-                    <Setter Property="Cursor" Value="Hand"/>
-                    <Setter Property="Opacity" Value="0.2"/>
-                    <Setter Property="Margin" Value="0 10 0 0"/>
+        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Panel.ZIndex="10000" Margin="0 10" Padding="0 20 20 20" Background="Transparent">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="RenderTransform">
+                        <Setter.Value>
+                            <TranslateTransform X="-85"/>
+                        </Setter.Value>
+                    </Setter>
                     <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="true">
+                        <Trigger Property="IsMouseOver" Value="True">
                             <Trigger.EnterActions>
-                                <BeginStoryboard Storyboard="{StaticResource SB_FadeIn}"/>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" Duration="0:0:0.3" To="-15" EasingFunction="{StaticResource CE_EaseOut}"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" Duration="0:0:0.3" To="1" EasingFunction="{StaticResource CE_EaseOut}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
-                                <BeginStoryboard Storyboard="{StaticResource SB_FadeHalf}"/>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" Duration="0:0:0.3" To="-85" EasingFunction="{StaticResource CE_EaseOut}"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" Duration="0:0:0.3" To="0.2" EasingFunction="{StaticResource CE_EaseOut}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
                     </Style.Triggers>
                 </Style>
-            </StackPanel.Resources>
-            <TextBlock Visibility="{Binding AuxVisibility, ElementName=MainWin, Mode=OneWay}"
-                       ToolTip="Options">
-                <Hyperlink Name="HY_Options" TextDecorations="{x:Null}" Click="Sidebar_Click">
-                    <fa:ImageAwesome Icon="Solid_Cog"/>
-                </Hyperlink>
-            </TextBlock>
-            <TextBlock ToolTip="Immsersion Mode">
-                <Hyperlink Name="HY_ImmersionMode" TextDecorations="{x:Null}" Click="Sidebar_Click">
-                    <fa:ImageAwesome Icon="Solid_Film"/>
-                </Hyperlink>
-            </TextBlock>
-        </StackPanel>
-        <ScrollViewer x:Name="SV1">
-            <ScrollViewer.Resources>
-                <Style TargetType="ScrollBar" BasedOn="{StaticResource AppleStyleScrollBar}"/>
-            </ScrollViewer.Resources>
-            <ItemsControl x:Name="LB1" ItemsSource="{Binding Source={StaticResource ObjectListViewSource}, Mode=OneTime}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Width="{Binding ElementName=LB1, Path=ActualWidth, Mode=OneWay}"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel x:Name="SP1" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" UseLayoutRounding="True">
-                            <local:Thumbnail x:Name="TN1" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1"
-                                             ObjectInfo="{Binding Mode=OneTime}" Margin="10"
-                                             Width="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
-                                             Height="{Binding ElementName=MainWin, Path=ThumbRealHeight, Mode=OneWay}"
-                                             ContextMenu="{StaticResource ThumbContextMenu}"
-                                             FlagIconVisibility="{Binding ElementName=MainWin, Path=AuxVisibility, Mode=OneWay}"
-                                             MouseUp="TN1_MouseUp">
-                                <local:Thumbnail.Style>
-                                    <Style TargetType="local:Thumbnail" BasedOn="{StaticResource S_RiseOnHover}"/>
-                                </local:Thumbnail.Style>
-                            </local:Thumbnail>
+            </Border.Style>
 
-                            <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10" Foreground="Gray"
-                                       MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
-                                       HorizontalAlignment="Center" Panel.ZIndex="0" TextWrapping="Wrap"
-                                       Visibility="{Binding ElementName=MainWin, Path=AuxVisibility, Mode=OneWay}">
-                            </TextBlock>
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-                <ItemsControl.ItemContainerStyle>
-                    <Style TargetType="{x:Type ContentPresenter}">
+            <Border Background="#FF444444" CornerRadius="10" Width="90">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="0" BlurRadius="10"/>
+                </Border.Effect>
+                <Border.Resources>
+                    <Style TargetType="fa:ImageAwesome">
+                        <Setter Property="Width" Value="48"/>
+                        <Setter Property="Height" Value="48"/>
+                        <Setter Property="Foreground" Value="#AAFFFFFF"/>
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="Margin" Value="5"/>
+                        <Setter Property="Effect">
+                            <Setter.Value>
+                                <DropShadowEffect Direction="270" ShadowDepth="2" BlurRadius="5" />
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="RenderTransformOrigin" Value="0.5 0.5"/>
+                        <Setter Property="RenderTransform">
+                            <Setter.Value>
+                                <TransformGroup>
+                                    <ScaleTransform/>
+                                </TransformGroup>
+                            </Setter.Value>
+                        </Setter>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Panel.ZIndex" Value="9999" />
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Up_L}"/>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down_L}"/>
+                                </Trigger.ExitActions>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
-                </ItemsControl.ItemContainerStyle>
-            </ItemsControl>
-        </ScrollViewer>
+                </Border.Resources>
+
+                <StackPanel Margin="10" HorizontalAlignment="Right">
+                    <TextBlock ToolTip="Options">
+                        <Hyperlink Name="HY_Options" TextDecorations="{x:Null}" Click="Sidebar_Click">
+                            <fa:ImageAwesome Icon="Solid_Cog"/>
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock ToolTip="Immsersion Mode">
+                        <Hyperlink Name="HY_ImmersionMode" TextDecorations="{x:Null}" Click="Sidebar_Click">
+                            <fa:ImageAwesome Icon="Solid_Film"/>
+                        </Hyperlink>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </Border>
+        
+        
+        <vir:VirtualizingItemsControl x:Name="TV1" VirtualizingPanel.ScrollUnit="Pixel"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ItemsSource="{Binding Source={StaticResource ObjectListViewSource}, Mode=OneTime}"
+                                      ItemTemplate="{StaticResource ThumbDataTemplate}"
+                                      MouseDown="TV1_MouseDown">
+            <vir:VirtualizingItemsControl.Resources>
+                <Style TargetType="ScrollBar" BasedOn="{StaticResource AppleStyleScrollBar}"/>
+            </vir:VirtualizingItemsControl.Resources>
+            <vir:VirtualizingItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <local:VirtualizingWrapPanel/>
+                </ItemsPanelTemplate>
+            </vir:VirtualizingItemsControl.ItemsPanel>
+        </vir:VirtualizingItemsControl>
+        <!--<ListBox  >
+            
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <vir:VirtualizingWrapPanel/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            --><!--<ItemsControl.ItemContainerStyle>
+                <Style TargetType="{x:Type ContentPresenter}">
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Panel.ZIndex" Value="9999" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ItemsControl.ItemContainerStyle>--><!--
+        </ListBox>-->
     </Grid>
     
     

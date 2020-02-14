@@ -15,6 +15,7 @@ namespace ZipImageViewer
         public event PropertyChangedEventHandler PropertyChanged;
 
         private KeyedCollection<string, ObjectInfo> objectList;
+        private readonly MainWindow mainWin;
 
         public ObjectInfo ObjectInfo
         {
@@ -74,15 +75,55 @@ namespace ZipImageViewer
 
         public ViewWindow(Window owner, KeyedCollection<string, ObjectInfo> objList)
         {
+            InitializeComponent();
             objectList = objList;
             Owner = owner;
             Opacity = 0d;
-            InitializeComponent();
+
+            if (!(owner is MainWindow win)) return;
+
+            mainWin = win;
+            ButtonCloseVisibility = win.AuxVisibility;
+            ButtonMinVisibility = win.AuxVisibility;
+            ButtonMaxVisibility = win.AuxVisibility;
+            TitleVisibility = win.AuxVisibility;
+
+            if (win.AuxVisibility == Visibility.Collapsed) {
+                var info = NativeHelpers.GetMonitorFromWindow(owner);
+                Top = info.Top;
+                Left = info.Left;
+                Width = info.Width;
+                Height = info.Height;
+            }
+            else if (win.lastViewWindowRect.IsEmpty)
+                WindowState = WindowState.Maximized;
+            else if (win.lastViewWindowRect.Width + win.lastViewWindowRect.Height > 0) {
+                Top = win.lastViewWindowRect.Top;
+                Left = win.lastViewWindowRect.Left;
+                Width = win.lastViewWindowRect.Width;
+                Height = win.lastViewWindowRect.Height;
+            }
         }
 
         private void ViewWindow_Loaded(object sender, RoutedEventArgs e) {
             scaleToCanvas(0); //needed for first time opening due to impossible to layout before loaded
             this.AnimateDoubleCubicEase(OpacityProperty, 1d, 100, EasingMode.EaseOut);
+        }
+
+        private void ViewWin_Unloaded(object sender, RoutedEventArgs e) {
+            //save window state
+            if (mainWin != null) {
+                if (WindowState == WindowState.Maximized)
+                    mainWin.lastViewWindowRect = Rect.Empty;
+                else
+                    mainWin.lastViewWindowRect = new Rect(Left, Top, Width, Height);
+            }
+            objectList = null;
+            ViewImageSource = null;
+            ObjectInfo.ImageSources = null;
+            ObjectInfo = null;
+            IM.Source = null;
+            IM = null;
         }
 
         private void ViewWin_MouseUp(object sender, MouseButtonEventArgs e) {
@@ -300,15 +341,6 @@ namespace ZipImageViewer
                     BM.Show("No more!");
                     break;
             }
-        }
-
-        private void ViewWin_Unloaded(object sender, RoutedEventArgs e) {
-            objectList = null;
-            ViewImageSource = null;
-            ObjectInfo.ImageSources = null;
-            ObjectInfo = null;
-            IM.Source = null;
-            IM = null;
         }
     }
 }

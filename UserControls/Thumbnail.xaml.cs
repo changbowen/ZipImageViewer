@@ -94,18 +94,23 @@ namespace ZipImageViewer
         }
 
         private void TN_Unloaded(object sender, RoutedEventArgs e) {
-            ThumbImageSource = null;
-            ObjectInfo.ImageSources = null;
-            ObjectInfo = null;
-            nextSource = null;
-            IM1.Source = null;
-            IM1.ToolTip = null;
-            IM1 = null;
-            mask = null;
+            //ThumbImageSource = null;
+            //if (ObjectInfo != null) {
+            //    ObjectInfo.ImageSources = null;
+            //    ObjectInfo = null;
+            //}
+            //nextSource = null;
+            //if (IM1 != null) {
+            //    IM1.Source = null;
+            //    IM1.ToolTip = null;
+            //    IM1 = null;
+            //}
+            //mask = null;
         }
 
         private void cycleImageSource() {
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
+            if (ObjectInfo == null) return;
 
             if (ObjectInfo.ImageSources == null || ObjectInfo.ImageSources.Length == 0) {
                 if (ObjectInfo.Flags.HasFlag(FileFlags.Error))
@@ -114,9 +119,7 @@ namespace ZipImageViewer
                     ThumbImageSource = App.fa_meh;
                 return;
             }
-#if DEBUG
-            Console.WriteLine(ObjectInfo.FileSystemPath);
-#endif
+
             if (ObjectInfo.ImageSources.Length == 1 && ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
                 ThumbImageSource = ObjectInfo.ImageSources[0];
                 return;
@@ -127,9 +130,14 @@ namespace ZipImageViewer
             }
 
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
-            Task.Run(() => {
+           
+            var delay = App.MainWin.ThumbChangeDelay;
+#if DEBUG
+            Console.WriteLine($"Cycling {ObjectInfo.FileSystemPath}... Delay {delay} ms.");
+#endif
+            Task.Run(async () => {
                 try {
-                    Thread.Sleep(App.MainWin.ThumbChangeDelay);
+                    await Task.Delay(delay);
                     Dispatcher.Invoke(cycleImageSource);
                 }
                 catch (TaskCanceledException) { }

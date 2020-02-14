@@ -32,6 +32,20 @@ namespace ZipImageViewer
             T_CurrentDbSize.Text = $"Current DB size: {Helpers.BytesToString(new FileInfo(SQLiteHelper.DbFileFullPath).Length)}";
         }
 
+        private void SettingsWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+            try {
+                Setting.SaveConfigToFile();
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void SettingsWin_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e) {
+            if (e.Key != System.Windows.Input.Key.Escape) return;
+            Close();
+        }
+
         private void CB_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             var cb = (ComboBox)sender;
             switch (cb.Name) {
@@ -67,25 +81,6 @@ namespace ZipImageViewer
             Task.Run(() => win.LoadPath(win.CurrentPath));
         }
 
-        private void Btn_OK_Click(object sender, RoutedEventArgs e) {
-            try {
-                //Setting.SevenZipDllPath = TB_7zDllPath.Text;
-                //Setting.ThumbnailSize = new ObservablePair<int, int>(int.Parse(TB_ThumbWidth.Text), int.Parse(TB_ThumbHeight.Text));
-                //Setting.ThumbDbSize = (int)(SL_ThumbDbSize.Value * 1024);
-                //Setting.ViewerTransition = (Setting.Transition)CB_ViewerTransition.SelectedItem;
-                //Setting.ViewerTransitionSpeed = (Setting.TransitionSpeed)CB_AnimSpeed.SelectedItem;
-                Setting.SaveConfigToFile();
-                Close();
-            }
-            catch (Exception ex) {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void Btn_Cancel_Click(object sender, RoutedEventArgs e) {
-            Close();
-        }
-
         private void DataGrid_RowEditEnding(object sender, DataGridRowEditEndingEventArgs e) {
             var dg = (DataGrid)sender;
             if (e.EditAction != DataGridEditAction.Commit) return;
@@ -107,7 +102,6 @@ namespace ZipImageViewer
                     break;
             }
         }
-
 
     }
 

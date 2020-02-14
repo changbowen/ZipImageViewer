@@ -5,56 +5,100 @@
     <CubicEase x:Key="CE_EaseOut" EasingMode="EaseOut"/>
     <CubicEase x:Key="CE_EaseInOut" EasingMode="EaseInOut"/>
 
-    <Storyboard x:Key="SB_Rise_Up">
-        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX"      To="1.05"  Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY"      To="1.05"  Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)" To="5"     Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"  To="20"    Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+    <Storyboard x:Key="SB_Rise_Up_H">
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].ScaleX"      To="1.05" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].ScaleY"      To="1.05" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)" To="-2"   Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"  To="20"   Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
         <!--<DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.Opacity)"     To="0.5"   Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>-->
         <!--<DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].Y"           To="-10"   Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>-->
     </Storyboard>
 
-    <Storyboard x:Key="SB_Rise_Down">
-        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX"         To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY"         To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)"    To="2" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
-        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"     To="5" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+    <Storyboard x:Key="SB_Rise_Down_H" FillBehavior="Stop">
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].ScaleX"      To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].ScaleY"      To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.ShadowDepth)" To="2" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        <DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.BlurRadius)"  To="5" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
         <!--<DoubleAnimation Storyboard.TargetProperty="(Effect).(DropShadowEffect.Opacity)"        To="0.8" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>-->
         <!--<DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].Y"              To="0" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>-->
     </Storyboard>
 
+    <Storyboard x:Key="SB_Rise_Up_L">
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].ScaleX"      To="1.05" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].ScaleY"      To="1.05" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SB_Rise_Down_L" FillBehavior="Stop">
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].ScaleX"      To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].ScaleY"      To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+    </Storyboard>
+
     <Storyboard x:Key="SB_FadeIn" TargetProperty="Opacity">
-        <DoubleAnimation To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}"/>
+        <DoubleAnimation To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseInOut}"/>
     </Storyboard>
     <Storyboard x:Key="SB_FadeOut" TargetProperty="Opacity">
-        <DoubleAnimation To="0" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseIn}"/>
+        <DoubleAnimation To="0" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseInOut}"/>
     </Storyboard>
     <Storyboard x:Key="SB_FadeHalf" TargetProperty="Opacity">
-        <DoubleAnimation To="0.2" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseOut}" />
+        <DoubleAnimation To="0.2" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseInOut}" />
     </Storyboard>
 
     <DropShadowEffect x:Key="DS_Below" Direction="270" Opacity="0.8" ShadowDepth="2" BlurRadius="5" />
 
-    <Style x:Key="S_RiseOnHover" TargetType="FrameworkElement">
-        <Setter Property="Effect" Value="{StaticResource DS_Below}"/>
+    <Style x:Key="S_DropShadow" TargetType="FrameworkElement">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding LiteMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="False">
+                <Setter Property="Effect" Value="{StaticResource DS_Below}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="S_RiseOnHover" TargetType="FrameworkElement" BasedOn="{StaticResource S_DropShadow}">
         <Setter Property="RenderTransformOrigin" Value="0.5 0.5"/>
         <Setter Property="RenderTransform">
             <Setter.Value>
                 <TransformGroup>
-                    <TranslateTransform/>
                     <ScaleTransform/>
+                    <TranslateTransform/>
                 </TransformGroup>
             </Setter.Value>
         </Setter>
         <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding LiteMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="False"/>
+                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}, Mode=OneWay}" Value="True"/>
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Tag" Value="{x:Null}"/>
+                <MultiDataTrigger.EnterActions>
+                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Up_H}"/>
+                </MultiDataTrigger.EnterActions>
+                <MultiDataTrigger.ExitActions>
+                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down_H}"/>
+                </MultiDataTrigger.ExitActions>
+                <!--why do i need the below line for the animations to play???-->
+            </MultiDataTrigger>
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding LiteMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="True"/>
+                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}, Mode=OneWay}" Value="True"/>
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Tag" Value="{x:Null}"/>
+                <MultiDataTrigger.EnterActions>
+                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Up_L}"/>
+                </MultiDataTrigger.EnterActions>
+                <MultiDataTrigger.ExitActions>
+                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down_L}"/>
+                </MultiDataTrigger.ExitActions>
+            </MultiDataTrigger>
+            <!--<Trigger Property="IsMouseOver" Value="True">
                 <Trigger.EnterActions>
-                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Up}"/>
+                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Up_H}"/>
                 </Trigger.EnterActions>
                 <Trigger.ExitActions>
-                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down}"/>
+                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down_H}"/>
                 </Trigger.ExitActions>
-            </Trigger>
+            </Trigger>-->
         </Style.Triggers>
     </Style>
 
