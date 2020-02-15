@@ -265,9 +265,9 @@
 
             <Border Grid.Row="8" Grid.RowSpan="2" Style="{StaticResource SettingBlockStyle}" Margin="8 4 8 8">
                 <DockPanel>
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="Custom Commands"/>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="Custom Commands (Comming Soon...)"/>
                     <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                        <DataGrid RowEditEnding="DataGrid_RowEditEnding"
+                        <DataGrid RowEditEnding="DataGrid_RowEditEnding" IsEnabled="False"
                                   AutoGenerateColumns="False" EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                   ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=CustomCommands}">
                             <DataGrid.Columns>
