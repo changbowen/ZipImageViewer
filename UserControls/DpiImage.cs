@@ -62,9 +62,9 @@ namespace ZipImageViewer
             RealSize = new Size(Math.Round(size.Width * DpiMultiplier.X, 3),
                                 Math.Round(size.Height * DpiMultiplier.Y, 3));
 
-#if DEBUG
-            Console.WriteLine($"{nameof(RealSize)}: {RealSize}; Scale: {DpiMultiplier.X};");
-#endif
+//#if DEBUG
+//            Console.WriteLine($"{nameof(RealSize)}: {RealSize}; Scale: {DpiMultiplier.X};");
+//#endif
         }
 
         protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {

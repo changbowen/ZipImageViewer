@@ -15,6 +15,7 @@ Need .Net Framework 4.7.2 (included in Windows 10 April 2018 Update)
 - No blurriness caused by incorrect position (X / Y translation).
 - PerMonitor DPI awareness
 - Thumbnail cache for faster loading
+- "Picture Wall"
 
 ## Screenshots
 **Be sure to scale the page properly to see the difference.**

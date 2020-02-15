@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Data;
+using SizeInt = System.Drawing.Size;
 
 namespace ZipImageViewer
 {
@@ -108,11 +109,11 @@ namespace ZipImageViewer
             //mask = null;
         }
 
-        private void cycleImageSource() {
+        private async void cycleImageSource() {
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
             if (ObjectInfo == null) return;
 
-            if (ObjectInfo.ImageSources == null || ObjectInfo.ImageSources.Length == 0) {
+            if (ObjectInfo.SourcePaths == null || ObjectInfo.SourcePaths.Length == 0) {
                 if (ObjectInfo.Flags.HasFlag(FileFlags.Error))
                     ThumbImageSource = App.fa_exclamation;
                 else
@@ -120,13 +121,13 @@ namespace ZipImageViewer
                 return;
             }
 
-            if (ObjectInfo.ImageSources.Length == 1 && ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
-                ThumbImageSource = ObjectInfo.ImageSources[0];
+            if (ObjectInfo.SourcePaths.Length == 1 && ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
+                ThumbImageSource = await getThumbImageSource(0);
                 return;
             }
-            else if (ObjectInfo.ImageSources.Length > 0) {
-                thumbIndex = thumbIndex == ObjectInfo.ImageSources.Length - 1 ? 0 : thumbIndex + 1;
-                ThumbImageSource = ObjectInfo.ImageSources[thumbIndex];
+            else if (ObjectInfo.SourcePaths.Length > 0) {
+                thumbIndex = thumbIndex == ObjectInfo.SourcePaths.Length - 1 ? 0 : thumbIndex + 1;
+                ThumbImageSource = await getThumbImageSource(thumbIndex);
             }
 
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
@@ -142,6 +143,21 @@ namespace ZipImageViewer
                 }
                 catch (TaskCanceledException) { }
             });
+        }
+
+        private async Task<ImageSource> getThumbImageSource(int thumbIdx) {
+            var path = ObjectInfo.SourcePaths[thumbIdx];
+            switch (ObjectInfo.Flags) {
+                case FileFlags.Directory:
+                    return await Task.Run(()=> Helpers.GetImageSource(path, (SizeInt)Setting.ThumbnailSize));
+                case FileFlags.Archive:
+                    App.MainWin
+                    return null;
+                case FileFlags.Image:
+                    return await Task.Run(() => Helpers.GetImageSource(path, (SizeInt)Setting.ThumbnailSize));
+                default:
+                    return App.fa_exclamation;
+            }
         }
     }
 }

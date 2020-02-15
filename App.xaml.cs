@@ -24,7 +24,7 @@ namespace ZipImageViewer
                 "zip", "rar", "7z",
                 ".zip", ".rar", ".7z",
             });
-        public const int PreviewCount = 4;
+        //public const int PreviewCount = 4;
         public static Random Random = new Random();
 
         internal static ImageSource fa_meh;

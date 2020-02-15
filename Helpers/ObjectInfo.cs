@@ -89,18 +89,18 @@ namespace ZipImageViewer
             }
         }
 
-        private ImageSource[] imageSources;
+        private string[] sourcePaths;
         /// <summary>
         /// ImageSources is used in both thumbnail display and ViewWindow.
         /// Whether it is a thumbnail depends on the decode width & height used when loading the image.
         /// </summary>
-        public ImageSource[] ImageSources {
-            get => imageSources;
+        public string[] SourcePaths {
+            get => sourcePaths;
             set {
-                if (imageSources == value) return;
-                imageSources = value;
+                if (sourcePaths == value) return;
+                sourcePaths = value;
                 if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ImageSources)));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(SourcePaths)));
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
             }
         }
@@ -110,7 +110,7 @@ namespace ZipImageViewer
                 return $"{nameof(FileName)}: {FileName}\r\n" +
                     $"{nameof(FileSystemPath)}: {FileSystemPath}\r\n" +
                     $"{nameof(Flags)}: {Flags.ToString()}\r\n" +
-                    $"{nameof(ImageSources)}:\r\n{(ImageSources == null ? null : string.Join("\r\n", ImageSources.Select(i => i.Width + " x " + i.Height)) + "\r\n")}" +
+                    $"{nameof(SourcePaths)}: {SourcePaths?.Length}\r\n" +
                     $"{nameof(VirtualPath)}: {VirtualPath}\r\n" +
                     $"{nameof(DisplayName)}: {DisplayName}\r\n" +
                     $"{nameof(Comments)}:\r\n{Comments}";
@@ -130,10 +130,10 @@ namespace ZipImageViewer
         }
 
 
-        public ObjectInfo(string fsPath, FileFlags flag = FileFlags.Unknown, ImageSource[] sources = null) {
+        public ObjectInfo(string fsPath, FileFlags flag = FileFlags.Unknown, string[] paths = null) {
             FileSystemPath = fsPath;
             flags = flag;
-            imageSources = sources;
+            sourcePaths = paths;
         }
     }
 

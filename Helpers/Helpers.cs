@@ -123,7 +123,7 @@ namespace ZipImageViewer
         public string Password { get; set; } = null;
         public string[] FileNames { get; set; } = null;
         /// <summary>
-        /// The number of files to extract. Ignored when FileNames are not empty.
+        /// The number of files to extract. If set to 0 only file list will be returned;
         /// </summary>
         public int ExtractCount { get; set; } = 0;
         /// <summary>
@@ -183,7 +183,7 @@ namespace ZipImageViewer
             return FileFlags.Unknown;
         }
 
-        public static BitmapSource GetImageSource(string path, SizeInt decodeSize) {
+        public static BitmapSource GetImageSource(string path, SizeInt decodeSize = default) {
             BitmapSource bs = null;
             var isThumb = decodeSize.Width + decodeSize.Height > 0;
             if (isThumb) {
@@ -276,7 +276,6 @@ namespace ZipImageViewer
             tb.Freeze();
             return tb;
         }
-
 
         private static double GetAverageBrightness(BitmapFrame frame) {
             using (var bmpStream = new MemoryStream()) {

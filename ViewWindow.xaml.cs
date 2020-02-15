@@ -23,12 +23,12 @@ namespace ZipImageViewer
             set { SetValue(ObjectInfoProperty, value); }
         }
         public static readonly DependencyProperty ObjectInfoProperty =
-            Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(new PropertyChangedCallback((o, e) => {
-                if (!(e.NewValue is ObjectInfo objInfo) || objInfo.ImageSources.Length == 0) return;
+            Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata(new PropertyChangedCallback(async (o, e) => {
+                if (!(e.NewValue is ObjectInfo objInfo) || objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0) return;
                 var win = (ViewWindow)o;
                 if (!win.IsLoaded)
                     //update directly without animations when window is not loaded yet (first time opening)
-                    win.ViewImageSource = win.ObjectInfo.ImageSources[0];
+                    win.ViewImageSource = await Task.Run(() => Helpers.GetImageSource(win.ObjectInfo.SourcePaths[0]));
                 else if (win.IM.Transforming)
                     //update after transform end
                     DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).AddValueChanged(win.IM, updateViewImageSource);
@@ -38,12 +38,12 @@ namespace ZipImageViewer
             })));
 
 
-        private static void updateViewImageSource(object obj, EventArgs e) {
+        private static async void updateViewImageSource(object obj, EventArgs e) {
             DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).RemoveValueChanged(obj, updateViewImageSource);
             var im = (DpiImage)obj;
             var win = (ViewWindow)GetWindow(im);
             //update image
-            win.ViewImageSource = win.ObjectInfo.ImageSources[0];
+            win.ViewImageSource = await Task.Run(() => Helpers.GetImageSource(win.ObjectInfo.SourcePaths[0]));
             //reset image position instantaneously
             win.scaleToCanvas(0);
             //continue "in" animation
@@ -120,7 +120,7 @@ namespace ZipImageViewer
             }
             objectList = null;
             ViewImageSource = null;
-            ObjectInfo.ImageSources = null;
+            ObjectInfo.SourcePaths = null;
             ObjectInfo = null;
             IM.Source = null;
             IM = null;
