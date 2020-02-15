@@ -445,11 +445,19 @@ namespace ZipImageViewer
                 if (ex is ExtractionFailedException ||
                     ex is SevenZipArchiveException ||
                     ex is NotSupportedException) return false;
+                
+                if (ext != null) {
+                    ext.Dispose();
+                    ext = null;
+                }
                 throw;
             }
             finally
             {
-                ext?.Dispose();
+                if (ext != null) {
+                    ext.Dispose();
+                    ext = null;
+                }
             }
         }
 
