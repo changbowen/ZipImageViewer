@@ -39,67 +39,69 @@ namespace ZipImageViewer
         public static Setting Setting { get; } = new Setting();
 
         private void App_Startup(object sender, StartupEventArgs e) {
-            Setting.LoadConfigFromFile();
+            try {
+                Setting.LoadConfigFromFile();
 
-            //create resources
-            fa_meh = FontAwesome5.ImageAwesome.CreateImageSource(
-                FontAwesome5.EFontAwesomeIcon.Solid_Meh,
-                new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
-            fa_spinner = FontAwesome5.ImageAwesome.CreateImageSource(
-                FontAwesome5.EFontAwesomeIcon.Solid_Spinner,
-                new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
-            fa_exclamation = FontAwesome5.ImageAwesome.CreateImageSource(
-                FontAwesome5.EFontAwesomeIcon.Solid_ExclamationCircle,
-                new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
+                //create resources
+                fa_meh = FontAwesome5.ImageAwesome.CreateImageSource(
+                    FontAwesome5.EFontAwesomeIcon.Solid_Meh,
+                    new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
+                fa_spinner = FontAwesome5.ImageAwesome.CreateImageSource(
+                    FontAwesome5.EFontAwesomeIcon.Solid_Spinner,
+                    new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
+                fa_exclamation = FontAwesome5.ImageAwesome.CreateImageSource(
+                    FontAwesome5.EFontAwesomeIcon.Solid_ExclamationCircle,
+                    new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
 
-            //create thumb database if not exist and update columns if not correct
-            var aff1 = Execute(
-                con => {
-                    using (var cmd = new SQLiteCommand(con)) {
-                        cmd.CommandText =
+                //create thumb database if not exist and update columns if not correct
+                var aff1 = Execute(
+                    con => {
+                        using (var cmd = new SQLiteCommand(con)) {
+                            cmd.CommandText =
 $@"create table if not exists [{Table_ThumbsData.Name}] (
 [{Table_ThumbsData.Col_VirtualPath}] TEXT NOT NULL,
 [{Table_ThumbsData.Col_DecodeWidth}] INTEGER,
 [{Table_ThumbsData.Col_DecodeHeight}] INTEGER,
 [{Table_ThumbsData.Col_ThumbData}] BLOB)";
-                        return cmd.ExecuteNonQuery();
-                    }
-                });
+                            return cmd.ExecuteNonQuery();
+                        }
+                    });
 
-            //add columns if not exist
-            if (aff1[0] != null && aff1[0].Equals(-1)) {//-1 means table already exists
-                Execute(con => {
-                    using (var cmd = new SQLiteCommand(con)) {
-                        cmd.CommandText =
-$@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_VirtualPath}] TEXT NOT NULL;";
-                        try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
+                //add columns if not exist
+                if (aff1[0] != null && aff1[0].Equals(-1)) {//-1 means table already exists
+                    Execute(con => {
+                        using (var cmd = new SQLiteCommand(con)) {
+                            cmd.CommandText =
+                            $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_VirtualPath}] TEXT NOT NULL;";
+                            try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
 
-                        cmd.CommandText =
-$@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_DecodeWidth}] INTEGER;";
-                        try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
+                            cmd.CommandText =
+                            $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_DecodeWidth}] INTEGER;";
+                            try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
 
-                        cmd.CommandText =
-$@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_DecodeHeight}] INTEGER;";
-                        try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
+                            cmd.CommandText =
+                            $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_DecodeHeight}] INTEGER;";
+                            try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
 
-                        cmd.CommandText =
-$@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_ThumbData}] BLOB;";
-                        try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
-                    }
-                    return 0;
-                });
+                            cmd.CommandText =
+                            $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_ThumbData}] BLOB;";
+                            try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
+                        }
+                        return 0;
+                    });
+                }
+
+                //show mainwindow
+                MainWin = new MainWindow() {
+                    Width = Setting.LastWindowSize.Width,
+                    Height = Setting.LastWindowSize.Height,
+                };
+                MainWin.Show();
             }
-
-            //show mainwindow
-            MainWin = new MainWindow() {
-                Width = Setting.LastWindowSize.Width,
-                Height = Setting.LastWindowSize.Height,
-            };
-            MainWin.Show();
-
-#if DEBUG
-            //new SettingsWindow(MainWin).ShowDialog();
-#endif
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message, "Application Start Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                throw;
+            }
         }
 
 
@@ -129,7 +131,8 @@ $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_Thumb
                             var delCount = (dbSize - targetSize) / (dbSize / rowCount) * 2;
                             if (delCount < 50) delCount = 50L;
 
-                            cmd.CommandText = $@"delete from {Table_ThumbsData.Name} where rowid in
+                            cmd.CommandText = 
+$@"delete from {Table_ThumbsData.Name} where rowid in
 (select rowid from {Table_ThumbsData.Name} order by rowid asc limit {delCount})";
                             cmd.ExecuteNonQuery();
                             cmd.CommandText = @"vacuum";

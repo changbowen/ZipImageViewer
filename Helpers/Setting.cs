@@ -24,7 +24,7 @@ namespace ZipImageViewer
         public enum TransitionSpeed { Fast, Medium, Slow }
 
 
-        private static string sevenZipDllPath = @"C:\Program Files\7-Zip\7z.dll";
+        private static string sevenZipDllPath = Path.Combine(App.ExeDir, @"7z.dll");
         public static string SevenZipDllPath {
             get => sevenZipDllPath;
             set {
