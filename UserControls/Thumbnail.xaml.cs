@@ -130,8 +130,8 @@ namespace ZipImageViewer
             }
 
             if (!IsLoaded) return; //dont do anything before or after the lifecycle
-           
-            var delay = App.MainWin.ThumbChangeDelay;
+
+            var delay = ((MainWindow)Window.GetWindow(this)).ThumbChangeDelay;
 #if DEBUG
             Console.WriteLine($"Cycling {ObjectInfo.FileSystemPath}... Delay {delay} ms.");
 #endif

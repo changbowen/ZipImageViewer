@@ -272,6 +272,7 @@ namespace ZipImageViewer
         }
 
         private void CA_PreviewKeyUp(object sender, KeyEventArgs e) {
+            if (mainWin == null) return;
             switch (e.Key) {
                 case Key.Left:
                 case Key.Right:
@@ -333,7 +334,7 @@ namespace ZipImageViewer
 
                         //load next or previous image
                         Task.Run(() => {
-                            App.MainWin.LoadPath(next, this);
+                            mainWin.LoadPath(next, this);
                         });
                         return;
                     }

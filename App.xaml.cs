@@ -14,7 +14,6 @@ namespace ZipImageViewer
     public partial class App : Application
     {
         public static readonly string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-        public static MainWindow MainWin;
         public static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] {
                 "jpg", "jpeg", "png", "gif", "tiff", "bmp",
@@ -92,11 +91,10 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
                 }
 
                 //show mainwindow
-                MainWin = new MainWindow() {
+                new MainWindow() {
                     Width = Setting.LastWindowSize.Width,
                     Height = Setting.LastWindowSize.Height,
-                };
-                MainWin.Show();
+                }.Show();
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Application Start Error", MessageBoxButton.OK, MessageBoxImage.Error);
