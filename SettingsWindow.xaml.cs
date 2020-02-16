@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -74,6 +75,21 @@ namespace ZipImageViewer
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Move Failed", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void Btn_Clean_Click(object sender, RoutedEventArgs e) {
+            //clean database
+            SQLiteHelper.Execute(con => {
+                using (var cmd = new SQLiteCommand(con)) {
+                    cmd.CommandText = $@"delete from {SQLiteHelper.Table_ThumbsData.Name}";
+                    cmd.ExecuteNonQuery();
+                    cmd.CommandText = @"vacuum";
+                    cmd.ExecuteNonQuery();
+                }
+                return 0;
+            });
+
+            T_CurrentDbSize.Text = $"Current DB size: {Helpers.BytesToString(new FileInfo(SQLiteHelper.DbFileFullPath).Length)}";
         }
 
         private void Btn_Reload_Click(object sender, RoutedEventArgs e) {

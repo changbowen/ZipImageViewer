@@ -7,9 +7,9 @@
              xmlns:local="clr-namespace:ZipImageViewer" UseLayoutRounding="True" SnapsToDevicePixels="True"
              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300" Loaded="TN_Loaded" Unloaded="TN_Unloaded">
     <UserControl.Resources>
-        <local:FlagToImageConverter x:Key="FlagToImageConverter"/>
+        <!--<local:FlagToImageConverter x:Key="FlagToImageConverter"/>-->
         <local:MathMultiplyConverter x:Key="MathMultiplyConverter"/>
-        <local:ThicknessMultiplyConverter x:Key="ThicknessMultiplyConverter"/>
+        <!--<local:ThicknessMultiplyConverter x:Key="ThicknessMultiplyConverter"/>-->
 
         <!--simple initial anim-->
         <Storyboard x:Key="SB_ThumbTransInit_Out" Completed="ThumbTransAnimOut_Completed">
@@ -129,7 +129,7 @@
             </local:DpiImage>
         </Grid>
 
-        <fa:ImageAwesome VerticalAlignment="Top" HorizontalAlignment="Right" Foreground="#AAFFFFFF"
+        <!--<fa:ImageAwesome VerticalAlignment="Top" HorizontalAlignment="Right" Foreground="#AAFFFFFF"
                          Visibility="{Binding FlagIconVisibility, ElementName=TN, Mode=OneWay}"
                          Margin="{Binding ActualWidth, ElementName=mask, Mode=OneWay, Converter={StaticResource ThicknessMultiplyConverter}, ConverterParameter=0 0.06 0.06 0}"
                          Width="{Binding ActualWidth, ElementName=mask, Mode=OneWay, Converter={StaticResource MathMultiplyConverter}, ConverterParameter=0.16}"
@@ -138,7 +138,7 @@
             <fa:ImageAwesome.Style>
                 <Style TargetType="fa:ImageAwesome" BasedOn="{StaticResource S_DropShadow}"/>
             </fa:ImageAwesome.Style>
-        </fa:ImageAwesome>
+        </fa:ImageAwesome>-->
     </Grid>
     
 </UserControl>

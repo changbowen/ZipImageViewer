@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
         Icon="Resources/ZipImageViewer.ico"
         Title="{Binding ElementName=ViewWin, Path=ObjectInfo.VirtualPath, Mode=OneWay}"
-        Width="1024" Height="768" Foreground="LightGray" Background="#FF333333" UseLayoutRounding="True" 
+        Width="1024" Height="768" Foreground="LightGray" Background="#FF333333" UseLayoutRounding="True" SizeChanged="ViewWin_SizeChanged"
         MouseUp="ViewWin_MouseUp" Loaded="ViewWindow_Loaded" PreviewKeyUp="CA_PreviewKeyUp" Unloaded="ViewWin_Unloaded">
     <Window.Resources>
         <local:CenterConverter x:Key="CenterConverter"/>

@@ -91,8 +91,7 @@ namespace ZipImageViewer
 
         private string[] sourcePaths;
         /// <summary>
-        /// ImageSources is used in both thumbnail display and ViewWindow.
-        /// Whether it is a thumbnail depends on the decode width & height used when loading the image.
+        /// Contains the child items. Null indicates the children are not retrived yet.
         /// </summary>
         public string[] SourcePaths {
             get => sourcePaths;
@@ -102,6 +101,21 @@ namespace ZipImageViewer
                 if (PropertyChanged == null) return;
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(SourcePaths)));
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+            }
+        }
+
+        private ImageSource imageSource;
+        /// <summary>
+        /// Only used for displaying images in archives because it is not practical to start more than one Task to extract an archive.
+        /// Thus loading images in archive will be a single thread.
+        /// </summary>
+        public ImageSource ImageSource {
+            get => imageSource;
+            set {
+                if (imageSource == value) return;
+                imageSource = value;
+                if (PropertyChanged == null) return;
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ImageSource)));
             }
         }
 
@@ -129,11 +143,27 @@ namespace ZipImageViewer
             }
         }
 
+        //public bool? HasImage {
+        //    get {
+        //        if (Flags == FileFlags.Unknown || Flags.HasFlag(FileFlags.Error)) return false;
+        //        if (SourcePaths != null) {
+        //            if (SourcePaths.Length == 0) return false;
+        //            else return true;
+        //        }
+        //        if (ImageSource != null) return true;
+        //        return null;
+        //    }
+        //    //set {
+        //    //    if (notAnImage == value) return;
+        //    //    notAnImage = value;
+        //    //    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NotAnImage)));
+        //    //}
+        //}
 
-        public ObjectInfo(string fsPath, FileFlags flag = FileFlags.Unknown, string[] paths = null) {
+
+        public ObjectInfo(string fsPath, FileFlags flag = FileFlags.Unknown) {
             FileSystemPath = fsPath;
             flags = flag;
-            sourcePaths = paths;
         }
     }
 

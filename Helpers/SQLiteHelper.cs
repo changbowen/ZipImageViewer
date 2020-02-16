@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace ZipImageViewer
 {
-    internal class SQLiteHelper
+    internal static class SQLiteHelper
     {
         internal const string dbFileName = @"thumb_database.sqlite";
         internal static string DbFileFullPath => Path.Combine(Setting.ThumbDbDir, dbFileName);
+        private readonly static object lock_ThumbDb = new object();
 
         internal static class Table_ThumbsData
         {
@@ -28,6 +30,15 @@ namespace ZipImageViewer
         internal static object[] Execute(params Func<SQLiteConnection, object>[] callbackFuncs) {
             SQLiteConnection con = null;
             var affected = new object[callbackFuncs.Length];
+
+//#if DEBUG
+//            var now = DateTime.Now;
+//#endif
+            Monitor.Enter(lock_ThumbDb);
+//#if DEBUG
+//            Console.WriteLine("SQLiteHelper.Execute() waited " + (DateTime.Now - now).TotalMilliseconds + "ms");
+//#endif
+
             try {
                 con = new SQLiteConnection($"Data Source={DbFileFullPath};Version=3;");
                 con.Open();
@@ -40,6 +51,7 @@ namespace ZipImageViewer
                     con.Close();
                     con.Dispose();
                 }
+                Monitor.Exit(lock_ThumbDb);
             }
             return affected;
         }
@@ -48,6 +60,7 @@ namespace ZipImageViewer
         internal static int AddToThumbDB(ImageSource source, string path, System.Drawing.Size decodeSize) {
             if (!(source is BitmapSource bs)) throw new NotSupportedException();
 
+            object[] affected = null;
             byte[] png;
             var enc = new PngBitmapEncoder();
             enc.Frames.Add(BitmapFrame.Create(bs));
@@ -57,7 +70,7 @@ namespace ZipImageViewer
             }
             if (png.Length == 0) return 0;
 
-            var affected = Execute(con => {
+            affected = Execute(con => {
                 using (var cmd = new SQLiteCommand(con)) {
                     //remove existing
                     cmd.CommandText = $@"delete from {Table_ThumbsData.Name} where {Table_ThumbsData.Col_VirtualPath} = @path";
@@ -71,7 +84,7 @@ namespace ZipImageViewer
                     return cmd.ExecuteNonQuery();
                 }
             });
-            
+
             return (int)affected[0];
         }
 

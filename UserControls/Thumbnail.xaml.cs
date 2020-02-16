@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Threading;
 using System.Windows.Media.Animation;
 using System.Windows.Media;
 using System.Threading.Tasks;
@@ -9,6 +8,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Data;
 using SizeInt = System.Drawing.Size;
+using System.Windows.Threading;
+using System.Threading;
 
 namespace ZipImageViewer
 {
@@ -30,7 +31,12 @@ namespace ZipImageViewer
             DependencyProperty.Register("FlagIconVisibility", typeof(Visibility), typeof(Thumbnail), new PropertyMetadata(Visibility.Visible));
 
 
-        public bool HasError => thumbImageSource == App.fa_meh || thumbImageSource == App.fa_exclamation;
+        //public bool HasImage => thumbImageSource != App.fa_meh &&
+        //                        thumbImageSource != App.fa_exclamation &&
+        //                        thumbImageSource != App.fa_file &&
+        //                        thumbImageSource != App.fa_folder &&
+        //                        thumbImageSource != App.fa_archive &&
+        //                        thumbImageSource != App.fa_image;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -69,6 +75,8 @@ namespace ZipImageViewer
             }
         }
 
+        private MainWindow mainWin;
+        private DispatcherTimer cycleTimer;
 
         public Thumbnail() {
             InitializeComponent();
@@ -81,17 +89,31 @@ namespace ZipImageViewer
             ToolTipService.SetShowDuration(IM1, 20000);
 #endif
             thumbTransAnimCount = Resources.Keys.Cast<string>().Count(k => k.StartsWith(@"SB_ThumbTrans_")) / 2;
+
         }
+
 
         private void ThumbTransAnimOut_Completed(object sender, EventArgs e) {
             thumbImageSource = nextSource;
             nextSource = null;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbImageSource)));
+            if (PropertyChanged != null) {
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbImageSource)));
+                //PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(HasImage)));
+            }
             GR1.BeginStoryboard(thumbTransAnimIn);
         }
 
         private void TN_Loaded(object sender, RoutedEventArgs e) {
-            cycleImageSource();
+            cycleTimer = new DispatcherTimer(DispatcherPriority.Normal, Application.Current.Dispatcher);
+            cycleTimer.Tick += cycleImageSource;
+
+            mainWin = (MainWindow)Window.GetWindow(this);
+            
+            var objInfo = ObjectInfo;
+            Task.Run(() => {
+                if (objInfo.SourcePaths == null) //non-null indicate SourcePaths has already been updated
+                    Helpers.UpdateSourcePaths(objInfo);
+            }).ContinueWith(t => Dispatcher.Invoke(() => cycleImageSource(null, null)));
         }
 
         private void TN_Unloaded(object sender, RoutedEventArgs e) {
@@ -107,57 +129,51 @@ namespace ZipImageViewer
             //    IM1 = null;
             //}
             //mask = null;
+            cycleTimer.Stop();
+            cycleTimer.Tick -= cycleImageSource;
         }
 
-        private async void cycleImageSource() {
-            if (!IsLoaded) return; //dont do anything before or after the lifecycle
-            if (ObjectInfo == null) return;
+        private async void cycleImageSource(object sender, EventArgs e) {
+            var tn = this;
+            tn.cycleTimer.Stop();
 
-            if (ObjectInfo.SourcePaths == null || ObjectInfo.SourcePaths.Length == 0) {
-                if (ObjectInfo.Flags.HasFlag(FileFlags.Error))
-                    ThumbImageSource = App.fa_exclamation;
-                else
-                    ThumbImageSource = App.fa_meh;
-                return;
+            if (!tn.IsLoaded) return; //dont do anything before or after the lifecycle
+            if (tn.ObjectInfo == null) return;
+
+            var cycle = false;
+            if (tn.ObjectInfo.SourcePaths?.Length > 1) {
+                tn.thumbIndex = tn.thumbIndex == tn.ObjectInfo.SourcePaths.Length - 1 ? 0 : tn.thumbIndex + 1;
+                cycle = true;
             }
+            else
+                tn.thumbIndex = 0;
 
-            if (ObjectInfo.SourcePaths.Length == 1 && ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
-                ThumbImageSource = await getThumbImageSource(0);
-                return;
-            }
-            else if (ObjectInfo.SourcePaths.Length > 0) {
-                thumbIndex = thumbIndex == ObjectInfo.SourcePaths.Length - 1 ? 0 : thumbIndex + 1;
-                ThumbImageSource = await getThumbImageSource(thumbIndex);
-            }
 
-            if (!IsLoaded) return; //dont do anything before or after the lifecycle
+//#if DEBUG
+//            Console.WriteLine($"Cycling {tn.ObjectInfo.VirtualPath}... Delay {delay} ms.");
+//#endif
 
-            var delay = ((MainWindow)Window.GetWindow(this)).ThumbChangeDelay;
-#if DEBUG
-            Console.WriteLine($"Cycling {ObjectInfo.FileSystemPath}... Delay {delay} ms.");
-#endif
-            Task.Run(async () => {
-                try {
-                    await Task.Delay(delay);
-                    Dispatcher.Invoke(cycleImageSource);
-                }
-                catch (TaskCanceledException) { }
-            });
-        }
+            //var objInfo = ObjectInfo;
+            //ThreadPool.QueueUserWorkItem(s => {
+            //    tn.ThumbImageSource = Helpers.GetImageSource(objInfo, tn.thumbIndex, (SizeInt)Setting.ThumbnailSize);
 
-        private async Task<ImageSource> getThumbImageSource(int thumbIdx) {
-            var path = ObjectInfo.SourcePaths[thumbIdx];
-            switch (ObjectInfo.Flags) {
-                case FileFlags.Directory:
-                    return await Task.Run(()=> Helpers.GetImageSource(path, (SizeInt)Setting.ThumbnailSize));
-                case FileFlags.Archive:
-                    App.MainWin
-                    return null;
-                case FileFlags.Image:
-                    return await Task.Run(() => Helpers.GetImageSource(path, (SizeInt)Setting.ThumbnailSize));
-                default:
-                    return App.fa_exclamation;
-            }
+            //    Dispatcher.Invoke(() => {
+            //        if (!tn.IsLoaded || !cycle) return;
+            //        var delay = mainWin.ThumbChangeDelay;
+            //        tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(delay);
+            //        tn.cycleTimer.Start();
+            //    });
+
+            //});
+
+            tn.ThumbImageSource = await Helpers.GetImageSource(tn.ObjectInfo, tn.thumbIndex, true);
+
+            if (!tn.IsLoaded || !cycle) return; //dont do anything before or after the lifecycle
+
+            var delay = mainWin.ThumbChangeDelay;
+
+            tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(delay);
+            tn.cycleTimer.Start();
         }
     }
 }

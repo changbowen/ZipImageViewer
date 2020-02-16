@@ -129,6 +129,7 @@
                 <StackPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Database Directory"/>
                     <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Clean" VerticalAlignment="Center" Click="Btn_Clean_Click"/>
                         <Button DockPanel.Dock="Right" Content="Move" VerticalAlignment="Center" Click="Btn_Move_Click"/>
                         <ContentControl>
                             <TextBox x:Name="TB_ThumbDbDir" Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbDbDir, Mode=OneWay}"/>

@@ -11,6 +11,8 @@ using System.Windows.Controls;
 using System.Collections.Generic;
 using System.Collections;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace ZipImageViewer
 {
@@ -61,6 +63,7 @@ namespace ZipImageViewer
 
 
         public static double RoundToMultiplesOf(this double input, double multiplesOf) {
+            if (multiplesOf == 0d) return 0d;
             return Math.Ceiling(input / multiplesOf) * multiplesOf;
         }
 
@@ -123,9 +126,9 @@ namespace ZipImageViewer
         public string Password { get; set; } = null;
         public string[] FileNames { get; set; } = null;
         /// <summary>
-        /// The number of files to extract. If set to 0 only file list will be returned;
+        /// Whether to load image content. Set to false to only return file list.
         /// </summary>
-        public int ExtractCount { get; set; } = 0;
+        public bool LoadImage { get; set; } = false;
         /// <summary>
         /// Should be called on returning of each ObjectInfo (usually file system objects).
         /// </summary>
@@ -183,24 +186,179 @@ namespace ZipImageViewer
             return FileFlags.Unknown;
         }
 
+        /// <summary>
+        /// Call from background thread.
+        /// </summary>
+        internal static void UpdateSourcePaths(ObjectInfo objInfo) {
+            switch (objInfo.Flags) {
+                case FileFlags.Directory:
+                    IEnumerable<FileSystemInfo> fsInfos = null;
+                    try { fsInfos = new DirectoryInfo(objInfo.FileSystemPath).EnumerateFileSystemInfos(); }
+                    catch { objInfo.Flags |= FileFlags.Error; }
+                    var srcPaths = new List<string>();
+                    foreach (var fsInfo in fsInfos) {
+                        var fType = GetPathType(fsInfo);
+                        if (fType != FileFlags.Image) continue;
+                        srcPaths.Add(fsInfo.FullName);
+                    }
+                    objInfo.SourcePaths = srcPaths.ToArray();
+                    break;
+                case FileFlags.Archive:
+                    MainWindow.LoadFile(new LoadOptions(objInfo.FileSystemPath) {
+                        Flags = FileFlags.Archive,
+                        ObjInfoCallback = oi => objInfo.SourcePaths = oi.SourcePaths,
+                    });
+                    break;
+                case FileFlags.Image:
+                    objInfo.SourcePaths = new[] { objInfo.FileSystemPath };
+                    break;
+                default:
+                    objInfo.SourcePaths = new string[0];
+                    break;
+            }
+            //FileFlags.Archive | FileFlags.Image should have SourcePaths updated when loaded the first time.
+            //Console.WriteLine("Updated SourcePaths for: " + objInfo.FileSystemPath);
+        }
+
+
+        //private static HashSet<string> loading = new HashSet<string>();
+        //private static readonly object lock_Loading = new object();
+
+        /// <summary>
+        /// Used to get image from within a container. Flags will contain Error if error occurred.
+        /// </summary>
+        /// <param name="objInfo">The ObjectInfo of the container.</param>
+        /// <param name="sourcePathIdx">Index of the file to load in ObjectInfo.SourcePaths.</param>
+        public static async Task<ImageSource> GetImageSource(ObjectInfo objInfo, int sourcePathIdx, bool isThumb) {
+            //var targetPath = objInfo.SourcePaths[sourcePathIdx];
+            //var fsPath = objInfo.FileSystemPath;
+            //var flags = objInfo.Flags;
+            var size = isThumb ? (SizeInt)Setting.ThumbnailSize : default;
+            //var imgSource = objInfo.ImageSource;
+            return await Task.Run(() => GetImageSource(objInfo, sourcePathIdx, size));
+        }
+
+        /// <summary>
+        /// Used to get image from within a container.
+        /// </summary>
+        /// <param name="childPath">For archives this is the path of the files inside the archive. For others, full path to the image.</param>
+        /// <param name="fsPath">This is the path of the container.</param>
+        /// <param name="flags">FileFlag of the container</param>
+        /// <param name="size">Decode size.</param>
+        /// <param name="imgSource">This is used as the return value if the flags == Archive | Image,
+        /// because images inside archive is loaded directly in a single thread.</param>
+        //public static ImageSource GetImageSource(string childPath, string fsPath, FileFlags flags, SizeInt size = default, ImageSource imgSource = null) {
+        public static ImageSource GetImageSource(ObjectInfo objInfo, int sourcePathIdx, SizeInt size) {
+            if (objInfo.Flags.HasFlag(FileFlags.Error)) return App.fa_exclamation;
+            if (objInfo.Flags == FileFlags.Unknown) return App.fa_file;
+
+#if DEBUG
+            var now = DateTime.Now;
+#endif
+            App.LoadThrottle.Wait();
+#if DEBUG
+            Console.WriteLine("Helpers.GetImageSource() waited " + (DateTime.Now - now).TotalMilliseconds + "ms.");
+#endif
+
+            ImageSource source = null;
+            try {
+                //flags is the parent container type
+                switch (objInfo.Flags) {
+                    case FileFlags.Directory:
+                        if (objInfo.SourcePaths?.Length > 0)
+                            source = GetImageSource(objInfo.SourcePaths[sourcePathIdx], size);
+                        if (source == null) {
+                            source = App.fa_folder;
+                        }
+                        break;
+                    case FileFlags.Image:
+                        source = GetImageSource(objInfo.FileSystemPath, size);
+                        if (source == null) {
+                            source = App.fa_image;
+                        }
+                        break;
+                    case FileFlags.Archive:
+                        if (objInfo.SourcePaths?.Length > 0) {
+                            MainWindow.LoadFile(new LoadOptions(objInfo.FileSystemPath) {
+                                DecodeSize = size,
+                                LoadImage = true,
+                                FileNames = new[] { objInfo.SourcePaths[sourcePathIdx] },
+                                Flags = FileFlags.Archive,
+                                CldInfoCallback = oi => source = oi.ImageSource,
+                                ObjInfoCallback = oi => objInfo.Flags = oi.Flags
+                            });
+                        }
+                        if (source == null) {
+                            source = App.fa_archive;
+                        }
+                        break;
+                    case FileFlags.Archive | FileFlags.Image:
+                        source = objInfo.ImageSource;
+                        if (source == null) {
+                            source = App.fa_image;
+                        }
+                        break;
+                }
+            }
+            finally {
+                objInfo = null;
+
+                App.LoadThrottle.Release();
+#if DEBUG
+                Console.WriteLine("Helpers.GetImageSource() exited leaving " + App.LoadThrottle.CurrentCount + " slots.");
+#endif
+            }
+            return source;
+        }
+
+        /// <summary>
+        /// Load image from disk if cache is not availble.
+        /// </summary>
         public static BitmapSource GetImageSource(string path, SizeInt decodeSize = default) {
             BitmapSource bs = null;
-            var isThumb = decodeSize.Width + decodeSize.Height > 0;
-            if (isThumb) {
-                //try load from cache when decodeSize is non-zero
-                bs = SQLiteHelper.GetFromThumbDB(path, decodeSize);
-                if (bs != null) return bs;
-            }
+            try {
+                var isThumb = decodeSize.Width + decodeSize.Height > 0;
+                if (isThumb) {
+                    //try load from cache when decodeSize is non-zero
+                    bs = SQLiteHelper.GetFromThumbDB(path, decodeSize);
+                    if (bs != null) return bs;
+                }
 
-            //load from disk
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
-                bs = GetImageSource(fs, decodeSize);
+                ////avoid file dead locks
+                //Monitor.Enter(lock_Loading);
+                //var wait = loading.Contains(path);
+                //Monitor.Exit(lock_Loading);
+                //while (wait) {
+                //    Thread.Sleep(100);
+                //    Monitor.Enter(lock_Loading);
+                //    wait = loading.Contains(path);
+                //    Monitor.Exit(lock_Loading);
+                //}
+                //Monitor.Enter(lock_Loading);
+                //loading.Add(path);
+                //Monitor.Exit(lock_Loading);
+                //load from disk
+#if DEBUG
+                Console.WriteLine("Loading from disk: " + path);
+#endif
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
+                    bs = GetImageSource(fs, decodeSize);
+                }
+                if (isThumb && bs != null) SQLiteHelper.AddToThumbDB(bs, path, decodeSize);
             }
-            if (isThumb && bs != null) SQLiteHelper.AddToThumbDB(bs, path, decodeSize);
-
+            catch (Exception ex) {
+                MessageBox.Show($"Error loading file {path}.\r\n{ex.Message}", "Error Loading File", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally {
+                //loading.Remove(path);
+            }
+            
             return bs;
         }
 
+        /// <summary>
+        /// Decode image from stream (FileStream when loading from file or MemoryStream when loading from archive.
+        /// </summary>
         public static BitmapSource GetImageSource(Stream stream, SizeInt decodeSize) {
             stream.Position = 0;
             var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
@@ -402,7 +560,6 @@ namespace ZipImageViewer
             //Return this as a size now
             return new Size(scaleX, scaleY);
         }
-
 
         public static string OpenFolderDialog(Window owner)
         {

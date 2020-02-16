@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FontAwesome5;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -30,6 +31,11 @@ namespace ZipImageViewer
         internal static ImageSource fa_meh;
         internal static ImageSource fa_spinner;
         internal static ImageSource fa_exclamation;
+        internal static ImageSource fa_file;
+        internal static ImageSource fa_folder;
+        internal static ImageSource fa_archive;
+        internal static ImageSource fa_image;
+
 
         public static CubicEase CE_EaseIn => (CubicEase)Current.FindResource("CE_EaseIn");
         public static CubicEase CE_EaseOut => (CubicEase)Current.FindResource("CE_EaseOut");
@@ -37,20 +43,22 @@ namespace ZipImageViewer
 
         public static Setting Setting { get; } = new Setting();
 
+        public static readonly int MaxLoadThreads = Environment.ProcessorCount;
+        public static System.Threading.SemaphoreSlim LoadThrottle = new System.Threading.SemaphoreSlim(MaxLoadThreads);
+
         private void App_Startup(object sender, StartupEventArgs e) {
             try {
                 Setting.LoadConfigFromFile();
 
                 //create resources
-                fa_meh = FontAwesome5.ImageAwesome.CreateImageSource(
-                    FontAwesome5.EFontAwesomeIcon.Solid_Meh,
-                    new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
-                fa_spinner = FontAwesome5.ImageAwesome.CreateImageSource(
-                    FontAwesome5.EFontAwesomeIcon.Solid_Spinner,
-                    new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
-                fa_exclamation = FontAwesome5.ImageAwesome.CreateImageSource(
-                    FontAwesome5.EFontAwesomeIcon.Solid_ExclamationCircle,
-                    new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
+                var fa_brush = new SolidColorBrush(Color.FromArgb(40, 255, 255, 255));
+                fa_meh = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_Meh, fa_brush);
+                fa_spinner = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_Spinner, fa_brush);
+                fa_exclamation = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_ExclamationCircle, fa_brush);
+                fa_file = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_File, fa_brush);
+                fa_folder = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_Folder, fa_brush);
+                fa_archive = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_FileArchive, fa_brush);
+                fa_image = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_FileImage, fa_brush);
 
                 //create thumb database if not exist and update columns if not correct
                 var aff1 = Execute(
@@ -90,6 +98,18 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
                     });
                 }
 
+#if DEBUG
+                Execute(con => {
+                    using (var cmd = new SQLiteCommand(con)) {
+                        cmd.CommandText = $@"delete from {Table_ThumbsData.Name}";
+                        cmd.ExecuteNonQuery();
+                        cmd.CommandText = @"vacuum";
+                        cmd.ExecuteNonQuery();
+                    }
+                    return 0;
+                });
+#endif
+
                 //show mainwindow
                 new MainWindow() {
                     Width = Setting.LastWindowSize.Width,
@@ -104,6 +124,11 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
 
 
         private void App_Exit(object sender, ExitEventArgs e) {
+            while (LoadThrottle.CurrentCount < MaxLoadThreads) {
+                System.Threading.Thread.Sleep(100);
+            }
+            LoadThrottle.Dispose();
+
             Setting.SaveConfigToFile();
 
             //db maintenance
