@@ -39,8 +39,7 @@ namespace ZipImageViewer
             }
         }
 
-        public int ThumbChangeDelay => Convert.ToInt32((virWrapPanel.VisualChildrenCount * 200 + App.Random.Next(2, 5) * 1000) * Setting.ThumbSwapDelayMultiplier);
-        //public int ThumbChangeDelay => ObjectList.Count(oi => oi.ImageSources?.Length > 1) * 200 + App.Random.Next(2, 5) * 1000;
+        public int ThumbChangeDelay => Convert.ToInt32((virWrapPanel.VisualChildrenCount * 200 + App.Random.Next(2, 7) * 1000) * Setting.ThumbSwapDelayMultiplier);
 
         internal CancellationTokenSource tknSrc_LoadThumb;
         private readonly object lock_LoadThumb = new object();
@@ -145,6 +144,12 @@ namespace ZipImageViewer
             //        add = false;
             //});
             //if (add) ObjectList.Add(objInfo);
+            var auxVis = Dispatcher.Invoke(() => AuxVisibility);
+            if (auxVis == Visibility.Collapsed) {
+                Helpers.UpdateSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
+                if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0)
+                    return;
+            }
             ObjectList.Add(objInfo);
         }
 
@@ -471,9 +476,11 @@ namespace ZipImageViewer
                     //        thumb.Visibility = AuxVisibility;
                     //}
 
-                    if (AuxVisibility == Visibility.Collapsed) {
+                    if (AuxVisibility == Visibility.Collapsed)
+                    {
                         virWrapPanel.ScrollOwner.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-                        if (WindowState == WindowState.Maximized) {
+                        if (WindowState == WindowState.Maximized)
+                        {
                             WindowState = WindowState.Normal;
                             lastWindowRect = new Rect(Left, Top, Width, Height);
                             var info = NativeHelpers.GetMonitorFromWindow(this);
@@ -482,12 +489,9 @@ namespace ZipImageViewer
                             Width = info.Width;
                             Height = info.Height;
                         }
-                        //remove error thumbs
-                        foreach (var item in ObjectList.Where(oi => oi.SourcePaths == null || oi.SourcePaths.Length == 0).ToArray()) {
-                            ObjectList.Remove(item);
-                        }
                     }
-                    else {
+                    else
+                    {
                         virWrapPanel.ScrollOwner.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
                         if (lastWindowRect.Size.Width + lastWindowRect.Size.Height > 0) {
                             Top = lastWindowRect.Top;
@@ -495,8 +499,8 @@ namespace ZipImageViewer
                             Width = lastWindowRect.Width;
                             Height = lastWindowRect.Height;
                         }
-                        Task.Run(() => LoadPath(CurrentPath));
                     }
+                    Task.Run(() => LoadPath(CurrentPath));
                     break;
             }
         }

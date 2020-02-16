@@ -110,9 +110,11 @@ namespace ZipImageViewer
             mainWin = (MainWindow)Window.GetWindow(this);
             
             var objInfo = ObjectInfo;
+            var rm = mainWin.AuxVisibility == Visibility.Collapsed;
             Task.Run(() => {
-                if (objInfo.SourcePaths == null) //non-null indicate SourcePaths has already been updated
+                if (objInfo.SourcePaths == null) {//non-null indicate SourcePaths has already been updated
                     Helpers.UpdateSourcePaths(objInfo);
+                }
             }).ContinueWith(t => Dispatcher.Invoke(() => cycleImageSource(null, null)));
         }
 
