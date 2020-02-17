@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Linq;
 using System.Windows.Data;
 using SizeInt = System.Drawing.Size;
+using System.Windows.Threading;
 
 namespace ZipImageViewer
 {
@@ -145,7 +146,7 @@ namespace ZipImageViewer
             //});
             //if (add) ObjectList.Add(objInfo);
             var auxVis = Dispatcher.Invoke(() => AuxVisibility);
-            if (auxVis == Visibility.Collapsed) {
+            if (auxVis == Visibility.Collapsed && objInfo.SourcePaths == null) {
                 Helpers.UpdateSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
                 if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0)
                     return;
@@ -324,8 +325,36 @@ namespace ZipImageViewer
                             //if all fails mark with icon and when clicked
                             //prompt for a generic or dedicated password then extract with it
                             //-------------logic needed here-------------
-                            objInfo.Flags |= FileFlags.Error;
-                            objInfo.Comments = $"Extraction failed. Bad password or not supported image formats.";
+                            if (options.LoadImage && options.FileNames == null) {//means loading all thumbs in zip
+                                while (!success) {
+                                    string pwd = null;
+                                    bool isFb = true;
+                                    Application.Current.Dispatcher.Invoke(() => {
+                                        var win = new InputWindow();
+                                        if (win.ShowDialog() == true) {
+                                            pwd = win.TB_Password.Text;
+                                            isFb = win.CB_Fallback.IsChecked == true;
+                                        }
+                                        win.Close();
+                                    });
+
+                                    if (!string.IsNullOrEmpty(pwd)) {
+                                        options.Password = pwd;
+                                        success = ExtractZip(options, objInfo, done, tknSrc);
+                                        if (success) {
+                                            //make sure the password is saved when task is cancelled
+                                            Setting.MappedPasswords[options.FilePath] = new ObservablePair<string, string>(options.FilePath, pwd);
+                                            if (isFb) Setting.FallbackPasswords[pwd] = new Observable<string>(pwd);
+                                            break;
+                                        }
+                                    }
+                                    else break;
+                                }
+                            }
+                            if (!success) {
+                                objInfo.Flags |= FileFlags.Error;
+                                objInfo.Comments = $"Extraction failed. Bad password or not supported image formats.";
+                            }
                             break;
                     }
                     
@@ -351,7 +380,8 @@ namespace ZipImageViewer
         /// </summary>
         private static bool ExtractZip(LoadOptions options, ObjectInfo objInfo, HashSet<string> done, CancellationTokenSource tknSrc = null)
         {
-            if (tknSrc?.IsCancellationRequested == true) return false;
+            var success = false;
+            if (tknSrc?.IsCancellationRequested == true) return success;
             SevenZipExtractor ext = null;
             try
             {
@@ -370,7 +400,7 @@ namespace ZipImageViewer
                         .Select(d => d.FileName).ToArray();
 
                 foreach (var fileName in toDo) {
-                    if (tknSrc?.IsCancellationRequested == true) return false;
+                    if (tknSrc?.IsCancellationRequested == true) return success;
 
                     //skip if already done
                     if (done.Contains(fileName)) continue;
@@ -390,6 +420,7 @@ namespace ZipImageViewer
                             //load from disk
                             using (var ms = new MemoryStream()) {
                                 ext.ExtractFile(fileName, ms);
+                                success = true; //if the task is cancelled, success info is still returned correctly.
                                 source = Helpers.GetImageSource(ms, options.DecodeSize);
                             }
                             if (isThumb && source != null) SQLiteHelper.AddToThumbDB(source, thumbPathInDb, options.DecodeSize);
@@ -414,7 +445,8 @@ namespace ZipImageViewer
                 //save password for the future
                 if (fromDisk && options.Password?.Length > 0)
                     Setting.MappedPasswords[options.FilePath] = new ObservablePair<string, string>(options.FilePath, options.Password);
-                return true;
+                
+                return true; //it is considered successful if the code reaches here
             }
             catch (Exception ex)
             {
@@ -465,10 +497,10 @@ namespace ZipImageViewer
                     break;
                 case nameof(HY_ImmersionMode):
                     AuxVisibility = AuxVisibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
-                    ButtonCloseVisibility = AuxVisibility;
-                    ButtonMinVisibility = AuxVisibility;
-                    ButtonMaxVisibility = AuxVisibility;
-                    TitleVisibility = AuxVisibility;
+                    //ButtonCloseVisibility = AuxVisibility;
+                    //ButtonMinVisibility = AuxVisibility;
+                    //ButtonMaxVisibility = AuxVisibility;
+                    //TitleVisibility = AuxVisibility;
                     //for (int i = 0; i < LB1.Items.Count; i++) {
                     //    var thumb = (ContentPresenter)LB1.ItemContainerGenerator.ContainerFromIndex(i);
                     //    var objInfo = (ObjectInfo)thumb.DataContext;
@@ -479,8 +511,8 @@ namespace ZipImageViewer
                     if (AuxVisibility == Visibility.Collapsed)
                     {
                         virWrapPanel.ScrollOwner.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-                        if (WindowState == WindowState.Maximized)
-                        {
+                        if (WindowState == WindowState.Maximized) {
+                            //go fullscreen if alreayd maximized
                             WindowState = WindowState.Normal;
                             lastWindowRect = new Rect(Left, Top, Width, Height);
                             var info = NativeHelpers.GetMonitorFromWindow(this);
@@ -502,6 +534,29 @@ namespace ZipImageViewer
                     }
                     Task.Run(() => LoadPath(CurrentPath));
                     break;
+            }
+        }
+
+        protected override void OnStateChanged(EventArgs e) {
+            //override state behavior to enable fullscreen in immersion mode
+            if (WindowState == WindowState.Maximized && AuxVisibility == Visibility.Collapsed) {
+                WindowState = WindowState.Normal;
+                var info = NativeHelpers.GetMonitorFromWindow(this);
+                if (Top == info.Top && Left == info.Left && Width == info.Width && Height == info.Height) {
+                    //restore
+                    Top = lastWindowRect.Top;
+                    Left = lastWindowRect.Left;
+                    Width = lastWindowRect.Width;
+                    Height = lastWindowRect.Height;
+                }
+                else {
+                    //fullscreen
+                    lastWindowRect = new Rect(Left, Top, Width, Height);
+                    Top = info.Top;
+                    Left = info.Left;
+                    Width = info.Width;
+                    Height = info.Height;
+                }
             }
         }
 
@@ -546,6 +601,7 @@ namespace ZipImageViewer
             //    item.DataContext = new ObservablePair<string, string>(op.Item1, op.Item2.Replace(@"%FileSystemPath%", tn.ObjectInfo.FileSystemPath));
             //}
         }
+
 
     }
 }

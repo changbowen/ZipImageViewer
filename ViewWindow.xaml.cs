@@ -87,10 +87,10 @@ namespace ZipImageViewer
             Opacity = 0d;
 
             mainWin = win;
-            ButtonCloseVisibility = win.AuxVisibility;
-            ButtonMinVisibility = win.AuxVisibility;
-            ButtonMaxVisibility = win.AuxVisibility;
-            TitleVisibility = win.AuxVisibility;
+            //ButtonCloseVisibility = win.AuxVisibility;
+            //ButtonMinVisibility = win.AuxVisibility;
+            //ButtonMaxVisibility = win.AuxVisibility;
+            //TitleVisibility = win.AuxVisibility;
         }
 
         private void ViewWindow_Loaded(object sender, RoutedEventArgs e) {
@@ -99,14 +99,13 @@ namespace ZipImageViewer
                 if (mainWin.lastViewWindowRect != default) {
                     Top = mainWin.lastViewWindowRect.Top;
                     Left = mainWin.lastViewWindowRect.Left;
-                    if (mainWin.lastViewWindowRect.Size == default ||
-                        mainWin.AuxVisibility == Visibility.Collapsed)
-                        WindowState = WindowState.Maximized;
-                    else {
+                    if (mainWin.lastViewWindowRect.Size != default) {
                         Width = mainWin.lastViewWindowRect.Width;
                         Height = mainWin.lastViewWindowRect.Height;
                     }
                 }
+                if (mainWin.AuxVisibility == Visibility.Collapsed)
+                    Helpers.SwitchFullScreen(this, ref mainWin.lastViewWindowRect, true);
             }
 
             ////adjust window size according to image size
@@ -127,13 +126,6 @@ namespace ZipImageViewer
         }
 
         private void ViewWin_Unloaded(object sender, RoutedEventArgs e) {
-            //save window state
-            if (mainWin != null) {
-                if (WindowState == WindowState.Maximized)
-                    mainWin.lastViewWindowRect = new Rect(Left, Top, 0d, 0d);
-                else
-                    mainWin.lastViewWindowRect = new Rect(Left, Top, ActualWidth, ActualHeight);
-            }
             objectList = null;
             ViewImageSource = null;
             ObjectInfo.SourcePaths = null;
@@ -141,10 +133,6 @@ namespace ZipImageViewer
             ObjectInfo = null;
             IM.Source = null;
             IM = null;
-        }
-
-        private void ViewWin_MouseUp(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton == MouseButton.Right) Close();
         }
 
         /// <param name="altAnim">Set this to true or false to override alternate zoom & move animation.</param>
@@ -254,6 +242,19 @@ namespace ZipImageViewer
         private Point mouseCapturePoint;
         private Matrix existingTranslate;
 
+
+        private void ViewWin_MouseUp(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton == MouseButton.Right) {
+                //save window state
+                if (mainWin != null) {
+                    if (WindowState == WindowState.Maximized || Helpers.IsFullScreen(this))
+                        mainWin.lastViewWindowRect = new Rect(Left, Top, 0d, 0d);
+                    else
+                        mainWin.lastViewWindowRect = new Rect(Left, Top, ActualWidth, ActualHeight);
+                }
+                Close();
+            }
+        }
 
         private void CA_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             if (e.ClickCount == 1) {

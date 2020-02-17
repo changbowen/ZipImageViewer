@@ -212,11 +212,13 @@ namespace ZipImageViewer
                 case FileFlags.Image:
                     objInfo.SourcePaths = new[] { objInfo.FileSystemPath };
                     break;
+                case FileFlags.Archive | FileFlags.Image:
+                    //do nothing because FileFlags.Archive | FileFlags.Image should have SourcePaths updated when loaded the first time.
+                    break;
                 default:
                     objInfo.SourcePaths = new string[0];
                     break;
             }
-            //FileFlags.Archive | FileFlags.Image should have SourcePaths updated when loaded the first time.
             //Console.WriteLine("Updated SourcePaths for: " + objInfo.FileSystemPath);
         }
 
@@ -608,6 +610,38 @@ namespace ZipImageViewer
                 }
             }
             return child;
+        }
+
+        public static bool IsFullScreen(Window win, Rect monitorInfo = default) {
+            if (monitorInfo == default)
+                monitorInfo = NativeHelpers.GetMonitorFromWindow(win);
+
+            return win.Top == monitorInfo.Top && win.Left == monitorInfo.Left && win.Width == monitorInfo.Width && win.Height == monitorInfo.Height;
+        }
+
+        public static void SwitchFullScreen(Window win, ref Rect lastRect, bool? fullScreen = null, Rect monitorInfo = default) {
+            if (monitorInfo == default)
+                monitorInfo = NativeHelpers.GetMonitorFromWindow(win);
+
+            if (fullScreen == null)
+                fullScreen = !IsFullScreen(win, monitorInfo);
+
+            win.WindowState = WindowState.Normal;//need WindowState.Normal to hide taskbar under fullscreen
+            if (fullScreen.Value) {
+                //go fullscreen
+                lastRect = new Rect(win.Left, win.Top, win.Width, win.Height);
+                win.Top = monitorInfo.Top;
+                win.Left = monitorInfo.Left;
+                win.Width = monitorInfo.Width;
+                win.Height = monitorInfo.Height;
+            }
+            else {
+                //restore last
+                win.Top = lastRect.Top;
+                win.Left = lastRect.Left;
+                win.Width = lastRect.Width;
+                win.Height = lastRect.Height;
+            }
         }
     }
 

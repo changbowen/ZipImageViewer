@@ -23,12 +23,12 @@ namespace ZipImageViewer
             DependencyProperty.Register("ObjectInfo", typeof(ObjectInfo), typeof(Thumbnail), new PropertyMetadata(null));
 
 
-        public Visibility FlagIconVisibility {
-            get { return (Visibility)GetValue(FlagIconVisibilityProperty); }
-            set { SetValue(FlagIconVisibilityProperty, value); }
-        }
-        public static readonly DependencyProperty FlagIconVisibilityProperty =
-            DependencyProperty.Register("FlagIconVisibility", typeof(Visibility), typeof(Thumbnail), new PropertyMetadata(Visibility.Visible));
+        //public Visibility FlagIconVisibility {
+        //    get { return (Visibility)GetValue(FlagIconVisibilityProperty); }
+        //    set { SetValue(FlagIconVisibilityProperty, value); }
+        //}
+        //public static readonly DependencyProperty FlagIconVisibilityProperty =
+        //    DependencyProperty.Register("FlagIconVisibility", typeof(Visibility), typeof(Thumbnail), new PropertyMetadata(Visibility.Visible));
 
 
         //public bool HasImage => thumbImageSource != App.fa_meh &&
@@ -170,7 +170,7 @@ namespace ZipImageViewer
 
             tn.ThumbImageSource = await Helpers.GetImageSource(tn.ObjectInfo, tn.thumbIndex, true);
 
-            if (!tn.IsLoaded || !cycle) return; //dont do anything before or after the lifecycle
+            if (!tn.IsLoaded || !mainWin.IsLoaded || !cycle) return; //dont do anything before or after the lifecycle
 
             var delay = mainWin.ThumbChangeDelay;
 

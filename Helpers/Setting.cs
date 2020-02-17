@@ -135,8 +135,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static ObservableCollection<Observable<string>> fallbackPasswords;
-        public static ObservableCollection<Observable<string>> FallbackPasswords {
+        private static ObservableKeyedCollection<string, Observable<string>> fallbackPasswords;
+        public static ObservableKeyedCollection<string, Observable<string>> FallbackPasswords {
             get => fallbackPasswords;
             set {
                 if (fallbackPasswords == value) return;
@@ -191,7 +191,7 @@ namespace ZipImageViewer
             }
 
             //parse saved passwords at last
-            FallbackPasswords = new ObservableCollection<Observable<string>>(
+            FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item,
                 iniData["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
             MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1,
                 iniData["Saved Passwords"].Where(d => d.Value.Length > 0).Select(d => new ObservablePair<string, string>(d.KeyName, d.Value)));

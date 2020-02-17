@@ -60,6 +60,8 @@
                 </Style>
                 <Style TargetType="TextBox">
                     <Setter Property="Padding" Value="3"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="BorderBrush" Value="{x:Null}"/>
                 </Style>
                 <Style TargetType="ContentControl" BasedOn="{StaticResource ContentControlBaseStyle}">
                     <Setter Property="Margin" Value="4"/>

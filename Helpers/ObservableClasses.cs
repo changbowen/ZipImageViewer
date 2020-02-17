@@ -215,7 +215,7 @@ namespace ZipImageViewer {
 	}
 
 
-	public class Observable<T> : INotifyPropertyChanged
+	public class Observable<T> : INotifyPropertyChanged, IEquatable<Observable<T>>
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 
@@ -234,8 +234,21 @@ namespace ZipImageViewer {
 			return item.ToString();
 		}
 
+		public override bool Equals(object obj) {
+			return Equals(obj as Observable<T>);
+		}
+
+		public bool Equals(Observable<T> other) {
+			return other != null &&
+				   EqualityComparer<T>.Default.Equals(item, other.item);
+		}
+
+		public override int GetHashCode() {
+			return -1566986794 + EqualityComparer<T>.Default.GetHashCode(item);
+		}
+
 		public static implicit operator T(Observable<T> obs) {
-			return obs.Item;
+			return obs.item;
 		}
 
 		//for DataGrid to have a new row placeholder
@@ -246,8 +259,8 @@ namespace ZipImageViewer {
 		}
 	}
 
-	public class ObservablePair<T1, T2> : INotifyPropertyChanged
-    {
+	public class ObservablePair<T1, T2> : INotifyPropertyChanged, IEquatable<ObservablePair<T1, T2>>
+	{
         public event PropertyChangedEventHandler PropertyChanged;
 
         private T1 item1;
@@ -276,16 +289,33 @@ namespace ZipImageViewer {
 			return $@"({item1.ToString()}, {item2.ToString()})";
 		}
 
+		public override bool Equals(object obj) {
+			return Equals(obj as ObservablePair<T1, T2>);
+		}
+
+		public bool Equals(ObservablePair<T1, T2> other) {
+			return other != null &&
+				   EqualityComparer<T1>.Default.Equals(item1, other.item1) &&
+				   EqualityComparer<T2>.Default.Equals(item2, other.item2);
+		}
+
+		public override int GetHashCode() {
+			var hashCode = -798337671;
+			hashCode = hashCode * -1521134295 + EqualityComparer<T1>.Default.GetHashCode(item1);
+			hashCode = hashCode * -1521134295 + EqualityComparer<T2>.Default.GetHashCode(item2);
+			return hashCode;
+		}
+
 		public static explicit operator System.Drawing.Size(ObservablePair<T1, T2> pair) {
-			return new System.Drawing.Size(Convert.ToInt32(pair.Item1), Convert.ToInt32(pair.Item2));
+			return new System.Drawing.Size(Convert.ToInt32(pair.item1), Convert.ToInt32(pair.item2));
 		}
 
 		public static explicit operator Size(ObservablePair<T1, T2> pair) {
-			return new Size(Convert.ToDouble(pair.Item1), Convert.ToDouble(pair.Item2));
+			return new Size(Convert.ToDouble(pair.item1), Convert.ToDouble(pair.item2));
 		}
 
 		public static explicit operator Point(ObservablePair<T1, T2> pair) {
-			return new Point(Convert.ToDouble(pair.Item1), Convert.ToDouble(pair.Item2));
+			return new Point(Convert.ToDouble(pair.item1), Convert.ToDouble(pair.item2));
 		}
 
 		//for DataGrid to have a new row placeholder
@@ -302,7 +332,7 @@ namespace ZipImageViewer {
 	/// Notifying class for binding arbitrary data.
 	/// Add properties like int1, int2 etc. for additional data types.
 	/// </summary>
-	public class ObservableObj : INotifyPropertyChanged
+	public class ObservableObj : INotifyPropertyChanged, IEquatable<ObservableObj>
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 
@@ -342,6 +372,25 @@ namespace ZipImageViewer {
 			str1 = _str1;
 			str2 = _str2;
 			str3 = _str3;
+		}
+
+		public override bool Equals(object obj) {
+			return Equals(obj as ObservableObj);
+		}
+
+		public bool Equals(ObservableObj other) {
+			return other != null &&
+				   str1 == other.str1 &&
+				   str2 == other.str2 &&
+				   str3 == other.str3;
+		}
+
+		public override int GetHashCode() {
+			var hashCode = 302667186;
+			hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(str1);
+			hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(str2);
+			hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(str3);
+			return hashCode;
 		}
 	}
 
