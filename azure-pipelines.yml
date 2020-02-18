@@ -49,6 +49,5 @@ steps:
     tagSource: 'userSpecifiedTag'
     tag: 'v$(AssemblyInfo.AssemblyVersion.Major).$(AssemblyInfo.AssemblyVersion.Minor).$(AssemblyInfo.AssemblyVersion.Build)'
     assets: '$(System.DefaultWorkingDirectory)/$(Build.Repository.Name).zip'
-    isDraft: true
     changeLogCompareToRelease: 'lastFullRelease'
     changeLogType: 'commitBased'
