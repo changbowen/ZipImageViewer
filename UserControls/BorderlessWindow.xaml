@@ -8,7 +8,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="local:BorderlessWindow">
                     <Grid Background="{TemplateBinding Background}">
-                        <Grid x:Name="titleBar" Opacity="0" Background="#11FFFFFF" VerticalAlignment="Top" Height="30" Panel.ZIndex="1">
+                        <Grid x:Name="titleBar" Opacity="0" Background="#22FFFFFF" VerticalAlignment="Top" Height="30" Panel.ZIndex="1">
                             <Grid.Triggers>
                                 <EventTrigger RoutedEvent="MouseEnter">
                                     <BeginStoryboard>

@@ -563,15 +563,17 @@ namespace ZipImageViewer
             return new Size(scaleX, scaleY);
         }
 
-        public static string OpenFolderDialog(Window owner)
+        public static string OpenFolderDialog(MainWindow win, Action<string> callback = null)
         {
-            var cofd = new CommonOpenFileDialog() {
-                IsFolderPicker = true
-            };
+            var cofd = new CommonOpenFileDialog() { IsFolderPicker = true };
 
-            return cofd.ShowDialog(owner) == CommonFileDialogResult.Ok ? cofd.FileName : null;
+            if (cofd.ShowDialog(win) == CommonFileDialogResult.Ok && !string.IsNullOrEmpty(cofd.FileName)) {
+                var path = cofd.FileName;
+                if (callback != null) callback.Invoke(path);
+                return path;
+            }
+            return null;
         }
-
 
         public static void Run(string path, string args) {
             var info = new ProcessStartInfo(path, args) {

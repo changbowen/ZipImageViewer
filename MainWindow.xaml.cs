@@ -21,9 +21,7 @@ namespace ZipImageViewer
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ObservableKeyedCollection<string, ObjectInfo> ObjectList { get; } =
-            new ObservableKeyedCollection<string, ObjectInfo>(o => o.VirtualPath);
-
+        public ObservableKeyedCollection<string, ObjectInfo> ObjectList { get; } = new ObservableKeyedCollection<string, ObjectInfo>(o => o.VirtualPath);
 
         private DpiScale DpiScale;
         public double ThumbRealWidth => Setting.ThumbnailSize.Item1 / DpiScale.DpiScaleX;
@@ -64,6 +62,7 @@ namespace ZipImageViewer
             InitializeComponent();
         }
 
+
         #region MainWindow Event Handlers
 
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
@@ -80,8 +79,8 @@ namespace ZipImageViewer
                 Task.Run(() => LoadPath(InitialPath));
             else if (Setting.LastPath?.Length > 0)
                 Task.Run(() => LoadPath(Setting.LastPath));
-            else if (Helpers.OpenFolderDialog(this) is string path)
-                Task.Run(() => LoadPath(path));
+            else
+                openFolderPrompt();
         }
 
         private void ThumbnailSizeChanged(object sender, PropertyChangedEventArgs e) {
@@ -130,12 +129,19 @@ namespace ZipImageViewer
                 e.Handled = true;
             }
             else if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left) {
-                if (Helpers.OpenFolderDialog(this) is string path) Task.Run(() => LoadPath(path));
+                openFolderPrompt();
                 e.Handled = true;
             }
         }
 
         #endregion
+
+
+        #region Private Helper Methods
+
+        private void openFolderPrompt() {
+            Helpers.OpenFolderDialog(this, path => Task.Run(() => LoadPath(path)));
+        }
 
         private void Callback_AddToImageList(ObjectInfo objInfo) {
             //var add = true;
@@ -163,6 +169,10 @@ namespace ZipImageViewer
             Dispatcher.Invoke(() => virWrapPanel.ScrollOwner.ScrollToTop());
         }
 
+        #endregion
+
+
+        #region Load Methods
         /// <summary>
         /// Display file system objects in the path as thumbnails, or open viewer depending on the file type and parameters.
         /// Main open logic is set here.
@@ -469,6 +479,10 @@ namespace ZipImageViewer
             }
         }
 
+        #endregion
+
+
+        #region Misc Event Handlers
 
         private void TN1_Click(object sender, MouseButtonEventArgs e) {
             if (e.Source.Equals(sender)) {
@@ -492,6 +506,9 @@ namespace ZipImageViewer
 
         private void Sidebar_Click(object sender, RoutedEventArgs e) {
             switch (((FrameworkContentElement)sender).Name) {
+                case nameof(HY_Open):
+                    openFolderPrompt();
+                    break;
                 case nameof(HY_Options):
                     new SettingsWindow(this).ShowDialog();
                     break;
@@ -501,13 +518,6 @@ namespace ZipImageViewer
                     //ButtonMinVisibility = AuxVisibility;
                     //ButtonMaxVisibility = AuxVisibility;
                     //TitleVisibility = AuxVisibility;
-                    //for (int i = 0; i < LB1.Items.Count; i++) {
-                    //    var thumb = (ContentPresenter)LB1.ItemContainerGenerator.ContainerFromIndex(i);
-                    //    var objInfo = (ObjectInfo)thumb.DataContext;
-                    //    if (objInfo.ImageSources == null || objInfo.ImageSources.Length == 0)
-                    //        thumb.Visibility = AuxVisibility;
-                    //}
-
                     if (AuxVisibility == Visibility.Collapsed)
                     {
                         virWrapPanel.ScrollOwner.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
@@ -533,6 +543,9 @@ namespace ZipImageViewer
                         }
                     }
                     Task.Run(() => LoadPath(CurrentPath));
+                    break;
+                case nameof(HY_Close):
+                    Close();
                     break;
             }
         }
@@ -602,6 +615,6 @@ namespace ZipImageViewer
             //}
         }
 
-
+        #endregion
     }
 }

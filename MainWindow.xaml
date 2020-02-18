@@ -87,7 +87,7 @@
                 <Style TargetType="Border">
                     <Setter Property="RenderTransform">
                         <Setter.Value>
-                            <TranslateTransform X="-85"/>
+                            <TranslateTransform X="-90"/>
                         </Setter.Value>
                     </Setter>
                     <Style.Triggers>
@@ -95,7 +95,7 @@
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" Duration="0:0:0.3" To="-15" EasingFunction="{StaticResource CE_EaseOut}"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" Duration="0:0:0.3" To="-20" EasingFunction="{StaticResource CE_EaseOut}"/>
                                         <DoubleAnimation Storyboard.TargetProperty="Opacity" Duration="0:0:0.3" To="1" EasingFunction="{StaticResource CE_EaseOut}"/>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -103,7 +103,7 @@
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" Duration="0:0:0.3" To="-85" EasingFunction="{StaticResource CE_EaseOut}"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" Duration="0:0:0.3" To="-90" EasingFunction="{StaticResource CE_EaseOut}"/>
                                         <DoubleAnimation Storyboard.TargetProperty="Opacity" Duration="0:0:0.3" To="0.2" EasingFunction="{StaticResource CE_EaseOut}"/>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -113,7 +113,7 @@
                 </Style>
             </Border.Style>
 
-            <Border Background="#FF444444" CornerRadius="10" Width="90">
+            <Border Background="#FF444444" CornerRadius="10" Width="100">
                 <Border.Effect>
                     <DropShadowEffect ShadowDepth="0" BlurRadius="10"/>
                 </Border.Effect>
@@ -121,9 +121,8 @@
                     <Style TargetType="fa:ImageAwesome">
                         <Setter Property="Width" Value="48"/>
                         <Setter Property="Height" Value="48"/>
-                        <Setter Property="Foreground" Value="#AAFFFFFF"/>
+                        <Setter Property="Foreground" Value="#FFAAAAAA"/>
                         <Setter Property="Cursor" Value="Hand"/>
-                        <Setter Property="Margin" Value="5"/>
                         <Setter Property="Effect">
                             <Setter.Value>
                                 <DropShadowEffect Direction="270" ShadowDepth="2" BlurRadius="5" />
@@ -150,18 +149,34 @@
                     </Style>
                 </Border.Resources>
 
-                <StackPanel Margin="10" HorizontalAlignment="Right">
-                    <TextBlock ToolTip="Options">
+                <local:PaddedGrid Margin="10" HorizontalAlignment="Right" Padding="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock ToolTip="Open Folder" Grid.Row="0">
+                        <Hyperlink Name="HY_Open" TextDecorations="{x:Null}" Click="Sidebar_Click">
+                            <fa:ImageAwesome Icon="Solid_FolderOpen"/>
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock ToolTip="Options" Grid.Row="1">
                         <Hyperlink Name="HY_Options" TextDecorations="{x:Null}" Click="Sidebar_Click">
                             <fa:ImageAwesome Icon="Solid_Cog"/>
                         </Hyperlink>
                     </TextBlock>
-                    <TextBlock ToolTip="Immsersion Mode">
+                    <TextBlock ToolTip="Immsersion Mode" Grid.Row="2">
                         <Hyperlink Name="HY_ImmersionMode" TextDecorations="{x:Null}" Click="Sidebar_Click">
                             <fa:ImageAwesome Icon="Solid_Film"/>
                         </Hyperlink>
                     </TextBlock>
-                </StackPanel>
+                    <TextBlock ToolTip="Close Window" Grid.Row="3">
+                        <Hyperlink Name="HY_Close" TextDecorations="{x:Null}" Click="Sidebar_Click">
+                            <fa:ImageAwesome Icon="Solid_TimesCircle"/>
+                        </Hyperlink>
+                    </TextBlock>
+                </local:PaddedGrid>
             </Border>
         </Border>
         
