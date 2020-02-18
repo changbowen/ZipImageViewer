@@ -115,6 +115,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ContextMenuWindow.xaml.cs">
+      <DependentUpon>ContextMenuWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Helpers\NativeHelpers.cs" />
     <Compile Include="Helpers\ObjectInfo.cs" />
     <Compile Include="Helpers\Setting.cs" />
@@ -141,6 +144,10 @@
     <Compile Include="ViewWindow.xaml.cs">
       <DependentUpon>ViewWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="ContextMenuWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="InputWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

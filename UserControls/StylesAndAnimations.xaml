@@ -91,14 +91,6 @@
                     <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down_L}"/>
                 </MultiDataTrigger.ExitActions>
             </MultiDataTrigger>
-            <!--<Trigger Property="IsMouseOver" Value="True">
-                <Trigger.EnterActions>
-                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Up_H}"/>
-                </Trigger.EnterActions>
-                <Trigger.ExitActions>
-                    <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down_H}"/>
-                </Trigger.ExitActions>
-            </Trigger>-->
         </Style.Triggers>
     </Style>
 

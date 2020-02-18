@@ -108,6 +108,13 @@ namespace ZipImageViewer
             }
         }
 
+        /// <summary>
+        /// This is a grid on which the scaling animations are applied.
+        /// </summary>
+        internal Grid BackgroundGrid { get; set; }
+
+        private bool? dialogResult;
+
         public RoundedWindow() {
             SetResourceReference(StyleProperty, typeof(RoundedWindow));
 
@@ -115,13 +122,6 @@ namespace ZipImageViewer
             WindowStyle = WindowStyle.None;
             base.Background = null;
         }
-
-        /// <summary>
-        /// This is a grid on which the scaling animations are applied.
-        /// </summary>
-        internal Grid BackgroundGrid { get; set; }
-
-        private bool? dialogResult;
 
         public override void OnApplyTemplate() {
             base.OnApplyTemplate();
@@ -156,6 +156,26 @@ namespace ZipImageViewer
         }
         #endregion
 
+        private void Owner_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton == MouseButton.Left) {
+                Owner.PreviewMouseDown -= Owner_PreviewMouseDown;
+                subscribedOwnerMouseDown = false;
+                Close();
+            }//right click moves the window
+        }
+
+        private bool subscribedOwnerMouseDown = false;
+        private void subscribeOwnerMouseDown() {
+            if (subscribedOwnerMouseDown) return;
+            if (Owner != null) Owner.PreviewMouseDown += Owner_PreviewMouseDown;
+            subscribedOwnerMouseDown = true;
+        }
+
+        public new void Show() {
+            subscribeOwnerMouseDown();
+            base.Show();
+        }
+
         protected override void OnClosing(CancelEventArgs e) {
             base.OnClosing(e);
             switch (CloseBehavior) {
@@ -182,7 +202,10 @@ namespace ZipImageViewer
         /// If the window is already faded in, move the window to the new position. In this case the FadingInEvent will not be raised.
         /// </summary>
         public void FadeIn(double left = double.NaN, double top = double.NaN) {
-            if (!IsLoaded) base.Show();//how to call something similar to initializecomponent?
+            if (!IsLoaded) {
+                Opacity = 0d;
+                Show();//how to call something similar to initializecomponent?
+            }
 
             //compute mouse position or set to existing values
             Point newpos, realpos;
@@ -226,7 +249,7 @@ namespace ZipImageViewer
             if (Opacity == 0) {
                 Left = realpos.X;
                 Top = realpos.Y;
-                base.Show();
+                Show();
                 RaiseEvent(new RoutedEventArgs(FadingInEvent));
             }
             else {
@@ -234,7 +257,7 @@ namespace ZipImageViewer
                 var easefunc = new CubicEase() { EasingMode = EasingMode.EaseInOut };
                 var anim_move_x = new DoubleAnimation(realpos.X, new Duration(new TimeSpan(0, 0, 0, 0, 300)), FillBehavior.Stop) { EasingFunction = easefunc };
                 var anim_move_y = new DoubleAnimation(realpos.Y, new Duration(new TimeSpan(0, 0, 0, 0, 300)), FillBehavior.Stop) { EasingFunction = easefunc };
-                BeginAnimation(LeftProperty, anim_move_x);
+                BeginAnimation(LeftProperty, anim_move_x) ;
                 BeginAnimation(TopProperty, anim_move_y);
             }
         }

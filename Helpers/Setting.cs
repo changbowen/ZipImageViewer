@@ -155,7 +155,16 @@ namespace ZipImageViewer
             }
         }
 
-        //public static Dictionary<string, string> MappedPasswords;
+        private static bool immersionMode;
+        //this one is not saved
+        public static bool ImmersionMode {
+            get => immersionMode;
+            set {
+                if (immersionMode == value) return;
+                immersionMode = value;
+                OnStaticPropertyChanged(nameof(ImmersionMode));
+            }
+        }
 
 
         public static void LoadConfigFromFile(string path = "config.ini") {
@@ -191,9 +200,9 @@ namespace ZipImageViewer
             }
 
             //parse saved passwords at last
-            FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item,
+            FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
                 iniData["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
-            MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1,
+            MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1, "Item1",
                 iniData["Saved Passwords"].Where(d => d.Value.Length > 0).Select(d => new ObservablePair<string, string>(d.KeyName, d.Value)));
 
             //apply dll path

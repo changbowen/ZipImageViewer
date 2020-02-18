@@ -87,10 +87,6 @@ namespace ZipImageViewer
             Opacity = 0d;
 
             mainWin = win;
-            //ButtonCloseVisibility = win.AuxVisibility;
-            //ButtonMinVisibility = win.AuxVisibility;
-            //ButtonMaxVisibility = win.AuxVisibility;
-            //TitleVisibility = win.AuxVisibility;
         }
 
         private void ViewWindow_Loaded(object sender, RoutedEventArgs e) {
@@ -104,7 +100,7 @@ namespace ZipImageViewer
                         Height = mainWin.lastViewWindowRect.Height;
                     }
                 }
-                if (mainWin.AuxVisibility == Visibility.Collapsed)
+                if (Setting.ImmersionMode)
                     Helpers.SwitchFullScreen(this, ref mainWin.lastViewWindowRect, true);
             }
 

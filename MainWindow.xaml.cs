@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Linq;
 using SevenZip;
 using Path = System.IO.Path;
 using System.ComponentModel;
@@ -46,13 +47,6 @@ namespace ZipImageViewer
         public string InitialPath;
 
 
-        public Visibility AuxVisibility {
-            get { return (Visibility)GetValue(AuxVisibilityProperty); }
-            set { SetValue(AuxVisibilityProperty, value); }
-        }
-        public static readonly DependencyProperty AuxVisibilityProperty =
-            DependencyProperty.Register("AuxVisibility", typeof(Visibility), typeof(MainWindow), new PropertyMetadata(Visibility.Visible));
-
         private VirtualizingWrapPanel virWrapPanel;
         private Rect lastWindowRect;
         internal Rect lastViewWindowRect;
@@ -67,6 +61,9 @@ namespace ZipImageViewer
 
         private void MainWin_Loaded(object sender, RoutedEventArgs e)
         {
+            if (App.ContextMenuWin == null)
+                App.ContextMenuWin = new ContextMenuWindow();
+
             virWrapPanel = Helpers.GetVisualChild<VirtualizingWrapPanel>(TV1);
 
             DpiScale = VisualTreeHelper.GetDpi(this);
@@ -75,6 +72,7 @@ namespace ZipImageViewer
             var view = (ListCollectionView)((CollectionViewSource)FindResource("ObjectListViewSource")).View;
             view.CustomSort = new FolderSorter();
 
+            //load last path or open dialog
             if (InitialPath?.Length > 0)
                 Task.Run(() => LoadPath(InitialPath));
             else if (Setting.LastPath?.Length > 0)
@@ -91,18 +89,21 @@ namespace ZipImageViewer
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealHeight)));
         }
 
-        private void MainWin_Unloaded(object sender, RoutedEventArgs e) {
-            Setting.StaticPropertyChanged -= ThumbnailSizeChanged;
+        private async void MainWin_Closing(object sender, CancelEventArgs e) {
+            Setting.ThumbnailSize.PropertyChanged -= ThumbnailSizeChanged;
 
             tknSrc_LoadThumb?.Cancel();
-            ObjectList.Clear();
+            while (tknSrc_LoadThumb != null) {
+                await Task.Delay(100);
+            }
+            Dispatcher.Invoke(() => ObjectList.Clear());
 
             Setting.LastPath = CurrentPath;
             if (WindowState != WindowState.Maximized) {
                 Setting.LastWindowSize = new Size(Width, Height);
             }
 
-            if (Application.Current.Windows.Count == 0)
+            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow) == 0)
                 Application.Current.Shutdown();
         }
 
@@ -151,8 +152,7 @@ namespace ZipImageViewer
             //        add = false;
             //});
             //if (add) ObjectList.Add(objInfo);
-            var auxVis = Dispatcher.Invoke(() => AuxVisibility);
-            if (auxVis == Visibility.Collapsed && objInfo.SourcePaths == null) {
+            if (Setting.ImmersionMode && objInfo.SourcePaths == null) {
                 Helpers.UpdateSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
                 if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0)
                     return;
@@ -354,8 +354,12 @@ namespace ZipImageViewer
                                         success = ExtractZip(options, objInfo, done, tknSrc);
                                         if (success) {
                                             //make sure the password is saved when task is cancelled
-                                            Setting.MappedPasswords[options.FilePath] = new ObservablePair<string, string>(options.FilePath, pwd);
-                                            if (isFb) Setting.FallbackPasswords[pwd] = new Observable<string>(pwd);
+                                            Setting.MappedPasswords.Remove(options.FilePath);
+                                            Setting.MappedPasswords.Add(new ObservablePair<string, string>(options.FilePath, pwd));
+                                            if (isFb) {
+                                                Setting.FallbackPasswords.Remove(pwd);
+                                                Setting.FallbackPasswords.Add(new Observable<string>(pwd));
+                                            }
                                             break;
                                         }
                                     }
@@ -456,9 +460,11 @@ namespace ZipImageViewer
                 //save password for the future
                 if (fromDisk && options.Password?.Length > 0 &&
                     (!Setting.MappedPasswords.Contains(options.FilePath) ||
-                      Setting.MappedPasswords[options.FilePath].Item2 != options.Password))
-                    Setting.MappedPasswords[options.FilePath] = new ObservablePair<string, string>(options.FilePath, options.Password);
-                
+                      Setting.MappedPasswords[options.FilePath].Item2 != options.Password)) {
+                    Setting.MappedPasswords.Remove(options.FilePath);
+                    Setting.MappedPasswords.Add(new ObservablePair<string, string>(options.FilePath, options.Password));
+                }
+
                 return true; //it is considered successful if the code reaches here
             }
             catch (Exception ex)
@@ -492,12 +498,16 @@ namespace ZipImageViewer
                 e.Handled = true;
                 var tn = (Thumbnail)sender;
                 var objInfo = tn.ObjectInfo;
-                if (e.ClickCount == 1) {
-                    switch (e.ChangedButton) {
-                        case MouseButton.Left:
-                            Task.Run(() => LoadPath(objInfo));
-                            break;
-                    }
+                if (e.ClickCount != 1) return;
+                switch (e.ChangedButton) {
+                    case MouseButton.Left:
+                        Task.Run(() => LoadPath(objInfo));
+                        break;
+                    case MouseButton.Right:
+                        App.ContextMenuWin.Owner = this;
+                        App.ContextMenuWin.ObjectInfo = objInfo;
+                        App.ContextMenuWin.FadeIn();
+                        break;
                 }
             }
         }
@@ -513,15 +523,13 @@ namespace ZipImageViewer
                     openFolderPrompt();
                     break;
                 case nameof(HY_Options):
-                    new SettingsWindow(this).ShowDialog();
+                    var win = new SettingsWindow(this);
+                    win.ShowDialog();
+                    win.Close();
                     break;
                 case nameof(HY_ImmersionMode):
-                    AuxVisibility = AuxVisibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
-                    //ButtonCloseVisibility = AuxVisibility;
-                    //ButtonMinVisibility = AuxVisibility;
-                    //ButtonMaxVisibility = AuxVisibility;
-                    //TitleVisibility = AuxVisibility;
-                    if (AuxVisibility == Visibility.Collapsed)
+                    Setting.ImmersionMode = !Setting.ImmersionMode;
+                    if (Setting.ImmersionMode)
                     {
                         virWrapPanel.ScrollOwner.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
                         if (WindowState == WindowState.Maximized) {
@@ -545,7 +553,6 @@ namespace ZipImageViewer
                             Height = lastWindowRect.Height;
                         }
                     }
-                    Task.Run(() => LoadPath(CurrentPath));
                     break;
                 case nameof(HY_Close):
                     Close();
@@ -555,7 +562,7 @@ namespace ZipImageViewer
 
         protected override void OnStateChanged(EventArgs e) {
             //override state behavior to enable fullscreen in immersion mode
-            if (WindowState == WindowState.Maximized && AuxVisibility == Visibility.Collapsed) {
+            if (WindowState == WindowState.Maximized && Setting.ImmersionMode) {
                 WindowState = WindowState.Normal;
                 var info = NativeHelpers.GetMonitorFromWindow(this);
                 if (Top == info.Top && Left == info.Left && Width == info.Width && Height == info.Height) {
@@ -577,47 +584,48 @@ namespace ZipImageViewer
         }
 
 
-        private void CTM_Click(object sender, RoutedEventArgs e) {
-            var mi = (MenuItem)sender;
-            var ctm = (ContextMenu)mi.CommandParameter;
-            switch (mi.DataContext) {
-                case ObjectInfo oi:
-                    switch (mi.Header) {
-                        case "View in Explorer":
-                            Helpers.Run("explorer", $"/select, \"{oi.FileSystemPath}\"");
-                            break;
-                        case "Open in New Window":
-                            if (oi.Flags.HasFlag(FileFlags.Image)) {
-                                LoadPath(oi);
-                            }
-                            else if (oi.Flags.HasFlag(FileFlags.Directory) ||
-                                oi.Flags.HasFlag(FileFlags.Archive)) {
-                                var win = new MainWindow {
-                                    InitialPath = oi.FileSystemPath
-                                };
-                                win.Show();
-                            }
-                            break;
-                    }
-                    break;
-                //case ObservablePair<string, string> op:
-                //    Helpers.Run(op.Item1, Helpers.CustomCmdArgsReplace(op.Item2, tn.ObjectInfo));
-                //    break;
-            }
+        //private void CTM_Click(object sender, RoutedEventArgs e) {
+        //    var mi = (MenuItem)sender;
+        //    var ctm = (ContextMenu)mi.CommandParameter;
+        //    switch (mi.DataContext) {
+        //        case ObjectInfo oi:
+        //            switch (mi.Header) {
+        //                case "View in Explorer":
+        //                    Helpers.Run("explorer", $"/select, \"{oi.FileSystemPath}\"");
+        //                    break;
+        //                case "Open in New Window":
+        //                    if (oi.Flags.HasFlag(FileFlags.Image)) {
+        //                        LoadPath(oi);
+        //                    }
+        //                    else if (oi.Flags.HasFlag(FileFlags.Directory) ||
+        //                        oi.Flags.HasFlag(FileFlags.Archive)) {
+        //                        var win = new MainWindow {
+        //                            InitialPath = oi.FileSystemPath
+        //                        };
+        //                        win.Show();
+        //                    }
+        //                    break;
+        //            }
+        //            break;
+        //        //case ObservablePair<string, string> op:
+        //        //    Helpers.Run(op.Item1, Helpers.CustomCmdArgsReplace(op.Item2, tn.ObjectInfo));
+        //        //    break;
+        //    }
             
-        }
+        //}
 
-        private void CTM_Opened(object sender, RoutedEventArgs e) {
-            //var ctm = (ContextMenu)sender;
-            //var tn = (Thumbnail)ctm.PlacementTarget;
-            //ctm.Tag = tn.ObjectInfo.FileSystemPath;
+        //private void CTM_Opened(object sender, RoutedEventArgs e) {
+        //    //var ctm = (ContextMenu)sender;
+        //    //var tn = (Thumbnail)ctm.PlacementTarget;
+        //    //ctm.Tag = tn.ObjectInfo.FileSystemPath;
 
-            //foreach (MenuItem item in mi.Items) {
-            //    var op = (ObservablePair<string, string>)item.DataContext;
-            //    item.DataContext = new ObservablePair<string, string>(op.Item1, op.Item2.Replace(@"%FileSystemPath%", tn.ObjectInfo.FileSystemPath));
-            //}
-        }
+        //    //foreach (MenuItem item in mi.Items) {
+        //    //    var op = (ObservablePair<string, string>)item.DataContext;
+        //    //    item.DataContext = new ObservablePair<string, string>(op.Item1, op.Item2.Replace(@"%FileSystemPath%", tn.ObjectInfo.FileSystemPath));
+        //    //}
+        //}
 
         #endregion
+
     }
 }

@@ -15,7 +15,7 @@ using System.Windows;
 
 namespace ZipImageViewer {
     public class ObservableKeyedCollection<TKey, TItem> : KeyedCollection<TKey, TItem>, INotifyCollectionChanged, INotifyPropertyChanged {
-        private readonly Func<TItem, TKey> _getKeyForItemDelegate;
+        public readonly Func<TItem, TKey> GetKeyForItemDelegate;
         private readonly PropertyChangingEventHandler ChildPropertyChanging;
         private readonly PropertyChangedEventHandler ChildPropertyChanged;
         private readonly string keyPropertyName;
@@ -25,11 +25,11 @@ namespace ZipImageViewer {
         /// Using a delegate should be faster than the property name which will use reflection.
         /// If TItem implements both INotifyCollectionChanged and INotifyCollectionChanging, the name of the key property is also needed for key updating to work.
         /// </summary>
-        public ObservableKeyedCollection(Func<TItem, TKey> getKeyFunc = null, string keyPropName = null) {
+        public ObservableKeyedCollection(Func<TItem, TKey> getKeyFunc = null, string keyPropName = null, IEnumerable<TItem> collection = null) {
             if (getKeyFunc == null && keyPropName == null)
-                throw new ArgumentException(@"getKeyForItemDelegate and KeyPropertyName cannot both be null.");
+                throw new ArgumentException(@"GetKeyForItemDelegate and KeyPropertyName cannot both be null.");
             keyPropertyName = keyPropName;
-            _getKeyForItemDelegate = getKeyFunc;
+            GetKeyForItemDelegate = getKeyFunc;
 			
             if (keyPropertyName != null &&
                 typeof(TItem).GetInterface(nameof(INotifyPropertyChanged)) != null &&
@@ -45,22 +45,22 @@ namespace ZipImageViewer {
                     Dictionary?.Add(GetKeyForItem(item), item);
                 };
             }
-        }
 
-		public ObservableKeyedCollection(Func<TItem, TKey> getKeyFunc, IEnumerable < TItem> collection) : this(getKeyFunc) {
-			IList<TItem> items = Items;
-			if (collection != null && items != null) {
-				using (IEnumerator<TItem> enumerator = collection.GetEnumerator()) {
-					while (enumerator.MoveNext()) {
-						items.Add(enumerator.Current);
+			if (collection != null) {
+				IList<TItem> items = Items;
+				if (collection != null && items != null) {
+					using (IEnumerator<TItem> enumerator = collection.GetEnumerator()) {
+						while (enumerator.MoveNext()) {
+							items.Add(enumerator.Current);
+						}
 					}
 				}
 			}
-		}
+        }
 
 		protected override TKey GetKeyForItem(TItem item) {
-            if (_getKeyForItemDelegate != null)//delegate is faster than reflection.
-                return _getKeyForItemDelegate(item);
+            if (GetKeyForItemDelegate != null)//delegate is faster than reflection.
+                return GetKeyForItemDelegate(item);
             if (keyPropertyName != null)
                 return (TKey)item.GetType().GetProperty(keyPropertyName).GetValue(item);
             throw new ArgumentException(@"getKeyForItemDelegate and KeyPropertyName cannot both be null.");
@@ -231,7 +231,7 @@ namespace ZipImageViewer {
 		}
 
 		public override string ToString() {
-			return item.ToString();
+			return item?.ToString();
 		}
 
 		public override bool Equals(object obj) {
@@ -259,16 +259,18 @@ namespace ZipImageViewer {
 		}
 	}
 
-	public class ObservablePair<T1, T2> : INotifyPropertyChanged, IEquatable<ObservablePair<T1, T2>>
+	public class ObservablePair<T1, T2> : INotifyPropertyChanged, INotifyPropertyChanging, IEquatable<ObservablePair<T1, T2>>
 	{
         public event PropertyChangedEventHandler PropertyChanged;
+		public event PropertyChangingEventHandler PropertyChanging;
 
-        private T1 item1;
+		private T1 item1;
         public T1 Item1 {
             get => item1;
             set {
 				if (value == null && item1 == null) return;
 				if (item1 != null && item1.Equals(value)) return;
+                PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(nameof(Item1)));
 				item1 = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Item1)));
             }
@@ -280,13 +282,14 @@ namespace ZipImageViewer {
             set {
 				if (value == null && item2 == null) return;
 				if (item2 != null && item2.Equals(value)) return;
+                PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(nameof(Item2)));
 				item2 = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Item2)));
             }
         }
 
 		public override string ToString() {
-			return $@"({item1.ToString()}, {item2.ToString()})";
+			return $@"({item1?.ToString()}, {item2?.ToString()})";
 		}
 
 		public override bool Equals(object obj) {

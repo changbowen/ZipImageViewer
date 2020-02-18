@@ -10,64 +10,19 @@
         Icon="Resources/ZipImageViewer.ico"
         mc:Ignorable="d" UseLayoutRounding="True" Background="#FF1F1F1F" Foreground="LightGray"
         Title="{Binding ElementName=MainWin, Path=CurrentPath, Mode=OneWay}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
-        Loaded="MainWin_Loaded" Unloaded="MainWin_Unloaded" DpiChanged="MainWin_DpiChanged">
+        Loaded="MainWin_Loaded" Closing="MainWin_Closing" DpiChanged="MainWin_DpiChanged">
     <Window.Resources>
         <CollectionViewSource x:Key="ObjectListViewSource"
                               Source="{Binding ElementName=MainWin, Path=ObjectList, Mode=OneTime}">
         </CollectionViewSource>
         <local:CustomCmdArgsConverter x:Key="CustomCmdArgsConverter"/>
-        <ContextMenu x:Key="ThumbContextMenu" Opened="CTM_Opened">
-            <ContextMenu.Resources>
-                <!--<CollectionViewSource x:Key="MenuItemViewSource" Source="{Binding Source={x:Static local:App.Setting}, Path=CustomCommands, Mode=OneWay}"/>-->
-                <Style TargetType="MenuItem">
-                    <EventSetter Event="Click" Handler="CTM_Click"/>
-                    <Setter Property="CommandParameter" Value="{Binding Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}"/>
-                </Style>
-            </ContextMenu.Resources>
-            <MenuItem Header="View in Explorer">
-                <MenuItem.Icon>
-                    <fa:ImageAwesome Icon="Solid_FolderOpen" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </MenuItem.Icon>
-            </MenuItem>
-            <MenuItem Header="Open in New Window">
-                <MenuItem.Icon>
-                    <fa:ImageAwesome Icon="Solid_WindowRestore" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </MenuItem.Icon>
-            </MenuItem>
-            <!--<MenuItem Header="Custom Commands" ItemsSource="{Binding Source={StaticResource MenuItemViewSource}, Mode=OneTime}">
-                <MenuItem.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Program: " FontWeight="Bold"/>
-                                <TextBlock Text="{Binding Item1, Mode=OneWay}"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Arguments: " FontWeight="Bold"/>
-                                <TextBlock>
-                                    <TextBlock.Text>
-                                        <MultiBinding Converter="{StaticResource CustomCmdArgsConverter}">
-                                            <Binding Path="Item2" Mode="OneWay"/>
-                                            <Binding RelativeSource="{RelativeSource FindAncestor, AncestorType=ContextMenu}"
-                                                     Path="Tag" Mode="OneWay"/>
-                                        </MultiBinding>
-                                    </TextBlock.Text>
-                                </TextBlock>
-                            </StackPanel>
-                        </StackPanel>
-                    </DataTemplate>
-                </MenuItem.ItemTemplate>
-            </MenuItem>-->
-        </ContextMenu>
         
         <DataTemplate x:Key="ThumbDataTemplate" DataType="{x:Type local:ObjectInfo}">
             <StackPanel x:Name="SP1" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" UseLayoutRounding="True">
                 <local:Thumbnail x:Name="TN1" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1" PreviewMouseDown="TN1_Click"
                                  ObjectInfo="{Binding Mode=OneTime}" Margin="10" 
                                  Width="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
-                                 Height="{Binding ElementName=MainWin, Path=ThumbRealHeight, Mode=OneWay}"
-                                 ContextMenu="{StaticResource ThumbContextMenu}">
-                    <!--FlagIconVisibility="{Binding ElementName=MainWin, Path=AuxVisibility, Mode=OneWay}">-->
+                                 Height="{Binding ElementName=MainWin, Path=ThumbRealHeight, Mode=OneWay}">
                     <local:Thumbnail.Style>
                         <Style TargetType="local:Thumbnail" BasedOn="{StaticResource S_RiseOnHover}"/>
                     </local:Thumbnail.Style>
@@ -75,8 +30,16 @@
 
                 <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10" Foreground="Gray"
                            MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
-                           HorizontalAlignment="Center" Panel.ZIndex="0" TextWrapping="Wrap"
-                           Visibility="{Binding ElementName=MainWin, Path=AuxVisibility, Mode=OneWay}">
+                           HorizontalAlignment="Center" Panel.ZIndex="0" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ImmersionMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
                 </TextBlock>
             </StackPanel>
         </DataTemplate>

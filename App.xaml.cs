@@ -46,6 +46,8 @@ namespace ZipImageViewer
         public static readonly int MaxLoadThreads = Environment.ProcessorCount;
         public static System.Threading.SemaphoreSlim LoadThrottle = new System.Threading.SemaphoreSlim(MaxLoadThreads);
 
+        public static ContextMenuWindow ContextMenuWin;
+
         private void App_Startup(object sender, StartupEventArgs e) {
             try {
                 Setting.LoadConfigFromFile();
@@ -110,6 +112,9 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
                 });
 #endif
 
+                //handle immersion mode change
+                Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
+
                 //show mainwindow
                 new MainWindow() {
                     Width = Setting.LastWindowSize.Width,
@@ -122,6 +127,14 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
             }
         }
 
+        private void Setting_StaticPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
+            if (e.PropertyName == nameof(Setting.ImmersionMode)) {
+                foreach (var win in Windows) {
+                    if (!(win is MainWindow mainWin)) continue;
+                    Task.Run(() => mainWin.LoadPath(mainWin.CurrentPath));
+                }
+            }
+        }
 
         private void App_Exit(object sender, ExitEventArgs e) {
             while (LoadThrottle.CurrentCount < MaxLoadThreads) {
@@ -130,6 +143,8 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
             LoadThrottle.Dispose();
 
             Setting.SaveConfigToFile();
+
+            Setting.StaticPropertyChanged -= Setting_StaticPropertyChanged;
 
             //db maintenance
             Execute(con => {
