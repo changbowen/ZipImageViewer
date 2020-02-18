@@ -271,6 +271,7 @@ namespace ZipImageViewer
 
                 //throttle the load
                 if (flag != FileFlags.Unknown) Thread.Sleep(50);
+                //how to sleep only when childinfo thumbnail is loading images?
             }
         }
 
@@ -332,10 +333,10 @@ namespace ZipImageViewer
                             }
                             break;
                         case 3:
-                            //if all fails mark with icon and when clicked
-                            //prompt for a generic or dedicated password then extract with it
-                            //-------------logic needed here-------------
-                            if (options.LoadImage && options.FileNames == null) {//means loading all thumbs in zip
+                            //if all fails, prompt for password then extract with it
+                            if (options.LoadImage &&
+                                (options.FileNames == null || options.DecodeSize == default)) {
+                                //ask for password when opening explicitly the archive or opening viewer for images inside archive
                                 while (!success) {
                                     string pwd = null;
                                     bool isFb = true;
@@ -410,7 +411,7 @@ namespace ZipImageViewer
                         .Select(d => d.FileName).ToArray();
 
                 foreach (var fileName in toDo) {
-                    if (tknSrc?.IsCancellationRequested == true) return success;
+                    if (tknSrc?.IsCancellationRequested == true) break;
 
                     //skip if already done
                     if (done.Contains(fileName)) continue;
@@ -453,7 +454,9 @@ namespace ZipImageViewer
                 objInfo.SourcePaths = toDo;
 
                 //save password for the future
-                if (fromDisk && options.Password?.Length > 0)
+                if (fromDisk && options.Password?.Length > 0 &&
+                    (!Setting.MappedPasswords.Contains(options.FilePath) ||
+                      Setting.MappedPasswords[options.FilePath].Item2 != options.Password))
                     Setting.MappedPasswords[options.FilePath] = new ObservablePair<string, string>(options.FilePath, options.Password);
                 
                 return true; //it is considered successful if the code reaches here

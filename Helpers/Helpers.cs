@@ -259,7 +259,7 @@ namespace ZipImageViewer
 #endif
             App.LoadThrottle.Wait();
 #if DEBUG
-            Console.WriteLine("Helpers.GetImageSource() waited " + (DateTime.Now - now).TotalMilliseconds + "ms.");
+            Console.WriteLine($"Helpers.GetImageSource() waited {(DateTime.Now - now).TotalMilliseconds}ms. Remaining slots: {App.LoadThrottle.CurrentCount}");
 #endif
 
             ImageSource source = null;
@@ -307,7 +307,7 @@ namespace ZipImageViewer
 
                 App.LoadThrottle.Release();
 #if DEBUG
-                Console.WriteLine("Helpers.GetImageSource() exited leaving " + App.LoadThrottle.CurrentCount + " slots.");
+                Console.WriteLine($"Helpers.GetImageSource() exited leaving {App.LoadThrottle.CurrentCount} slots.");
 #endif
             }
             return source;

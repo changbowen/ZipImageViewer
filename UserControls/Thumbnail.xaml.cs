@@ -13,8 +13,7 @@ using System.Threading;
 
 namespace ZipImageViewer
 {
-    public partial class Thumbnail : UserControl, INotifyPropertyChanged
-    {
+    public partial class Thumbnail : UserControl, INotifyPropertyChanged {
         public ObjectInfo ObjectInfo {
             get { return (ObjectInfo)GetValue(ObjectInfoProperty); }
             set { SetValue(ObjectInfoProperty, value); }
@@ -92,7 +91,6 @@ namespace ZipImageViewer
 
         }
 
-
         private void ThumbTransAnimOut_Completed(object sender, EventArgs e) {
             thumbImageSource = nextSource;
             nextSource = null;
@@ -115,7 +113,8 @@ namespace ZipImageViewer
                 if (objInfo.SourcePaths == null) {//non-null indicate SourcePaths has already been updated
                     Helpers.UpdateSourcePaths(objInfo);
                 }
-            }).ContinueWith(t => Dispatcher.Invoke(() => cycleImageSource(null, null)));
+                Dispatcher.Invoke(() => cycleImageSource(null, null));
+            });
         }
 
         private void TN_Unloaded(object sender, RoutedEventArgs e) {
