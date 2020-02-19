@@ -7,14 +7,15 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Linq;
 using SevenZip;
-using Path = System.IO.Path;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Media;
-using System.Linq;
 using System.Windows.Data;
-using SizeInt = System.Drawing.Size;
 using System.Windows.Threading;
+using System.Data;
+using Path = System.IO.Path;
+using SizeInt = System.Drawing.Size;
+using static ZipImageViewer.TableHelper;
 
 namespace ZipImageViewer
 {
@@ -81,6 +82,11 @@ namespace ZipImageViewer
                 openFolderPrompt();
         }
 
+        private void MainWin_Unloaded(object sender, RoutedEventArgs e) {
+            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow) == 0)
+                Application.Current.Shutdown();
+        }
+
         private void ThumbnailSizeChanged(object sender, PropertyChangedEventArgs e) {
             if (PropertyChanged == null) return;
             if (e.PropertyName == nameof(Setting.ThumbnailSize.Item1))
@@ -102,9 +108,6 @@ namespace ZipImageViewer
             if (WindowState != WindowState.Maximized) {
                 Setting.LastWindowSize = new Size(Width, Height);
             }
-
-            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow) == 0)
-                Application.Current.Shutdown();
         }
 
         private void MainWin_DpiChanged(object sender, DpiChangedEventArgs e) {
@@ -315,8 +318,8 @@ namespace ZipImageViewer
                     var success = false;
                     switch (caseIdx) {
                         //first check if there is a match in saved passwords
-                        case 0 when Setting.MappedPasswords.TryGetValue(options.FilePath, out ObservablePair<string, string> pwd):
-                            options.Password = pwd.Item2;
+                        case 0 when Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow row:
+                            options.Password = (string)row[nameof(Column.Password)];
                             success = ExtractZip(options, objInfo, done, tknSrc);
                             break;
                         //then try no password
@@ -354,11 +357,9 @@ namespace ZipImageViewer
                                         success = ExtractZip(options, objInfo, done, tknSrc);
                                         if (success) {
                                             //make sure the password is saved when task is cancelled
-                                            Setting.MappedPasswords.Remove(options.FilePath);
-                                            Setting.MappedPasswords.Add(new ObservablePair<string, string>(options.FilePath, pwd));
+                                            Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), pwd);
                                             if (isFb) {
-                                                Setting.FallbackPasswords.Remove(pwd);
-                                                Setting.FallbackPasswords.Add(new Observable<string>(pwd));
+                                                Setting.FallbackPasswords[pwd] = new Observable<string>(pwd);
                                             }
                                             break;
                                         }
@@ -458,11 +459,8 @@ namespace ZipImageViewer
                 objInfo.SourcePaths = toDo;
 
                 //save password for the future
-                if (fromDisk && options.Password?.Length > 0 &&
-                    (!Setting.MappedPasswords.Contains(options.FilePath) ||
-                      Setting.MappedPasswords[options.FilePath].Item2 != options.Password)) {
-                    Setting.MappedPasswords.Remove(options.FilePath);
-                    Setting.MappedPasswords.Add(new ObservablePair<string, string>(options.FilePath, options.Password));
+                if (fromDisk && options.Password?.Length > 0) {
+                    Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), options.Password);
                 }
 
                 return true; //it is considered successful if the code reaches here
@@ -611,7 +609,7 @@ namespace ZipImageViewer
         //        //    Helpers.Run(op.Item1, Helpers.CustomCmdArgsReplace(op.Item2, tn.ObjectInfo));
         //        //    break;
         //    }
-            
+
         //}
 
         //private void CTM_Opened(object sender, RoutedEventArgs e) {

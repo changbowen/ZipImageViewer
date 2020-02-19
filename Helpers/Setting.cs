@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -8,6 +9,8 @@ using IniParser;
 using IniParser.Model;
 using SevenZip;
 using SizeInt = System.Drawing.Size;
+using static ZipImageViewer.TableHelper;
+using static ZipImageViewer.SQLiteHelper;
 
 namespace ZipImageViewer
 {
@@ -34,13 +37,13 @@ namespace ZipImageViewer
             }
         }
 
-        private static string thumbDbDir = App.ExeDir;
-        public static string ThumbDbDir {
-            get => thumbDbDir;
+        private static string databaseDir = App.ExeDir;
+        public static string DatabaseDir {
+            get => databaseDir;
             set {
-                if (thumbDbDir == value) return;
-                thumbDbDir = value;
-                OnStaticPropertyChanged(nameof(ThumbDbDir));
+                if (databaseDir == value) return;
+                databaseDir = value;
+                OnStaticPropertyChanged(nameof(DatabaseDir));
             }
         }
 
@@ -145,8 +148,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static ObservableKeyedCollection<string, ObservablePair<string, string>> mappedPasswords;
-        public static ObservableKeyedCollection<string, ObservablePair<string, string>> MappedPasswords {
+        private static DataTable mappedPasswords;
+        public static DataTable MappedPasswords {
             get => mappedPasswords;
             set {
                 if (mappedPasswords == value) return;
@@ -166,7 +169,6 @@ namespace ZipImageViewer
             }
         }
 
-
         public static void LoadConfigFromFile(string path = "config.ini") {
             //load config
             if (!File.Exists(path)) {
@@ -178,7 +180,7 @@ namespace ZipImageViewer
             var iniData = new FileIniDataParser().ReadFile(path, System.Text.Encoding.UTF8);
 
             SevenZipDllPath =          ParseConfig(iniData, nameof(SevenZipDllPath),       SevenZipDllPath);
-            ThumbDbDir =               ParseConfig(iniData, nameof(ThumbDbDir),            ThumbDbDir);
+            DatabaseDir =              ParseConfig(iniData, nameof(DatabaseDir),            DatabaseDir);
             ThumbnailSize =            ParseConfig(iniData, nameof(ThumbnailSize),         ThumbnailSize);
             ThumbSwapDelayMultiplier = ParseConfig(iniData, nameof(ThumbSwapDelayMultiplier), ThumbSwapDelayMultiplier);
             ThumbDbSize =              ParseConfig(iniData, nameof(ThumbDbSize),           ThumbDbSize);
@@ -202,8 +204,21 @@ namespace ZipImageViewer
             //parse saved passwords at last
             FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
                 iniData["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
-            MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1, "Item1",
-                iniData["Saved Passwords"].Where(d => d.Value.Length > 0).Select(d => new ObservablePair<string, string>(d.KeyName, d.Value)));
+            //MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1, "Item1",
+            //iniData["Saved Passwords"].Where(d => d.Value.Length > 0).Select(d => new ObservablePair<string, string>(d.KeyName, d.Value)));
+
+            var mp = Tables[Table.MappedPasswords];
+            MappedPasswords = new DataTable(mp.Name);
+            MappedPasswords.Columns.Add(nameof(Column.Path), typeof(string));
+            MappedPasswords.Columns.Add(nameof(Column.Password), typeof(string));
+            MappedPasswords.PrimaryKey = new[] { MappedPasswords.Columns[nameof(Column.Path)] };
+            if (File.Exists(mp.FullPath)) {
+                try { MappedPasswords.ReadXml(mp.FullPath); }
+                catch (Exception ex) {
+                    MessageBox.Show("There was an error loading mapped passwords. Loading will be skipped.\r\n" + ex.Message,
+                        null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                }
+            }
 
             //apply dll path
             if (string.IsNullOrEmpty(SevenZipDllPath))
@@ -272,18 +287,14 @@ namespace ZipImageViewer
                     savedPwds += s.Item + "=\r\n";
                 }
             }
-            if (MappedPasswords != null && MappedPasswords.Count > 0) {
-                foreach (var p in MappedPasswords) {
-                    if (string.IsNullOrWhiteSpace(p.Item1) || string.IsNullOrWhiteSpace(p.Item2)) continue;
-                    savedPwds += p.Item1 + "=" + p.Item2 + "\r\n";
-                }
-            }
+
+            MappedPasswords.WriteXml(Tables[Table.MappedPasswords].FullPath, XmlWriteMode.WriteSchema);
 
 
             File.WriteAllText(path, $@"
 [App Config]
 {nameof(SevenZipDllPath)}={SevenZipDllPath}
-{nameof(ThumbDbDir)}={ThumbDbDir}
+{nameof(DatabaseDir)}={DatabaseDir}
 {nameof(ThumbnailSize)}={ThumbnailSize.Item1}x{ThumbnailSize.Item2}
 {nameof(ThumbSwapDelayMultiplier)}={ThumbSwapDelayMultiplier}
 {nameof(ThumbDbSize)}={ThumbDbSize}

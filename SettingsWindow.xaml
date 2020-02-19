@@ -129,24 +129,24 @@
 
             <Border Grid.Row="3" Style="{StaticResource SettingBlockStyle}">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Database Directory"/>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Database Directory"/>
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Content="Clean" VerticalAlignment="Center" Click="Btn_Clean_Click"/>
                         <Button DockPanel.Dock="Right" Content="Move" VerticalAlignment="Center" Click="Btn_Move_Click"/>
                         <ContentControl>
-                            <TextBox x:Name="TB_ThumbDbDir" Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbDbDir, Mode=OneWay}"/>
+                            <TextBox x:Name="TB_DatabaseDir" Text="{Binding Source={x:Static local:App.Setting}, Path=DatabaseDir, Mode=OneWay}"/>
                         </ContentControl>
                     </DockPanel>
                 </StackPanel>
             </Border>
             <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource TipTextStyle}"
-                       Text="The folder to save the thumbnail database file."/>
+                       Text="The folder to save the all database files."/>
 
             <Border Grid.Row="4" Style="{StaticResource SettingBlockStyle}">
                 <StackPanel>
                     <DockPanel>
                         <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Database Size"/>
-                        <TextBlock x:Name="T_CurrentDbSize" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="T_ThumbDbSize" HorizontalAlignment="Right"/>
                     </DockPanel>
                     <DockPanel>
                         <Slider x:Name="SL_ThumbDbSize" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"
@@ -236,13 +236,8 @@
                         </TabItem>
                         <TabItem Header="Mapped Passwords">
                             <ContentControl  HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                                <DataGrid AutoGenerateColumns="False" RowEditEnding="DataGrid_RowEditEnding"
-                                          EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                                <DataGrid AutoGenerateColumns="True" EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                           ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=MappedPasswords}">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="File Path" Binding="{Binding Item1, TargetNullValue=(Enter value)}"/>
-                                        <DataGridTextColumn Header="Password" Binding="{Binding Item2, TargetNullValue=(Enter value)}"/>
-                                    </DataGrid.Columns>
                                 </DataGrid>
                             </ContentControl>
                         </TabItem>
@@ -288,11 +283,6 @@
                     <Bold>%FileSystemPath%</Bold> - Path to the current file or folder.
                 </TextBlock.Inlines>
             </TextBlock>
-
-            <!--<StackPanel Grid.Row="100" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="Btn_OK" Content="OK" MinWidth="60" MinHeight="30" Click="Btn_OK_Click"/>
-                <Button x:Name="Btn_Cancel" Content="Cancel" MinWidth="60" MinHeight="30" Margin="4 0 0 0" Click="Btn_Cancel_Click"/>
-            </StackPanel>-->
         </local:PaddedGrid>
     </ScrollViewer>
 </local:BorderlessWindow>

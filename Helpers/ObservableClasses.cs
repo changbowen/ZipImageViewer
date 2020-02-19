@@ -46,16 +46,7 @@ namespace ZipImageViewer {
                 };
             }
 
-			if (collection != null) {
-				IList<TItem> items = Items;
-				if (collection != null && items != null) {
-					using (IEnumerator<TItem> enumerator = collection.GetEnumerator()) {
-						while (enumerator.MoveNext()) {
-							items.Add(enumerator.Current);
-						}
-					}
-				}
-			}
+			if (collection != null) AddRange(collection);
         }
 
 		protected override TKey GetKeyForItem(TItem item) {

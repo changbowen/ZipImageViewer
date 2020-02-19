@@ -122,6 +122,7 @@
     <Compile Include="Helpers\ObjectInfo.cs" />
     <Compile Include="Helpers\Setting.cs" />
     <Compile Include="Helpers\SQLiteHelper.cs" />
+    <Compile Include="Helpers\TableHelper.cs" />
     <Compile Include="InputWindow.xaml.cs">
       <DependentUpon>InputWindow.xaml</DependentUpon>
     </Compile>

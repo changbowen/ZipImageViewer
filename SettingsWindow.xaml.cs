@@ -7,8 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using IniParser;
-using SevenZip;
+using static ZipImageViewer.TableHelper;
+using static ZipImageViewer.SQLiteHelper;
 
 namespace ZipImageViewer
 {
@@ -20,21 +20,17 @@ namespace ZipImageViewer
         }
 
         private void SettingsWin_Loaded(object sender, RoutedEventArgs e) {
-            //Setting.LoadConfigFromFile();
-            //TB_7zDllPath.Text =                 Setting.SevenZipDllPath;
-            //TB_ThumbWidth.Text =                Setting.ThumbnailSize.Item1.ToString();
-            //TB_ThumbHeight.Text =               Setting.ThumbnailSize.Item2.ToString();
-            //SL_ThumbDbSize.Value =              Setting.ThumbDbSize / 1024d;
             CB_ViewerTransition.ItemsSource =   Enum.GetValues(typeof(Setting.Transition));
             CB_ViewerTransition.SelectedItem =  Setting.ViewerTransition;
             CB_AnimSpeed.ItemsSource =          Enum.GetValues(typeof(Setting.TransitionSpeed));
             CB_AnimSpeed.SelectedItem =         Setting.ViewerTransitionSpeed;
 
-            T_CurrentDbSize.Text = $"Current DB size: {Helpers.BytesToString(new FileInfo(SQLiteHelper.DbFileFullPath).Length)}";
+            T_ThumbDbSize.Text = $"Current DB size: {Helpers.BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length)}";
         }
 
         private void SettingsWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             try {
+                Setting.MappedPasswords.AcceptChanges();
                 Setting.SaveConfigToFile();
             }
             catch (Exception ex) {
@@ -43,7 +39,7 @@ namespace ZipImageViewer
         }
 
         private void SettingsWin_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e) {
-            if (e.Key != System.Windows.Input.Key.Escape) return;
+            if (e.Key != System.Windows.Input.Key.Escape || !(e.Source is ScrollViewer)) return;
             Close();
         }
 
@@ -60,28 +56,41 @@ namespace ZipImageViewer
         }
 
         private async void Btn_Move_Click(object sender, RoutedEventArgs e) {
-            if (string.IsNullOrWhiteSpace(TB_ThumbDbDir.Text)) return;
+            if (string.IsNullOrWhiteSpace(TB_DatabaseDir.Text) ||
+                TB_DatabaseDir.Text.Trim() == Setting.DatabaseDir) return;
+            
+            var targetDir = TB_DatabaseDir.Text;
+            DirectoryInfo dirInfo = null;
+            try { dirInfo = Directory.CreateDirectory(targetDir); } catch { }
+            if (dirInfo == null || !dirInfo.Exists) return;
 
-            var targetDir = TB_ThumbDbDir.Text;
             var btn = (Button)sender;
             btn.IsEnabled = false;
             try {
-                await Task.Run(() => File.Move(SQLiteHelper.DbFileFullPath, Path.Combine(targetDir, SQLiteHelper.dbFileName)));
-
-                Setting.ThumbDbDir = targetDir;
-                MessageBox.Show("Thumbnail database file moved successfully.", "Move Complete", MessageBoxButton.OK, MessageBoxImage.Information);
-                btn.IsEnabled = true;
+                await Task.Run(() => {
+                    foreach (var table in Tables.Values) {
+                        if (!File.Exists(table.FullPath)) continue;
+                        lock (table.Lock) {
+                            var targetPath = Path.Combine(targetDir, table.FileName);
+                            File.Delete(targetPath);
+                            File.Move(table.FullPath, targetPath);
+                        }
+                    }
+                });
+                Setting.DatabaseDir = targetDir;
+                MessageBox.Show("Database files moved successfully.", "Move Complete", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Move Failed", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            btn.IsEnabled = true;
         }
 
         private void Btn_Clean_Click(object sender, RoutedEventArgs e) {
             //clean database
-            SQLiteHelper.Execute(con => {
+            Execute(Table.Thumbs, (table, con) => {
                 using (var cmd = new SQLiteCommand(con)) {
-                    cmd.CommandText = $@"delete from {SQLiteHelper.Table_ThumbsData.Name}";
+                    cmd.CommandText = $@"delete from {table.Name}";
                     cmd.ExecuteNonQuery();
                     cmd.CommandText = @"vacuum";
                     cmd.ExecuteNonQuery();
@@ -89,7 +98,7 @@ namespace ZipImageViewer
                 return 0;
             });
 
-            T_CurrentDbSize.Text = $"Current DB size: {Helpers.BytesToString(new FileInfo(SQLiteHelper.DbFileFullPath).Length)}";
+            T_ThumbDbSize.Text = $"Current DB size: {Helpers.BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length)}";
         }
 
         private void Btn_Reload_Click(object sender, RoutedEventArgs e) {

@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using static ZipImageViewer.SQLiteHelper;
+using static ZipImageViewer.TableHelper;
 
 namespace ZipImageViewer
 {
@@ -63,37 +64,37 @@ namespace ZipImageViewer
                 fa_image = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_FileImage, fa_brush);
 
                 //create thumb database if not exist and update columns if not correct
-                var aff1 = Execute(
-                    con => {
+                var aff1 = Execute(Table.Thumbs,
+                    (table, con) => {
                         using (var cmd = new SQLiteCommand(con)) {
                             cmd.CommandText =
-$@"create table if not exists [{Table_ThumbsData.Name}] (
-[{Table_ThumbsData.Col_VirtualPath}] TEXT NOT NULL,
-[{Table_ThumbsData.Col_DecodeWidth}] INTEGER,
-[{Table_ThumbsData.Col_DecodeHeight}] INTEGER,
-[{Table_ThumbsData.Col_ThumbData}] BLOB)";
+$@"create table if not exists [{table.Name}] (
+[{Column.VirtualPath}] TEXT NOT NULL,
+[{Column.DecodeWidth}] INTEGER,
+[{Column.DecodeHeight}] INTEGER,
+[{Column.ThumbData}] BLOB)";
                             return cmd.ExecuteNonQuery();
                         }
                     });
 
                 //add columns if not exist
                 if (aff1[0] != null && aff1[0].Equals(-1)) {//-1 means table already exists
-                    Execute(con => {
+                    Execute(Table.Thumbs, (table, con) => {
                         using (var cmd = new SQLiteCommand(con)) {
                             cmd.CommandText =
-                            $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_VirtualPath}] TEXT NOT NULL;";
+                            $@"alter table [{table.Name}] add column [{Column.VirtualPath}] TEXT NOT NULL;";
                             try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
 
                             cmd.CommandText =
-                            $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_DecodeWidth}] INTEGER;";
+                            $@"alter table [{table.Name}] add column [{Column.DecodeWidth}] INTEGER;";
                             try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
 
                             cmd.CommandText =
-                            $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_DecodeHeight}] INTEGER;";
+                            $@"alter table [{table.Name}] add column [{Column.DecodeHeight}] INTEGER;";
                             try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
 
                             cmd.CommandText =
-                            $@"alter table [{Table_ThumbsData.Name}] add column [{Table_ThumbsData.Col_ThumbData}] BLOB;";
+                            $@"alter table [{table.Name}] add column [{Column.ThumbData}] BLOB;";
                             try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
                         }
                         return 0;
@@ -101,9 +102,9 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
                 }
 
 #if DEBUG
-                Execute(con => {
+                Execute(Table.Thumbs, (table, con) => {
                     using (var cmd = new SQLiteCommand(con)) {
-                        cmd.CommandText = $@"delete from {Table_ThumbsData.Name}";
+                        cmd.CommandText = $@"delete from {table.Name}";
                         cmd.ExecuteNonQuery();
                         cmd.CommandText = @"vacuum";
                         cmd.ExecuteNonQuery();
@@ -147,13 +148,13 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
             Setting.StaticPropertyChanged -= Setting_StaticPropertyChanged;
 
             //db maintenance
-            Execute(con => {
+            Execute(Table.Thumbs, (table, con) => {
                 using (var cmd = new SQLiteCommand(con)) {
                     //chech size limit on thumb db
                     if (Setting.ThumbDbSize < 10d) {
                         long pageCount, pageSize, rowCount;
                         long targetSize = (long)(Setting.ThumbDbSize * 1073741824);
-                        cmd.CommandText = $@"select count(*) from {Table_ThumbsData.Name}";
+                        cmd.CommandText = $@"select count(*) from {table.Name}";
                         using (var reader = cmd.ExecuteReader()) { reader.Read(); rowCount = (long)reader["count(*)"]; }
 
                         while (true) {
@@ -170,8 +171,8 @@ $@"create table if not exists [{Table_ThumbsData.Name}] (
                             if (delCount < 50) delCount = 50L;
 
                             cmd.CommandText = 
-$@"delete from {Table_ThumbsData.Name} where rowid in
-(select rowid from {Table_ThumbsData.Name} order by rowid asc limit {delCount})";
+$@"delete from {table.Name} where rowid in
+(select rowid from {table.Name} order by rowid asc limit {delCount})";
                             cmd.ExecuteNonQuery();
                             cmd.CommandText = @"vacuum";
                             cmd.ExecuteNonQuery();
