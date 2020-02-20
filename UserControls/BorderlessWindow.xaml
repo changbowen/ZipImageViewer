@@ -28,11 +28,11 @@
                             
                             <DockPanel x:Name="titleBar" LastChildFill="False" Background="#33FFFFFF" VerticalAlignment="Top" Height="30">
                                 <DockPanel.Effect>
-                                    <DropShadowEffect ShadowDepth="1" Direction="270" BlurRadius="3"/>
+                                    <DropShadowEffect ShadowDepth="2" Direction="270" BlurRadius="4"/>
                                 </DockPanel.Effect>
 
                                 <!--window title-->
-                                <TextBlock x:Name="titleText" FontSize="12" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="8 0 0 0"
+                                <TextBlock x:Name="titleText" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="8 0 0 0"
                                        Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}" Visibility="{TemplateBinding TitleVisibility}"/>
 
                                 <!--the close button-->

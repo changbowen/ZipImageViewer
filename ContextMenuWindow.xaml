@@ -1,4 +1,4 @@
-﻿<local:RoundedWindow x:Class="ZipImageViewer.ContextMenuWindow"
+﻿<local:RoundedWindow x:Class="ZipImageViewer.ContextMenuWindow" x:Name="CTMWin"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -18,6 +18,7 @@
         <Grid.RowDefinitions>
             <RowDefinition/>
             <RowDefinition/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
         <Grid.Resources>
             <Style TargetType="Border" BasedOn="{StaticResource S_RiseOnHover}">
@@ -32,13 +33,59 @@
             </Style>
         </Grid.Resources>
 
-        <Border Grid.Row="0" x:Name="B_OpenInExplorer">
+        <local:PaddedGrid Padding="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid.Resources>
+                <Style TargetType="fa:ImageAwesome">
+                    <Setter Property="Width" Value="16"/>
+                    <Setter Property="Height" Value="16"/>
+                    <Setter Property="Foreground" Value="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
+                </Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="10"/>
+                    <Setter Property="FontWeight" Value="DemiBold"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="MaxWidth" Value="220"/>
+                    <Setter Property="TextWrapping" Value="Wrap"/>
+                </Style>
+                <Style TargetType="Border">
+                    <Setter Property="Padding" Value="4"/>
+                    <Setter Property="Margin" Value="2" />
+                    <Setter Property="CornerRadius" Value="4" />
+                    <Setter Property="Background" Value="#33000000" />
+                </Style>
+            </Grid.Resources>
+            <fa:ImageAwesome Grid.Row="0" Grid.Column="0" Icon="Regular_File"/>
+            <fa:ImageAwesome Grid.Row="1" Grid.Column="0" Icon="Regular_Save"/>
+            <fa:ImageAwesome Grid.Row="2" Grid.Column="0" Icon="Solid_InfoCircle"/>
+            <Border Grid.Row="0" Grid.Column="1">
+                <TextBlock Text="{Binding ObjectInfo.FileName, ElementName=CTMWin, Mode=OneWay}"/>
+            </Border>
+            <Border Grid.Row="1" Grid.Column="1">
+                <TextBlock Text="{Binding ObjectInfo.FileSystemPath, ElementName=CTMWin, Mode=OneWay}"/>
+            </Border>
+            <Border Grid.Row="2" Grid.Column="1">
+                <TextBlock Text="{Binding ObjectInfo.Flags, ElementName=CTMWin, Mode=OneWay}"/>
+            </Border>
+
+        </local:PaddedGrid>
+
+        <Border Grid.Row="1" x:Name="B_OpenInExplorer">
             <StackPanel Orientation="Horizontal">
                 <fa:ImageAwesome Icon="Regular_WindowMaximize" ToolTip="Open in Explorer"/>
                 <TextBlock Text="Open in Explorer" FontWeight="Bold" VerticalAlignment="Center" Margin="10 0 0 0"/>
             </StackPanel>
         </Border>
-        <Border Grid.Row="1" x:Name="B_OpenInNewWindow">
+        <Border Grid.Row="2" x:Name="B_OpenInNewWindow">
             <StackPanel Orientation="Horizontal">
                 <fa:ImageAwesome Icon="Regular_WindowRestore" ToolTip="Open in Explorer"/>
                 <TextBlock Text="Open in New Window" FontWeight="Bold" VerticalAlignment="Center" Margin="10 0 0 0"/>
