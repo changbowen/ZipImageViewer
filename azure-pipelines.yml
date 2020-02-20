@@ -4,13 +4,13 @@
 # https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
 
 trigger:
-  branches:
-    include:
-      - master
+    branches:
+        include:
+            - master
     paths:
-      exclude:
-        - README.md
-        - azure-pipelines.yml
+        exclude:
+            - README.md
+            - azure-pipelines.yml
 
 pool:
   vmImage: 'windows-latest'
