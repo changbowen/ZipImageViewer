@@ -8,8 +8,8 @@
             <Setter.Value>
                 <ControlTemplate TargetType="local:BorderlessWindow">
                     <Grid Background="{TemplateBinding Background}">
-                        <Grid x:Name="titleBar" Opacity="0" Background="#22FFFFFF" VerticalAlignment="Top" Height="30" Panel.ZIndex="1">
-                            <Grid.Triggers>
+                        <Border x:Name="overlay" Opacity="0" BorderBrush="#33FFFFFF" BorderThickness="5 0 5 5" Panel.ZIndex="1">
+                            <Border.Triggers>
                                 <EventTrigger RoutedEvent="MouseEnter">
                                     <BeginStoryboard>
                                         <Storyboard Storyboard.TargetProperty="Opacity">
@@ -24,26 +24,28 @@
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </EventTrigger>
-                            </Grid.Triggers>
-                            <Grid.Effect>
-                                <DropShadowEffect ShadowDepth="1" Direction="270" BlurRadius="3"/>
-                            </Grid.Effect>
+                            </Border.Triggers>
                             
-                            <!--window title-->
-                            <TextBlock x:Name="titleText" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="8 0 0 0"
+                            <DockPanel x:Name="titleBar" LastChildFill="False" Background="#33FFFFFF" VerticalAlignment="Top" Height="30">
+                                <DockPanel.Effect>
+                                    <DropShadowEffect ShadowDepth="1" Direction="270" BlurRadius="3"/>
+                                </DockPanel.Effect>
+
+                                <!--window title-->
+                                <TextBlock x:Name="titleText" FontSize="12" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="8 0 0 0"
                                        Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}" Visibility="{TemplateBinding TitleVisibility}"/>
 
-                            <!--the close button-->
-                            <StackPanel x:Name="systemButtons"
-                                        Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                <Button x:Name="minimizeButton" Style="{StaticResource WindowButtonStyle}" Content="0"
+                                <!--the close button-->
+                                <StackPanel x:Name="systemButtons" Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Right">
+                                    <Button x:Name="minimizeButton" Style="{StaticResource WindowButtonStyle}" Content="0"
                                         Visibility="{TemplateBinding ButtonMinVisibility}" Margin="0 0 8 0"/>
-                                <Button x:Name="restoreButton" Style="{StaticResource WindowButtonStyle}" Content="1"
+                                    <Button x:Name="restoreButton" Style="{StaticResource WindowButtonStyle}" Content="1"
                                         Visibility="{TemplateBinding ButtonMaxVisibility}" Margin="0 0 8 0"/>
-                                <Button x:Name="closeButton" Style="{StaticResource WindowButtonStyle}" Content="r"
+                                    <Button x:Name="closeButton" Style="{StaticResource WindowButtonStyle}" Content="r"
                                         Visibility="{TemplateBinding ButtonCloseVisibility}" Margin="0 0 8 0"/>
-                            </StackPanel>
-                        </Grid>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
 
                         <!--the real content-->
                         <ContentPresenter Panel.ZIndex="0" x:Name="windowContent" Margin="{TemplateBinding Padding}"

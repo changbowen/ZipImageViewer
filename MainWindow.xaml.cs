@@ -87,27 +87,35 @@ namespace ZipImageViewer
                 Application.Current.Shutdown();
         }
 
-        private void ThumbnailSizeChanged(object sender, PropertyChangedEventArgs e) {
-            if (PropertyChanged == null) return;
-            if (e.PropertyName == nameof(Setting.ThumbnailSize.Item1))
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealWidth)));
-            if (e.PropertyName == nameof(Setting.ThumbnailSize.Item2))
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealHeight)));
-        }
-
+        private bool reallyClose = false;
         private async void MainWin_Closing(object sender, CancelEventArgs e) {
+            if (reallyClose) return;
+
+            //start cleaning up
+            e.Cancel = true;
             Setting.ThumbnailSize.PropertyChanged -= ThumbnailSizeChanged;
 
             tknSrc_LoadThumb?.Cancel();
-            while (tknSrc_LoadThumb != null) {
-                await Task.Delay(100);
-            }
+            while (tknSrc_LoadThumb != null) { await Task.Delay(100); }
+
             Dispatcher.Invoke(() => ObjectList.Clear());
 
             Setting.LastPath = CurrentPath;
             if (WindowState != WindowState.Maximized) {
                 Setting.LastWindowSize = new Size(Width, Height);
             }
+
+            //now really close
+            reallyClose = true;
+            Dispatcher.BeginInvoke(new Action(() => Close()));
+        }
+
+        private void ThumbnailSizeChanged(object sender, PropertyChangedEventArgs e) {
+            if (PropertyChanged == null) return;
+            if (e.PropertyName == nameof(Setting.ThumbnailSize.Item1))
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealWidth)));
+            if (e.PropertyName == nameof(Setting.ThumbnailSize.Item2))
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbRealHeight)));
         }
 
         private void MainWin_DpiChanged(object sender, DpiChangedEventArgs e) {
