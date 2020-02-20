@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
-        Width="800" Height="600" Icon="Resources/ZipImageViewer.ico"
+        Width="900" Height="600" Icon="Resources/ZipImageViewer.ico"
         Background="#FF333333" Foreground="LightGray" WindowStartupLocation="CenterOwner"
         Title="Settings" UseLayoutRounding="True" Loaded="SettingsWin_Loaded" Closing="SettingsWin_Closing" PreviewKeyDown="SettingsWin_PreviewKeyDown">
     <ScrollViewer>
@@ -144,9 +144,9 @@
             <Border Grid.Row="4" Style="{StaticResource SettingBlockStyle}">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
-                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Database Size"/>
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" 
+                                   Text="{Binding CurrentThumbDbSize, ElementName=SettingsWin, Mode=OneWay, StringFormat='Thumbnail Database Size (Current: {0})'}"/>
                         <Button Content="Clean" VerticalAlignment="Center" DockPanel.Dock="Right" Click="Btn_Clean_Click"/>
-                        <TextBlock x:Name="T_ThumbDbSize" DockPanel.Dock="Right"/>
                     </DockPanel>
                     <DockPanel>
                         <Slider x:Name="SL_ThumbDbSize" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"

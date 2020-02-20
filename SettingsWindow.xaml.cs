@@ -19,13 +19,21 @@ namespace ZipImageViewer
             InitializeComponent();
         }
 
+        public string CurrentThumbDbSize {
+            get { return (string)GetValue(CurrentThumbDbSizeProperty); }
+            set { SetValue(CurrentThumbDbSizeProperty, value); }
+        }
+        public static readonly DependencyProperty CurrentThumbDbSizeProperty =
+            DependencyProperty.Register("CurrentThumbDbSize", typeof(string), typeof(SettingsWindow), new PropertyMetadata("N/A"));
+
+
         private void SettingsWin_Loaded(object sender, RoutedEventArgs e) {
             CB_ViewerTransition.ItemsSource =   Enum.GetValues(typeof(Setting.Transition));
             CB_ViewerTransition.SelectedItem =  Setting.ViewerTransition;
             CB_AnimSpeed.ItemsSource =          Enum.GetValues(typeof(Setting.TransitionSpeed));
             CB_AnimSpeed.SelectedItem =         Setting.ViewerTransitionSpeed;
 
-            T_ThumbDbSize.Text = $"Current DB size: {Helpers.BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length)}";
+            CurrentThumbDbSize = Helpers.BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length);
         }
 
         private void SettingsWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
@@ -98,7 +106,7 @@ namespace ZipImageViewer
                 return 0;
             });
 
-            T_ThumbDbSize.Text = $"Current DB size: {Helpers.BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length)}";
+            CurrentThumbDbSize = Helpers.BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length);
         }
 
         private void Btn_Reload_Click(object sender, RoutedEventArgs e) {
