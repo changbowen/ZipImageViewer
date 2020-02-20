@@ -63,43 +63,8 @@ namespace ZipImageViewer
                 fa_archive = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_FileArchive, fa_brush);
                 fa_image = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_FileImage, fa_brush);
 
-                //create thumb database if not exist and update columns if not correct
-                var aff1 = Execute(Table.Thumbs,
-                    (table, con) => {
-                        using (var cmd = new SQLiteCommand(con)) {
-                            cmd.CommandText =
-$@"create table if not exists [{table.Name}] (
-[{Column.VirtualPath}] TEXT NOT NULL,
-[{Column.DecodeWidth}] INTEGER,
-[{Column.DecodeHeight}] INTEGER,
-[{Column.ThumbData}] BLOB)";
-                            return cmd.ExecuteNonQuery();
-                        }
-                    });
-
-                //add columns if not exist
-                if (aff1[0] != null && aff1[0].Equals(-1)) {//-1 means table already exists
-                    Execute(Table.Thumbs, (table, con) => {
-                        using (var cmd = new SQLiteCommand(con)) {
-                            cmd.CommandText =
-                            $@"alter table [{table.Name}] add column [{Column.VirtualPath}] TEXT NOT NULL;";
-                            try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
-
-                            cmd.CommandText =
-                            $@"alter table [{table.Name}] add column [{Column.DecodeWidth}] INTEGER;";
-                            try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
-
-                            cmd.CommandText =
-                            $@"alter table [{table.Name}] add column [{Column.DecodeHeight}] INTEGER;";
-                            try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
-
-                            cmd.CommandText =
-                            $@"alter table [{table.Name}] add column [{Column.ThumbData}] BLOB;";
-                            try { cmd.ExecuteNonQuery(); } catch (SQLiteException) { }
-                        }
-                        return 0;
-                    });
-                }
+                //make sure thumbs db is correct
+                CheckThumbsDB();
 
 #if DEBUG
                 Execute(Table.Thumbs, (table, con) => {

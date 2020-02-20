@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
-        Width="800" Height="600" Icon="Resources/ZipImageViewer.ico"
+        Width="900" Height="600" Icon="Resources/ZipImageViewer.ico"
         Background="#FF333333" Foreground="LightGray" WindowStartupLocation="CenterOwner"
         Title="Settings" UseLayoutRounding="True" Loaded="SettingsWin_Loaded" Closing="SettingsWin_Closing" PreviewKeyDown="SettingsWin_PreviewKeyDown">
     <ScrollViewer>
@@ -131,7 +131,6 @@
                 <StackPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Database Directory"/>
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="Clean" VerticalAlignment="Center" Click="Btn_Clean_Click"/>
                         <Button DockPanel.Dock="Right" Content="Move" VerticalAlignment="Center" Click="Btn_Move_Click"/>
                         <ContentControl>
                             <TextBox x:Name="TB_DatabaseDir" Text="{Binding Source={x:Static local:App.Setting}, Path=DatabaseDir, Mode=OneWay}"/>
@@ -144,9 +143,10 @@
 
             <Border Grid.Row="4" Style="{StaticResource SettingBlockStyle}">
                 <StackPanel>
-                    <DockPanel>
-                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Database Size"/>
-                        <TextBlock x:Name="T_ThumbDbSize" HorizontalAlignment="Right"/>
+                    <DockPanel LastChildFill="False">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" 
+                                   Text="{Binding CurrentThumbDbSize, ElementName=SettingsWin, Mode=OneWay, StringFormat='Thumbnail Database Size (Current: {0})'}"/>
+                        <Button Content="Clean" VerticalAlignment="Center" DockPanel.Dock="Right" Click="Btn_Clean_Click"/>
                     </DockPanel>
                     <DockPanel>
                         <Slider x:Name="SL_ThumbDbSize" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"
@@ -235,7 +235,7 @@
                             </ContentControl>
                         </TabItem>
                         <TabItem Header="Mapped Passwords">
-                            <ContentControl  HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                            <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                                 <DataGrid AutoGenerateColumns="True" EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                           ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=MappedPasswords}">
                                 </DataGrid>
