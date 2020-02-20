@@ -5,20 +5,22 @@ Need 64bit Windows and .Net Framework 4.7.2 (included in Windows 10 April 2018 U
 
 [![Build Status](https://changb0wen.visualstudio.com/ZipImageViewer/_apis/build/status/changbowen.ZipImageViewer?branchName=master)](https://changb0wen.visualstudio.com/ZipImageViewer/_build/latest?definitionId=4&branchName=master)
 
-![MainWindow](https://github.com/changbowen/Misc/raw/master/ZipImageViewer/picture_wall.gif)
-
+![Picture Wall](https://github.com/changbowen/Misc/raw/master/ZipImageViewer/picture_wall.gif)
 
 ## Features
-- Opens all archives supported by 7z.
-- Saves password of each archive for later.
+- Works with all archives supported by 7z.
 - Tries a configured list of fallback passwords on any new encrypted archives.
+- Keeps a map of the password used for each archive to reduce unnecessary trials and errors.
 - Support EXIF orientation metadata.
-- DpiImage control
+- DpiImage control.
   - 1:1 rendering of images by overriding WPF's device-independent auto-scaling on Image control.
 - No blurriness caused by incorrect position (X / Y translation).
-- PerMonitor DPI awareness
-- Thumbnail cache for faster loading
+- PerMonitor DPI awareness.
+- Thumbnail cache for instant loading.
 - "Picture Wall"
+
+#### Using Fallback Passwords
+![Fallback Passwords](https://github.com/changbowen/Misc/raw/master/ZipImageViewer/fallback_passwords.gif)
 
 ## What's Wrong with Photos
 **Be sure to scale the page properly to see the difference.**
