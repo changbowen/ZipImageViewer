@@ -5,6 +5,9 @@ Need .Net Framework 4.7.2 (included in Windows 10 April 2018 Update)
 
 [![Build Status](https://changb0wen.visualstudio.com/ZipImageViewer/_apis/build/status/changbowen.ZipImageViewer?branchName=master)](https://changb0wen.visualstudio.com/ZipImageViewer/_build/latest?definitionId=4&branchName=master)
 
+![MainWindow](https://github.com/changbowen/Misc/raw/master/ZipImageViewer/picture_wall.gif)
+
+
 ## Features
 - Opens all archives supported by 7z.
 - Saves password of each archive for later.
@@ -17,7 +20,7 @@ Need .Net Framework 4.7.2 (included in Windows 10 April 2018 Update)
 - Thumbnail cache for faster loading
 - "Picture Wall"
 
-## Screenshots
+## What's Wrong with Photos
 **Be sure to scale the page properly to see the difference.**
 **For example if your display is set to 125% scaling, you need to scale the webpage to 80%.**
 **And this is actually a chroma test image so you also want to use RGB instead of YCbCr color format on your monitor.**
