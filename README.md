@@ -1,7 +1,7 @@
 # ZipImageViewer
 Minimalistic image viewer that introduce no "DPI blurriness" and views contents of password-protected archives on the fly.
 
-Need .Net Framework 4.7.2 (included in Windows 10 April 2018 Update)
+Need 64bit Windows and .Net Framework 4.7.2 (included in Windows 10 April 2018 Update)
 
 [![Build Status](https://changb0wen.visualstudio.com/ZipImageViewer/_apis/build/status/changbowen.ZipImageViewer?branchName=master)](https://changb0wen.visualstudio.com/ZipImageViewer/_build/latest?definitionId=4&branchName=master)
 
