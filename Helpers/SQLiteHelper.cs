@@ -5,6 +5,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using static ZipImageViewer.TableHelper;
@@ -21,7 +22,7 @@ namespace ZipImageViewer
 
         /// <summary>
         /// Returns an array of objects containing the return value from each Func.
-        /// Errors will be ignored and the next callback will be executed;
+        /// Errors in callbacks will be ignored and the next callback will be executed;
         /// </summary>
         internal static object[] Execute(Table t, params Func<TableInfo, SQLiteConnection, object>[] callbackFuncs) {
             SQLiteConnection con = null;
@@ -37,6 +38,9 @@ namespace ZipImageViewer
                     catch { }
                 }
             }
+            catch (Exception ex) {
+                MessageBox.Show($"Error opening database file {table.FullPath}.\r\n{ex.Message}", null, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             finally {
                 if (con != null) {
                     con.Close();
@@ -45,6 +49,58 @@ namespace ZipImageViewer
                 Monitor.Exit(table.Lock);
             }
             return affected;
+        }
+
+        internal static void CheckThumbsDB() {
+            var goodColumns = 0;
+            Execute(Table.Thumbs, (table, con) => {
+                using (var cmd = new SQLiteCommand(con)) {
+                    cmd.CommandText = $@"pragma table_info({table.Name})";
+                    using (var r = cmd.ExecuteReader()) {
+                        while (r.Read()) {
+                            Console.WriteLine(r["name"]);
+                            Console.WriteLine(r["type"]);
+                            Console.WriteLine(r["notnull"]);
+                            Console.WriteLine(r["pk"]);
+                            switch (r["name"]) {
+                                case nameof(Column.VirtualPath):
+                                    if (r["type"].ToString() == "TEXT" &&
+                                        r["notnull"].ToString() == "1" &&
+                                        r["pk"].ToString() == "1") goodColumns += 1;
+                                    break;
+                                case nameof(Column.DecodeWidth):
+                                case nameof(Column.DecodeHeight):
+                                    if ((string)r["type"] == "INTEGER") goodColumns += 1;
+                                    break;
+                                case nameof(Column.ThumbData):
+                                    if ((string)r["type"] == "BLOB") goodColumns += 1;
+                                    break;
+                            }
+                        }
+                        return 0;
+                    }
+                }
+            });
+            if (goodColumns == 4) return;
+
+            //recreate thumbs table
+            if (File.Exists(Tables[Table.Thumbs].FullPath))
+                File.Delete(Tables[Table.Thumbs].FullPath);
+            else
+                Directory.CreateDirectory(Setting.DatabaseDir);
+
+            Execute(Table.Thumbs, (table, con) => {
+                using (var cmd = new SQLiteCommand(con)) {
+                    cmd.CommandText =
+$@"create table if not exists [{table.Name}] (
+[{Column.VirtualPath}] TEXT NOT NULL,
+[{Column.DecodeWidth}] INTEGER,
+[{Column.DecodeHeight}] INTEGER,
+[{Column.ThumbData}] BLOB,
+PRIMARY KEY({Column.VirtualPath}))";
+                    return cmd.ExecuteNonQuery();
+                }
+            });
         }
 
         internal static int AddToThumbDB(ImageSource source, string path, System.Drawing.Size decodeSize) {
