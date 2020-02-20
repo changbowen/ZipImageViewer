@@ -288,7 +288,7 @@ namespace ZipImageViewer
                 }
             }
 
-            MappedPasswords.WriteXml(Tables[Table.MappedPasswords].FullPath, XmlWriteMode.WriteSchema);
+            MappedPasswords?.WriteXml(Tables[Table.MappedPasswords].FullPath, XmlWriteMode.WriteSchema);
 
 
             File.WriteAllText(path, $@"
