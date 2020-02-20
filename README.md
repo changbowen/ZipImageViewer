@@ -5,6 +5,9 @@ Need .Net Framework 4.7.2 (included in Windows 10 April 2018 Update)
 
 [![Build Status](https://changb0wen.visualstudio.com/ZipImageViewer/_apis/build/status/changbowen.ZipImageViewer?branchName=master)](https://changb0wen.visualstudio.com/ZipImageViewer/_build/latest?definitionId=4&branchName=master)
 
+![MainWindow](https://github.com/changbowen/Misc/raw/master/ZipImageViewer/picture_wall.gif)
+
+
 ## Features
 - Opens all archives supported by 7z.
 - Saves password of each archive for later.
