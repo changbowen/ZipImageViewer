@@ -24,6 +24,7 @@
             <Style TargetType="Border" BasedOn="{StaticResource S_RiseOnHover}">
                 <Setter Property="Padding" Value="5"/>
                 <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="Background" Value="Transparent"/>
                 <EventSetter Event="PreviewMouseDown" Handler="Menu_PreviewMouseUp"/>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
