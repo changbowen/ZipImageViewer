@@ -228,7 +228,7 @@ namespace ZipImageViewer
                         LoadImage = true,
                         FileNames = new[] { objInfo.FileName },
                         CldInfoCallback = oi => Dispatcher.Invoke(() => {
-                            if (viewWin == null) new ViewWindow(this, ObjectList) { ObjectInfo = oi }.Show();
+                            if (viewWin == null) new ViewWindow(this) { ObjectInfo = oi }.Show();
                             else viewWin.ObjectInfo = oi;
                         }),
                     });
@@ -260,7 +260,7 @@ namespace ZipImageViewer
                     Flags = objInfo.Flags,
                     LoadImage = true,
                     ObjInfoCallback = oi => Dispatcher.Invoke(() => {
-                        if (viewWin == null) new ViewWindow(this, ObjectList) { ObjectInfo = oi }.Show();
+                        if (viewWin == null) new ViewWindow(this) { ObjectInfo = oi }.Show();
                         else viewWin.ObjectInfo = oi;
                     }),
                 });

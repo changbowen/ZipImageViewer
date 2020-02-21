@@ -50,7 +50,7 @@ namespace ZipImageViewer
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Flags)));
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Parent)));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ContainerPath)));
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
             }
         }
@@ -80,12 +80,16 @@ namespace ZipImageViewer
             }
         }
 
-        public string Parent {
+        /// <summary>
+        /// Return the immediate container path. If self is a container, same as FileSystemPath.
+        /// </summary>
+        public string ContainerPath {
             get {
-                if (Flags.HasFlag(FileFlags.Directory) || Flags.HasFlag(FileFlags.Archive))
-                    return Path.GetDirectoryName(FileSystemPath);
+                if (Flags.HasFlag(FileFlags.Directory) ||
+                    Flags.HasFlag(FileFlags.Archive))
+                    return FileSystemPath;
                 else
-                    return Path.GetDirectoryName(Path.GetDirectoryName(FileSystemPath));
+                    return Path.GetDirectoryName(FileSystemPath);
             }
         }
 

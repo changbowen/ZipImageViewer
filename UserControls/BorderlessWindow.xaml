@@ -25,18 +25,16 @@
                                     </BeginStoryboard>
                                 </EventTrigger>
                             </Border.Triggers>
-                            
-                            <DockPanel x:Name="titleBar" LastChildFill="False" Background="#33FFFFFF" VerticalAlignment="Top" Height="30">
-                                <DockPanel.Effect>
-                                    <DropShadowEffect ShadowDepth="2" Direction="270" BlurRadius="4"/>
-                                </DockPanel.Effect>
 
+                            <DockPanel x:Name="titleBar" LastChildFill="False" Background="#33FFFFFF" VerticalAlignment="Top" Height="30">
                                 <!--window title-->
                                 <TextBlock x:Name="titleText" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="8 0 0 0"
-                                       Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}" Visibility="{TemplateBinding TitleVisibility}"/>
+                                           Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}" Visibility="{TemplateBinding TitleVisibility}"
+                                           Effect="{StaticResource DS_Below}"/>
 
                                 <!--the close button-->
-                                <StackPanel x:Name="systemButtons" Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Right">
+                                <StackPanel x:Name="systemButtons" Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Right"
+                                            Effect="{StaticResource DS_Below}">
                                     <Button x:Name="minimizeButton" Style="{StaticResource WindowButtonStyle}" Content="0"
                                         Visibility="{TemplateBinding ButtonMinVisibility}" Margin="0 0 8 0"/>
                                     <Button x:Name="restoreButton" Style="{StaticResource WindowButtonStyle}" Content="1"

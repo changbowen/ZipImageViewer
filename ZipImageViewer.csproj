@@ -121,10 +121,14 @@
     <Compile Include="Helpers\NativeHelpers.cs" />
     <Compile Include="Helpers\ObjectInfo.cs" />
     <Compile Include="Helpers\Setting.cs" />
+    <Compile Include="Helpers\SlideshowHelper.cs" />
     <Compile Include="Helpers\SQLiteHelper.cs" />
     <Compile Include="Helpers\TableHelper.cs" />
     <Compile Include="InputWindow.xaml.cs">
       <DependentUpon>InputWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SlideshowWindow.xaml.cs">
+      <DependentUpon>SlideshowWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\BorderlessWindow.cs" />
     <Compile Include="UserControls\BubbleMessage.xaml.cs">
@@ -150,6 +154,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="InputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SlideshowWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

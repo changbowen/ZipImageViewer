@@ -14,7 +14,6 @@ namespace ZipImageViewer
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private KeyedCollection<string, ObjectInfo> objectList;
         private readonly MainWindow mainWin;
 
 
@@ -80,10 +79,9 @@ namespace ZipImageViewer
         //public Point CenterPoint =>
         //    new Point((CA.ActualWidth - IM.ActualWidth) / 2, (CA.ActualHeight - IM.ActualHeight) / 2);
 
-        public ViewWindow(MainWindow win, KeyedCollection<string, ObjectInfo> objList)
+        public ViewWindow(MainWindow win)
         {
             InitializeComponent();
-            objectList = objList;
             Opacity = 0d;
 
             mainWin = win;
@@ -122,7 +120,6 @@ namespace ZipImageViewer
         }
 
         private void ViewWin_Unloaded(object sender, RoutedEventArgs e) {
-            objectList = null;
             ViewImageSource = null;
             ObjectInfo.SourcePaths = null;
             ObjectInfo.ImageSource = null;
@@ -296,9 +293,9 @@ namespace ZipImageViewer
                     //also used to determine direction for some animations.
                     var increment = e.Key == Key.Left ? -1 : 1;
                     //get index of the next item
-                    var i = objectList.IndexOf(objectList[ObjectInfo.VirtualPath]) + increment;
-                    while (i > -1 && i < objectList.Count) {
-                        var next = objectList[i];
+                    var i = mainWin.ObjectList.IndexOf(mainWin.ObjectList[ObjectInfo.VirtualPath]) + increment;
+                    while (i > -1 && i < mainWin.ObjectList.Count) {
+                        var next = mainWin.ObjectList[i];
                         //check for non-images and skip
                         if (!next.Flags.HasFlag(FileFlags.Image)) {
                             i += increment;

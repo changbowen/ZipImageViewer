@@ -23,6 +23,10 @@ namespace ZipImageViewer
             InitializeComponent();
         }
 
+        private void ObjectInfo_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+            var oi = (ObjectInfo)sender;
+            //handle menu enable / disable here
+        }
 
         private ObjectInfo objectInfo;
         public ObjectInfo ObjectInfo {
@@ -43,7 +47,6 @@ namespace ZipImageViewer
             switch (border.Name) {
                 case nameof(B_OpenInExplorer):
                     Helpers.Run("explorer", $"/select, \"{ObjectInfo.FileSystemPath}\"");
-                    Close();
                     break;
                 case nameof(B_OpenInNewWindow):
                     if (ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
@@ -56,13 +59,16 @@ namespace ZipImageViewer
                         };
                         win.Show();
                     }
-                    Close();
+                    break;
+                case nameof(B_Slideshow):
+                    var sldWin = new SlideshowWindow(mainWin, ObjectInfo);
+                    sldWin.Show();
                     break;
             }
 
+            Close();
             ObjectInfo = null;
         }
-
 
     }
 }

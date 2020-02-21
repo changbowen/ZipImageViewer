@@ -187,9 +187,11 @@ namespace ZipImageViewer
         }
 
         /// <summary>
-        /// Call from background thread.
+        /// Only udpate when SourcePaths is null. Call from background thread.
         /// </summary>
         internal static void UpdateSourcePaths(ObjectInfo objInfo) {
+            if (objInfo.SourcePaths != null) return;
+
             switch (objInfo.Flags) {
                 case FileFlags.Directory:
                     IEnumerable<FileSystemInfo> fsInfos = null;
@@ -213,7 +215,9 @@ namespace ZipImageViewer
                     objInfo.SourcePaths = new[] { objInfo.FileSystemPath };
                     break;
                 case FileFlags.Archive | FileFlags.Image:
-                    //do nothing because FileFlags.Archive | FileFlags.Image should have SourcePaths updated when loaded the first time.
+                    //FileFlags.Archive | FileFlags.Image should have SourcePaths[1] set when loaded the first time.
+                    //this is only included for completeness and should never be reached unless something's wrong with the code.
+                    objInfo.SourcePaths = new[] { objInfo.FileName };
                     break;
                 default:
                     objInfo.SourcePaths = new string[0];
@@ -243,13 +247,7 @@ namespace ZipImageViewer
         /// <summary>
         /// Used to get image from within a container.
         /// </summary>
-        /// <param name="childPath">For archives this is the path of the files inside the archive. For others, full path to the image.</param>
-        /// <param name="fsPath">This is the path of the container.</param>
-        /// <param name="flags">FileFlag of the container</param>
         /// <param name="size">Decode size.</param>
-        /// <param name="imgSource">This is used as the return value if the flags == Archive | Image,
-        /// because images inside archive is loaded directly in a single thread.</param>
-        //public static ImageSource GetImageSource(string childPath, string fsPath, FileFlags flags, SizeInt size = default, ImageSource imgSource = null) {
         public static ImageSource GetImageSource(ObjectInfo objInfo, int sourcePathIdx, SizeInt size) {
             if (objInfo.Flags.HasFlag(FileFlags.Error)) return App.fa_exclamation;
             if (objInfo.Flags == FileFlags.Unknown) return App.fa_file;

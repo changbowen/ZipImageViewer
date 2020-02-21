@@ -1,0 +1,26 @@
+﻿<local:BorderlessWindow x:Class="ZipImageViewer.SlideshowWindow" x:Name="SlideWin"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ZipImageViewer" Background="Black" Foreground="LightGray" Padding="0"
+        mc:Ignorable="d" Height="450" Width="800" Loaded="SlideWin_Loaded" Closing="SlideWin_Closing">
+    <Canvas x:Name="canvas">
+        <local:DpiImage x:Name="IM0" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Fill" Opacity="0">
+            <local:DpiImage.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </local:DpiImage.RenderTransform>
+        </local:DpiImage>
+        <local:DpiImage x:Name="IM1" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Fill" Opacity="0">
+            <local:DpiImage.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </local:DpiImage.RenderTransform>
+        </local:DpiImage>
+    </Canvas>
+</local:BorderlessWindow>

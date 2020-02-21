@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:fa="http://schemas.fontawesome.com/icons/"
         xmlns:local="clr-namespace:ZipImageViewer" CloseBehavior="FadeOutAndHide" ButtonCloseVisible="False" ShowInTaskbar="False"
-        mc:Ignorable="d" ResizeMode="NoResize" SizeToContent="WidthAndHeight" 
+        mc:Ignorable="d" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
         Background="#FF444444" Foreground="LightGray">
     <Window.Resources>
         <Style TargetType="fa:ImageAwesome">
@@ -16,9 +16,10 @@
     </Window.Resources>
     <local:PaddedGrid Padding="2">
         <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.Resources>
             <Style TargetType="Border" BasedOn="{StaticResource S_RiseOnHover}">
@@ -90,6 +91,12 @@
             <StackPanel Orientation="Horizontal">
                 <fa:ImageAwesome Icon="Regular_WindowRestore" ToolTip="Open in Explorer"/>
                 <TextBlock Text="Open in New Window" FontWeight="Bold" VerticalAlignment="Center" Margin="10 0 0 0"/>
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="3" x:Name="B_Slideshow">
+            <StackPanel Orientation="Horizontal">
+                <fa:ImageAwesome Icon="Regular_WindowRestore" ToolTip="Start Slideshow"/>
+                <TextBlock Text="Start Slideshow" FontWeight="Bold" VerticalAlignment="Center" Margin="10 0 0 0"/>
             </StackPanel>
         </Border>
     </local:PaddedGrid>
