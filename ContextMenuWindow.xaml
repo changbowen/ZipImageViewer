@@ -6,12 +6,12 @@
         xmlns:fa="http://schemas.fontawesome.com/icons/"
         xmlns:local="clr-namespace:ZipImageViewer" CloseBehavior="FadeOutAndHide" ButtonCloseVisible="False" ShowInTaskbar="False"
         mc:Ignorable="d" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
-        Background="#FF444444" Foreground="LightGray">
+        Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource ForegroundBrush}">
     <Window.Resources>
         <Style TargetType="fa:ImageAwesome">
             <Setter Property="Width" Value="24"/>
             <Setter Property="Height" Value="24"/>
-            <Setter Property="Foreground" Value="LightGray"/>
+            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
         </Style>
     </Window.Resources>
     <local:PaddedGrid Padding="2">

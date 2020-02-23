@@ -8,6 +8,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using SizeInt = System.Drawing.Size;
 using static ZipImageViewer.TableHelper;
 
 namespace ZipImageViewer
@@ -58,10 +59,6 @@ namespace ZipImageViewer
                     cmd.CommandText = $@"pragma table_info({table.Name})";
                     using (var r = cmd.ExecuteReader()) {
                         while (r.Read()) {
-                            Console.WriteLine(r["name"]);
-                            Console.WriteLine(r["type"]);
-                            Console.WriteLine(r["notnull"]);
-                            Console.WriteLine(r["pk"]);
                             switch (r["name"]) {
                                 case nameof(Column.VirtualPath):
                                     if (r["type"].ToString() == "TEXT" &&
@@ -103,7 +100,7 @@ PRIMARY KEY({Column.VirtualPath}))";
             });
         }
 
-        internal static int AddToThumbDB(ImageSource source, string path, System.Drawing.Size decodeSize) {
+        internal static int AddToThumbDB(ImageSource source, string path, SizeInt decodeSize) {
             if (!(source is BitmapSource bs)) throw new NotSupportedException();
 
             object[] affected = null;
@@ -137,7 +134,7 @@ PRIMARY KEY({Column.VirtualPath}))";
         /// <summary>
         /// Returns null if thumb either does not exist in DB or has different size.
         /// </summary>
-        internal static BitmapSource GetFromThumbDB(string path, System.Drawing.Size decodeSize) {
+        internal static BitmapSource GetFromThumbDB(string path, SizeInt decodeSize) {
             var png = Execute(Table.Thumbs, (table, con) => {
                 byte[] pngByte = null;
                 using (var cmd = new SQLiteCommand(con)) {
@@ -149,7 +146,7 @@ $@"select {Column.ThumbData} from {table.Name} where
                     cmd.Parameters.Add(new SQLiteParameter("@path", DbType.String) { Value = path });
                     using (var reader = cmd.ExecuteReader()) {
                         while (reader.Read()) {
-                            pngByte = (byte[])reader["thumbData"];
+                            pngByte = (byte[])reader[0];
                             break;
                         }
                     }
@@ -167,6 +164,23 @@ $@"select {Column.ThumbData} from {table.Name} where
                 bi.Freeze();
                 return bi;
             }
+        }
+
+        internal static bool ThumbExistInDB(string path, SizeInt decodeSize) {
+            return (bool)Execute(Table.Thumbs, (table, con) => {
+                using (var cmd = new SQLiteCommand(con)) {
+                    cmd.CommandText =
+$@"select count({Column.ThumbData}) from {table.Name} where
+{Column.VirtualPath} = @path and
+{Column.DecodeWidth} = {decodeSize.Width} and
+{Column.DecodeHeight} = {decodeSize.Height}";
+                    cmd.Parameters.Add(new SQLiteParameter("@path", DbType.String) { Value = path });
+                    using (var r = cmd.ExecuteReader()) {
+                        r.Read();
+                        return (long)r[0] > 0;
+                    }
+                }
+            })[0];
         }
     }
 }

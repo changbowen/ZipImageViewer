@@ -10,6 +10,7 @@ using System.Windows.Data;
 using SizeInt = System.Drawing.Size;
 using System.Windows.Threading;
 using System.Threading;
+using System.Windows.Media.Imaging;
 
 namespace ZipImageViewer
 {
@@ -94,14 +95,36 @@ namespace ZipImageViewer
         private void ThumbTransAnimOut_Completed(object sender, EventArgs e) {
             thumbImageSource = nextSource;
             nextSource = null;
+
+            if (thumbImageSource is BitmapSource) {
+                //fill frame when it's an actual image
+                IM1.Stretch = Stretch.UniformToFill;
+                IM1.Width = double.NaN;
+                IM1.Height = double.NaN;
+            }
+            else {
+                //half size when it's not an image
+                var uniLength = Math.Min(ActualWidth, ActualHeight) * 0.5;
+                IM1.Stretch = Stretch.Uniform;
+                IM1.Width = uniLength;
+                IM1.Height = uniLength;
+            }
+
+            //tell binding to update image
             if (PropertyChanged != null) {
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbImageSource)));
-                //PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(HasImage)));
             }
+
+            //continue transition animation
             GR1.BeginStoryboard(thumbTransAnimIn);
         }
 
         private void TN_Loaded(object sender, RoutedEventArgs e) {
+            var uniLength = Math.Min(ActualWidth, ActualHeight) * 0.5;
+            IM1.Stretch = Stretch.Uniform;
+            IM1.Width = uniLength;
+            IM1.Height = uniLength;
+
             cycleTimer = new DispatcherTimer(DispatcherPriority.Normal, Application.Current.Dispatcher);
             cycleTimer.Tick += cycleImageSource;
 
@@ -166,7 +189,7 @@ namespace ZipImageViewer
 
             //});
 
-            tn.ThumbImageSource = await Helpers.GetImageSource(tn.ObjectInfo, tn.thumbIndex, true);
+            tn.ThumbImageSource = await Helpers.GetImageSourceAsync(tn.ObjectInfo, tn.thumbIndex, decodeSize: (SizeInt)Setting.ThumbnailSize);
 
             if (!tn.IsLoaded || !mainWin.IsLoaded || !cycle) return; //dont do anything before or after the lifecycle
 

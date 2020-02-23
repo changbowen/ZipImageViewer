@@ -8,7 +8,7 @@
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:vir="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
         Icon="Resources/ZipImageViewer.ico"
-        mc:Ignorable="d" UseLayoutRounding="True" Background="#FF1F1F1F" Foreground="LightGray"
+        mc:Ignorable="d" UseLayoutRounding="True" Background="{StaticResource BackgroundDarkBrush}" Foreground="{StaticResource ForegroundBrush}"
         Title="{Binding ElementName=MainWin, Path=CurrentPath, Mode=OneWay}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
         Loaded="MainWin_Loaded" Unloaded="MainWin_Unloaded" Closing="MainWin_Closing" DpiChanged="MainWin_DpiChanged">
     <Window.Resources>
@@ -28,7 +28,7 @@
                     </local:Thumbnail.Style>
                 </local:Thumbnail>
 
-                <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10" Foreground="Gray"
+                <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10" Foreground="{StaticResource ForegroundGrayBrush}"
                            MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
                            HorizontalAlignment="Center" Panel.ZIndex="0" TextWrapping="Wrap">
                     <TextBlock.Style>
@@ -76,7 +76,7 @@
                 </Style>
             </Border.Style>
 
-            <Border Background="#FF444444" CornerRadius="10" Width="100">
+            <Border Background="{StaticResource BackgroundLightBrush}" CornerRadius="10" Width="100">
                 <Border.Effect>
                     <DropShadowEffect ShadowDepth="0" BlurRadius="10"/>
                 </Border.Effect>
@@ -84,7 +84,7 @@
                     <Style TargetType="fa:ImageAwesome">
                         <Setter Property="Width" Value="48"/>
                         <Setter Property="Height" Value="48"/>
-                        <Setter Property="Foreground" Value="#FFAAAAAA"/>
+                        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
                         <Setter Property="Cursor" Value="Hand"/>
                         <Setter Property="Effect">
                             <Setter.Value>

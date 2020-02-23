@@ -11,6 +11,7 @@ using SevenZip;
 using SizeInt = System.Drawing.Size;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
+using static ZipImageViewer.SlideshowHelper;
 
 namespace ZipImageViewer
 {
@@ -169,6 +170,10 @@ namespace ZipImageViewer
             }
         }
 
+        //this one is not used for binding
+        public static SlideAnimConfig SlideAnimConfig = new SlideAnimConfig();
+
+
         public static void LoadConfigFromFile(string path = "config.ini") {
             //load config
             if (!File.Exists(path)) {
@@ -189,6 +194,14 @@ namespace ZipImageViewer
             LastWindowSize =           ParseConfig(iniData, nameof(LastWindowSize),        LastWindowSize);
             LastPath =                 ParseConfig(iniData, nameof(LastPath),              LastPath);
             LiteMode =                 ParseConfig(iniData, nameof(LiteMode),              LiteMode);
+            SlideAnimConfig.Transition =      ParseConfig(iniData, $"{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.Transition)}",       SlideAnimConfig.Transition);
+            SlideAnimConfig.ImageDuration =   ParseConfig(iniData, $"{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.ImageDuration)}",    SlideAnimConfig.ImageDuration);
+            SlideAnimConfig.FadeInDuration =  ParseConfig(iniData, $"{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.FadeInDuration)}",   SlideAnimConfig.FadeInDuration);
+            SlideAnimConfig.FadeOutDuration = ParseConfig(iniData, $"{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.FadeOutDuration)}",  SlideAnimConfig.FadeOutDuration);
+            SlideAnimConfig.XPanDistanceR =   ParseConfig(iniData, $"{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.XPanDistanceR)}",    SlideAnimConfig.XPanDistanceR);
+            SlideAnimConfig.YPanDistanceR =   ParseConfig(iniData, $"{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.YPanDistanceR)}",    SlideAnimConfig.YPanDistanceR);
+            SlideAnimConfig.Blur =            ParseConfig(iniData, $"{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.Blur)}",             SlideAnimConfig.Blur);
+            SlideAnimConfig.ResolutionScale =     ParseConfig(iniData, $"{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.ResolutionScale)}",      SlideAnimConfig.ResolutionScale);
 
             //parse custom commands
             CustomCommands = new ObservableCollection<ObservableObj>();
@@ -275,6 +288,10 @@ namespace ZipImageViewer
                     TransitionSpeed ts;
                     if (Enum.TryParse(value, out ts)) result = ts;
                     break;
+                case SlideTransition _:
+                    SlideTransition st;
+                    if (Enum.TryParse(value, out st)) result = st;
+                    break;
             }
             return (T)result;
         }
@@ -303,6 +320,14 @@ namespace ZipImageViewer
 {nameof(LastWindowSize)}={LastWindowSize.Width}x{LastWindowSize.Height}
 {nameof(LastPath)}={LastPath}
 {nameof(LiteMode)}={LiteMode}
+{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.Transition)}={SlideAnimConfig.Transition}
+{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.ImageDuration)}={SlideAnimConfig.ImageDuration}
+{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.FadeInDuration)}={SlideAnimConfig.FadeInDuration}
+{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.FadeOutDuration)}={SlideAnimConfig.FadeOutDuration}
+{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.XPanDistanceR)}={SlideAnimConfig.XPanDistanceR}
+{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.YPanDistanceR)}={SlideAnimConfig.YPanDistanceR}
+{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.Blur)}={SlideAnimConfig.Blur}
+{nameof(SlideAnimConfig)}.{nameof(SlideAnimConfig.ResolutionScale)}={SlideAnimConfig.ResolutionScale}
 
 [Custom Commands]
 {(CustomCommands?.Count > 0 ?

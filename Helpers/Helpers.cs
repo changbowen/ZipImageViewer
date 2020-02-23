@@ -235,20 +235,15 @@ namespace ZipImageViewer
         /// </summary>
         /// <param name="objInfo">The ObjectInfo of the container.</param>
         /// <param name="sourcePathIdx">Index of the file to load in ObjectInfo.SourcePaths.</param>
-        public static async Task<ImageSource> GetImageSource(ObjectInfo objInfo, int sourcePathIdx, bool isThumb) {
-            //var targetPath = objInfo.SourcePaths[sourcePathIdx];
-            //var fsPath = objInfo.FileSystemPath;
-            //var flags = objInfo.Flags;
-            var size = isThumb ? (SizeInt)Setting.ThumbnailSize : default;
-            //var imgSource = objInfo.ImageSource;
-            return await Task.Run(() => GetImageSource(objInfo, sourcePathIdx, size));
+        public static async Task<ImageSource> GetImageSourceAsync(ObjectInfo objInfo, int sourcePathIdx, SizeInt decodeSize = default, double? decodeScale = null) {
+            return await Task.Run(() => GetImageSource(objInfo, sourcePathIdx, decodeSize, decodeScale));
         }
 
         /// <summary>
         /// Used to get image from within a container.
         /// </summary>
-        /// <param name="size">Decode size.</param>
-        public static ImageSource GetImageSource(ObjectInfo objInfo, int sourcePathIdx, SizeInt size) {
+        /// <param name="decodeSize">Decode size.</param>
+        public static ImageSource GetImageSource(ObjectInfo objInfo, int sourcePathIdx, SizeInt decodeSize = default, double? decodeScale = null) {
             if (objInfo.Flags.HasFlag(FileFlags.Error)) return App.fa_exclamation;
             if (objInfo.Flags == FileFlags.Unknown) return App.fa_file;
 
@@ -266,13 +261,13 @@ namespace ZipImageViewer
                 switch (objInfo.Flags) {
                     case FileFlags.Directory:
                         if (objInfo.SourcePaths?.Length > 0)
-                            source = GetImageSource(objInfo.SourcePaths[sourcePathIdx], size);
+                            source = GetImageSource(objInfo.SourcePaths[sourcePathIdx], decodeSize: decodeSize, decodeScale: decodeScale);
                         if (source == null) {
                             source = App.fa_folder;
                         }
                         break;
                     case FileFlags.Image:
-                        source = GetImageSource(objInfo.FileSystemPath, size);
+                        source = GetImageSource(objInfo.FileSystemPath, decodeSize: decodeSize, decodeScale: decodeScale);
                         if (source == null) {
                             source = App.fa_image;
                         }
@@ -280,7 +275,7 @@ namespace ZipImageViewer
                     case FileFlags.Archive:
                         if (objInfo.SourcePaths?.Length > 0) {
                             MainWindow.LoadFile(new LoadOptions(objInfo.FileSystemPath) {
-                                DecodeSize = size,
+                                DecodeSize = decodeSize,
                                 LoadImage = true,
                                 FileNames = new[] { objInfo.SourcePaths[sourcePathIdx] },
                                 Flags = FileFlags.Archive,
@@ -312,75 +307,86 @@ namespace ZipImageViewer
         }
 
         /// <summary>
-        /// Load image from disk if cache is not availble.
+        /// <para>Load image from disk if cache is not availble.</para>
+        /// <para>Setting <paramref name="decodeScale"/> to 1 is the same as leaving <paramref name="decodeSize"/> to default.</para>
         /// </summary>
-        public static BitmapSource GetImageSource(string path, SizeInt decodeSize = default) {
+        public static BitmapSource GetImageSource(string path, SizeInt decodeSize = default, double? decodeScale = null) {
             BitmapSource bs = null;
             try {
-                var isThumb = decodeSize.Width + decodeSize.Height > 0;
+                var isThumb = decodeSize.Width + decodeSize.Height > 0 && decodeScale == null;
                 if (isThumb) {
                     //try load from cache when decodeSize is non-zero
                     bs = SQLiteHelper.GetFromThumbDB(path, decodeSize);
                     if (bs != null) return bs;
                 }
-
-                ////avoid file dead locks
-                //Monitor.Enter(lock_Loading);
-                //var wait = loading.Contains(path);
-                //Monitor.Exit(lock_Loading);
-                //while (wait) {
-                //    Thread.Sleep(100);
-                //    Monitor.Enter(lock_Loading);
-                //    wait = loading.Contains(path);
-                //    Monitor.Exit(lock_Loading);
-                //}
-                //Monitor.Enter(lock_Loading);
-                //loading.Add(path);
-                //Monitor.Exit(lock_Loading);
-                //load from disk
 #if DEBUG
                 Console.WriteLine("Loading from disk: " + path);
 #endif
                 using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
-                    bs = GetImageSource(fs, decodeSize);
+                    bs = GetImageSource(fs, decodeSize, decodeScale);
                 }
                 if (isThumb && bs != null) SQLiteHelper.AddToThumbDB(bs, path, decodeSize);
             }
             catch (Exception ex) {
                 MessageBox.Show($"Error loading file {path}.\r\n{ex.Message}", "Error Loading File", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally {
-                //loading.Remove(path);
-            }
             
             return bs;
         }
 
         /// <summary>
-        /// Decode image from stream (FileStream when loading from file or MemoryStream when loading from archive.
+        /// <para>Decode image from stream (FileStream when loading from file or MemoryStream when loading from archive.</para>
+        /// <para>A <paramref name="decodeSize"/> higher than the actual resolution will be ignored.
+        /// Note that this is the size in pixel instead of the device-independent size used in WPF.</para>
+        /// <para><paramref name="decodeScale"/> can be used to further scale up or down <paramref name="decodeSize"/>.</para>
         /// </summary>
-        public static BitmapSource GetImageSource(Stream stream, SizeInt decodeSize) {
+        public static BitmapSource GetImageSource(Stream stream, SizeInt decodeSize = default, double? decodeScale = null) {
             stream.Position = 0;
             var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
-            var frameSize = new Size(frame.PixelWidth, frame.PixelHeight);
+            var pixelSize = new SizeInt(frame.PixelWidth, frame.PixelHeight);
             ushort orien = 0;
             if ((frame.Metadata as BitmapMetadata)?.GetQuery("/app1/ifd/{ushort=274}") is ushort u)
                 orien = u;
             frame = null;
 
-            //flip decodeSize according to orientation
-            if (decodeSize.Width + decodeSize.Height > 0 && orien > 4 && orien < 9)
-                decodeSize = new SizeInt(decodeSize.Height, decodeSize.Width);
+            //calculate decode size
+            double newW = 0d, newH = 0d;
+            if (decodeSize.Width + decodeSize.Height > 0) {
+                //use pixelSize if decodeSize is too big
+                //DecodePixelWidth / Height is set to PixelWidth / Height anyway in reference source
+                if (decodeSize.Width > pixelSize.Width) decodeSize.Width = pixelSize.Width;
+                if (decodeSize.Height > pixelSize.Height) decodeSize.Height = pixelSize.Height;
+
+                //flip decodeSize according to orientation
+                if (orien > 4 && orien < 9) {
+                    newW = decodeSize.Height;
+                    newH = decodeSize.Width;
+                }
+                //apply decode scale
+                if (decodeScale > 0d) {
+                    newW *= decodeScale.Value;
+                    newH *= decodeScale.Value;
+                }
+            }
+            //apply decode scale
+            else if (decodeScale > 0d && decodeScale < 1d) {
+                newW = pixelSize.Width * decodeScale.Value;
+                newH = pixelSize.Height * decodeScale.Value;
+            }
+
+            if (newW + newH > 0d)
+                decodeSize = new SizeInt(Convert.ToInt32(newW), Convert.ToInt32(newH));
 
             //init bitmapimage
             stream.Position = 0;
             var bi = new BitmapImage();
             bi.BeginInit();
             bi.CacheOption = BitmapCacheOption.OnLoad;
-            if (frameSize.Width > 0 && frameSize.Height > 0) {
-                var frameRatio = frameSize.Width / frameSize.Height;
+            if (pixelSize.Width > 0 && pixelSize.Height > 0) {
+                //setting both DecodePixelWidth and Height will break the aspect ratio
+                var imgRatio = (double)pixelSize.Width / pixelSize.Height;
                 if (decodeSize.Width > 0 && decodeSize.Height > 0) {
-                    if (frameRatio > (double)decodeSize.Width / decodeSize.Height)
+                    if (imgRatio > (double)decodeSize.Width / decodeSize.Height)
                         bi.DecodePixelHeight = decodeSize.Height;
                     else
                         bi.DecodePixelWidth = decodeSize.Width;

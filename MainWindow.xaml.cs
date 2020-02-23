@@ -16,6 +16,7 @@ using System.Data;
 using Path = System.IO.Path;
 using SizeInt = System.Drawing.Size;
 using static ZipImageViewer.TableHelper;
+using static ZipImageViewer.SQLiteHelper;
 
 namespace ZipImageViewer
 {
@@ -156,19 +157,26 @@ namespace ZipImageViewer
         }
 
         private void Callback_AddToImageList(ObjectInfo objInfo) {
-            //var add = true;
-            //Helpers.UpdateSourcePaths(objInfo);
-            //Dispatcher.Invoke(() => {
-            //    if (AuxVisibility == Visibility.Collapsed && (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0))
-            //        add = false;
-            //});
-            //if (add) ObjectList.Add(objInfo);
+            //exclude non-image items in immersion mode
             if (Setting.ImmersionMode && objInfo.SourcePaths == null) {
                 Helpers.UpdateSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
                 if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0)
                     return;
             }
             ObjectList.Add(objInfo);
+
+            //throttle the load
+            while (true) {
+                var sleep = 50 * (App.MaxLoadThreads - App.LoadThrottle.CurrentCount) + 10;
+                if (objInfo.Flags == FileFlags.Directory ||
+                    objInfo.Flags == FileFlags.Archive ||
+                    (objInfo.Flags == FileFlags.Image && !ThumbExistInDB(objInfo.VirtualPath, (SizeInt)Setting.ThumbnailSize))) {
+                    //Console.WriteLine(objInfo.Flags + ": " + sleep);
+                    Thread.Sleep(sleep);
+                }
+
+                if (App.LoadThrottle.CurrentCount > 0) break;
+            }
         }
 
         private void clearObjectList() {
@@ -213,7 +221,15 @@ namespace ZipImageViewer
                     tknSrc_LoadThumb = new CancellationTokenSource();
                     CurrentPath = objInfo.FileSystemPath;
                     clearObjectList();
-                    LoadFolder(new DirectoryInfo(objInfo.FileSystemPath), tknSrc: tknSrc_LoadThumb);
+
+                    foreach (var childInfo in new DirectoryInfo(objInfo.FileSystemPath).EnumerateFileSystemInfos()) {
+                        if (tknSrc_LoadThumb?.IsCancellationRequested == true) return;
+
+                        var flag = Helpers.GetPathType(childInfo);
+                        Callback_AddToImageList(new ObjectInfo(childInfo.FullName, flag) {
+                            FileName = childInfo.Name,
+                        });
+                    }
                 }
                 finally {
                     tknSrc_LoadThumb = null;
@@ -241,6 +257,7 @@ namespace ZipImageViewer
                         tknSrc_LoadThumb = new CancellationTokenSource();
                         CurrentPath = objInfo.FileSystemPath;
                         clearObjectList();
+
                         LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                             Flags = objInfo.Flags,
                             LoadImage = true,
@@ -266,26 +283,6 @@ namespace ZipImageViewer
                 });
             }
         }
-
-        /// <summary>
-        /// Load thumbnails in folder.
-        /// </summary>
-        private void LoadFolder(DirectoryInfo dirInfo, CancellationTokenSource tknSrc = null) {
-            CurrentPath = dirInfo.FullName;
-            foreach (var childInfo in dirInfo.EnumerateFileSystemInfos()) {
-                if (tknSrc?.IsCancellationRequested == true) return;
-
-                var flag = Helpers.GetPathType(childInfo);
-                Callback_AddToImageList(new ObjectInfo(childInfo.FullName, flag) {
-                    FileName = childInfo.Name,
-                });
-
-                //throttle the load
-                if (flag != FileFlags.Unknown) Thread.Sleep(50);
-                //how to sleep only when childinfo thumbnail is loading images?
-            }
-        }
-
 
         /// <summary>
         /// Load image based on the type of file and try passwords when possible.

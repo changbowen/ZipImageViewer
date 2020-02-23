@@ -61,7 +61,7 @@ namespace ZipImageViewer
                     }
                     break;
                 case nameof(B_Slideshow):
-                    var sldWin = new SlideshowWindow(mainWin, ObjectInfo);
+                    var sldWin = new SlideshowWindow(ObjectInfo);
                     sldWin.Show();
                     break;
             }
