@@ -15,8 +15,7 @@ using System.Windows.Threading;
 using System.Data;
 using Path = System.IO.Path;
 using SizeInt = System.Drawing.Size;
-using static ZipImageViewer.TableHelper;
-using static ZipImageViewer.SQLiteHelper;
+using static ZipImageViewer.LoadHelper;
 
 namespace ZipImageViewer
 {
@@ -30,6 +29,7 @@ namespace ZipImageViewer
         public double ThumbRealWidth => Setting.ThumbnailSize.Item1 / DpiScale.DpiScaleX;
         public double ThumbRealHeight => Setting.ThumbnailSize.Item2 / DpiScale.DpiScaleY;
 
+        public string InitialPath;
 
         private string currentPath = "";
         public string CurrentPath {
@@ -41,21 +41,22 @@ namespace ZipImageViewer
             }
         }
 
-        public int ThumbChangeDelay => Convert.ToInt32((virWrapPanel.VisualChildrenCount * 200 + App.Random.Next(2, 7) * 1000) * Setting.ThumbSwapDelayMultiplier);
+        public int ThumbChangeDelay => Convert.ToInt32(Setting.ThumbSwapDelayMultiplier * (
+            virWrapPanel.Children.Cast<ContentPresenter>().Count(cp => ((ObjectInfo)cp.Content).SourcePaths?.Length > 0) * 200 + App.Random.Next(2, 7) * 1000));
 
         internal CancellationTokenSource tknSrc_LoadThumb;
         private readonly object lock_LoadThumb = new object();
 
-        public string InitialPath;
-
-
         private VirtualizingWrapPanel virWrapPanel;
         private Rect lastWindowRect;
         internal Rect lastViewWindowRect;
+        private readonly Dictionary<string, double> scrollPositions = new Dictionary<string, double>();
 
         public MainWindow()
         {
             InitializeComponent();
+            Width = Setting.LastWindowSize.Width;
+            Height = Setting.LastWindowSize.Height;
         }
 
 
@@ -159,33 +160,37 @@ namespace ZipImageViewer
         private void Callback_AddToImageList(ObjectInfo objInfo) {
             //exclude non-image items in immersion mode
             if (Setting.ImmersionMode && objInfo.SourcePaths == null) {
-                Helpers.UpdateSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
+                UpdateSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
                 if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0)
                     return;
             }
             ObjectList.Add(objInfo);
-
-            //throttle the load
-            while (true) {
-                var sleep = 50 * (App.MaxLoadThreads - App.LoadThrottle.CurrentCount) + 10;
-                if (objInfo.Flags == FileFlags.Directory ||
-                    objInfo.Flags == FileFlags.Archive ||
-                    (objInfo.Flags == FileFlags.Image && !ThumbExistInDB(objInfo.VirtualPath, (SizeInt)Setting.ThumbnailSize))) {
-                    //Console.WriteLine(objInfo.Flags + ": " + sleep);
-                    Thread.Sleep(sleep);
-                }
-
-                if (App.LoadThrottle.CurrentCount > 0) break;
-            }
         }
 
         private void clearObjectList() {
+            //save scrollbar position
+            Dispatcher.Invoke(() => scrollPosition(virWrapPanel.ScrollOwner.VerticalOffset));
+            //try to free resources
             foreach (var objInfo in ObjectList) {
-                objInfo.SourcePaths = null;
                 objInfo.ImageSource = null;
             }
             ObjectList.Clear();
             Dispatcher.Invoke(() => virWrapPanel.ScrollOwner.ScrollToTop());
+        }
+
+        /// <summary>
+        /// Save the current or set the last scroll position.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private void scrollPosition(double? value = null) {
+            var path = CurrentPath;
+            if (string.IsNullOrEmpty(path)) return;
+
+            if (value.HasValue)//save
+                scrollPositions[path] = value.Value;
+            else if (scrollPositions.ContainsKey(path))//set
+                virWrapPanel.ScrollOwner.ScrollToVerticalOffset(scrollPositions[path]);
         }
 
         #endregion
@@ -219,9 +224,8 @@ namespace ZipImageViewer
                     tknSrc_LoadThumb?.Cancel();
                     Monitor.Enter(lock_LoadThumb);
                     tknSrc_LoadThumb = new CancellationTokenSource();
-                    CurrentPath = objInfo.FileSystemPath;
                     clearObjectList();
-
+                    CurrentPath = objInfo.FileSystemPath;
                     foreach (var childInfo in new DirectoryInfo(objInfo.FileSystemPath).EnumerateFileSystemInfos()) {
                         if (tknSrc_LoadThumb?.IsCancellationRequested == true) return;
 
@@ -230,6 +234,7 @@ namespace ZipImageViewer
                             FileName = childInfo.Name,
                         });
                     }
+                    Dispatcher.Invoke(() => scrollPosition());
                 }
                 finally {
                     tknSrc_LoadThumb = null;
@@ -255,15 +260,15 @@ namespace ZipImageViewer
                         tknSrc_LoadThumb?.Cancel();
                         Monitor.Enter(lock_LoadThumb);
                         tknSrc_LoadThumb = new CancellationTokenSource();
-                        CurrentPath = objInfo.FileSystemPath;
                         clearObjectList();
-
+                        CurrentPath = objInfo.FileSystemPath;
                         LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                             Flags = objInfo.Flags,
                             LoadImage = true,
                             DecodeSize = (SizeInt)Setting.ThumbnailSize,
                             CldInfoCallback = Callback_AddToImageList,
                         }, tknSrc_LoadThumb);
+                        Dispatcher.Invoke(() => scrollPosition());
                     }
                     finally {
                         tknSrc_LoadThumb = null;
@@ -281,213 +286,6 @@ namespace ZipImageViewer
                         else viewWin.ObjectInfo = oi;
                     }),
                 });
-            }
-        }
-
-        /// <summary>
-        /// Load image based on the type of file and try passwords when possible.
-        /// <para>
-        /// If filePath points to an archive, ObjectInfo.Flags in ObjInfoCallback will contain FileFlag.Error when extraction fails.
-        /// ObjectInfo.SourcePaths in ObjInfoCallback contains the file list inside archive.
-        /// ObjectInfo in CldInfoCallback contains information for files inside archive.
-        /// </para>
-        /// Should be called from a background thread.
-        /// Callback can be used to manipulate the loaded images. For e.g. display it in the ViewWindow, or add to ObjectList as thumbnails.
-        /// Callback is called for each image loaded.
-        /// Use Dispatcher if callback needs to access the UI thread.
-        /// <param name="flags">Only checks for Image and Archive.</param>
-        /// </summary>
-        internal static void LoadFile(LoadOptions options, CancellationTokenSource tknSrc = null)
-        {
-            if (tknSrc?.IsCancellationRequested == true) return;
-
-            //objInfo to be returned
-            var objInfo = new ObjectInfo(options.FilePath, options.Flags) {
-                FileName = Path.GetFileName(options.FilePath)
-            };
-
-            //when file is an image
-            if (options.Flags.HasFlag(FileFlags.Image) && !options.Flags.HasFlag(FileFlags.Archive)) {
-                objInfo.SourcePaths = new[] { options.FilePath };
-                if (options.LoadImage)
-                    objInfo.ImageSource = Helpers.GetImageSource(options.FilePath, options.DecodeSize);
-            }
-            //when file is an archive
-            else if (options.Flags.HasFlag(FileFlags.Archive)) {
-                //some files may get loaded from cache therefore unaware of whether password is correct
-                //the HashSet records processed files through retries
-                var done = new HashSet<string>();
-                for (int caseIdx = 0; caseIdx < 4; caseIdx++) {
-                    if (tknSrc?.IsCancellationRequested == true) break;
-
-                    var success = false;
-                    switch (caseIdx) {
-                        //first check if there is a match in saved passwords
-                        case 0 when Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow row:
-                            options.Password = (string)row[nameof(Column.Password)];
-                            success = ExtractZip(options, objInfo, done, tknSrc);
-                            break;
-                        //then try no password
-                        case 1:
-                            options.Password = null;
-                            success = ExtractZip(options, objInfo, done, tknSrc);
-                            break;
-                        //then try all saved passwords with no filename
-                        case 2:
-                            foreach (var fp in Setting.FallbackPasswords) {
-                                options.Password = fp;
-                                success = ExtractZip(options, objInfo, done, tknSrc);
-                                if (success) break;
-                            }
-                            break;
-                        case 3:
-                            //if all fails, prompt for password then extract with it
-                            if (options.LoadImage &&
-                                (options.FileNames == null || options.DecodeSize == default)) {
-                                //ask for password when opening explicitly the archive or opening viewer for images inside archive
-                                while (!success) {
-                                    string pwd = null;
-                                    bool isFb = true;
-                                    Application.Current.Dispatcher.Invoke(() => {
-                                        var win = new InputWindow();
-                                        if (win.ShowDialog() == true) {
-                                            pwd = win.TB_Password.Text;
-                                            isFb = win.CB_Fallback.IsChecked == true;
-                                        }
-                                        win.Close();
-                                    });
-
-                                    if (!string.IsNullOrEmpty(pwd)) {
-                                        options.Password = pwd;
-                                        success = ExtractZip(options, objInfo, done, tknSrc);
-                                        if (success) {
-                                            //make sure the password is saved when task is cancelled
-                                            Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), pwd);
-                                            if (isFb) {
-                                                Setting.FallbackPasswords[pwd] = new Observable<string>(pwd);
-                                            }
-                                            break;
-                                        }
-                                    }
-                                    else break;
-                                }
-                            }
-                            if (!success) {
-                                objInfo.Flags |= FileFlags.Error;
-                                objInfo.Comments = $"Extraction failed. Bad password or not supported image formats.";
-                            }
-                            break;
-                    }
-                    
-                    if (success) break;
-                }
-            }
-
-            if (tknSrc?.IsCancellationRequested == true) return;
-            options.ObjInfoCallback?.Invoke(objInfo);
-        }
-
-
-        //private static bool ExtractZip(LoadOptions options, ObjectInfo objInfo, CancellationTokenSource tknSrc = null)
-        //{
-        //    if (tknSrc?.IsCancellationRequested == true) return false;
-        //    using (var fs = new FileStream(options.FilePath, FileMode.Open, FileAccess.Read)) {
-        //        return ExtractZip(fs, options, objInfo, tknSrc);
-        //    }
-        //}
-
-        /// <summary>
-        /// Returns true or false based on whether extraction succeeds.
-        /// </summary>
-        private static bool ExtractZip(LoadOptions options, ObjectInfo objInfo, HashSet<string> done, CancellationTokenSource tknSrc = null)
-        {
-            var success = false;
-            if (tknSrc?.IsCancellationRequested == true) return success;
-            SevenZipExtractor ext = null;
-            try
-            {
-                ext = options.Password?.Length > 0 ? new SevenZipExtractor(options.FilePath, options.Password) :
-                                                     new SevenZipExtractor(options.FilePath);
-                var isThumb = options.DecodeSize.Width + options.DecodeSize.Height > 0;
-                bool fromDisk = false;
-
-                //get files in archive to extract
-                string[] toDo;
-                if (options.FileNames?.Length > 0)
-                    toDo = options.FileNames;
-                else
-                    toDo = ext.ArchiveFileData
-                        .Where(d => !d.IsDirectory && Helpers.GetPathType(d.FileName) == FileFlags.Image)
-                        .Select(d => d.FileName).ToArray();
-
-                foreach (var fileName in toDo) {
-                    if (tknSrc?.IsCancellationRequested == true) break;
-
-                    //skip if already done
-                    if (done.Contains(fileName)) continue;
-
-                    ImageSource source = null;
-                    if (options.LoadImage) {
-                        var thumbPathInDb = Path.Combine(options.FilePath, fileName);
-                        if (isThumb) {
-                            //try load from cache
-                            source = SQLiteHelper.GetFromThumbDB(thumbPathInDb, options.DecodeSize);
-                        }
-                        if (source == null) {
-#if DEBUG
-                            Console.WriteLine("Extracting " + fileName);
-#endif
-                            fromDisk = true;
-                            //load from disk
-                            using (var ms = new MemoryStream()) {
-                                ext.ExtractFile(fileName, ms);
-                                success = true; //if the task is cancelled, success info is still returned correctly.
-                                source = Helpers.GetImageSource(ms, options.DecodeSize);
-                            }
-                            if (isThumb && source != null) SQLiteHelper.AddToThumbDB(source, thumbPathInDb, options.DecodeSize);
-                        }
-                    }
-
-                    if (options.CldInfoCallback != null) {
-                        var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive) {
-                            FileName = fileName,
-                            SourcePaths = new[] { fileName },
-                            ImageSource = source,
-                        };
-                        options.CldInfoCallback.Invoke(cldInfo);
-                    }
-                    
-                    done.Add(fileName);
-                }
-
-                //update objInfo
-                objInfo.SourcePaths = toDo;
-
-                //save password for the future
-                if (fromDisk && options.Password?.Length > 0) {
-                    Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), options.Password);
-                }
-
-                return true; //it is considered successful if the code reaches here
-            }
-            catch (Exception ex)
-            {
-                if (ex is ExtractionFailedException ||
-                    ex is SevenZipArchiveException ||
-                    ex is NotSupportedException) return false;
-                
-                if (ext != null) {
-                    ext.Dispose();
-                    ext = null;
-                }
-                throw;
-            }
-            finally
-            {
-                if (ext != null) {
-                    ext.Dispose();
-                    ext = null;
-                }
             }
         }
 

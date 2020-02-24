@@ -23,11 +23,6 @@ namespace ZipImageViewer
             InitializeComponent();
         }
 
-        private void ObjectInfo_PropertyChanged(object sender, PropertyChangedEventArgs e) {
-            var oi = (ObjectInfo)sender;
-            //handle menu enable / disable here
-        }
-
         private ObjectInfo objectInfo;
         public ObjectInfo ObjectInfo {
             get => objectInfo;

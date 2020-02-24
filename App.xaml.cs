@@ -44,9 +44,6 @@ namespace ZipImageViewer
 
         public static Setting Setting { get; } = new Setting();
 
-        public static readonly int MaxLoadThreads = Environment.ProcessorCount;
-        public static System.Threading.SemaphoreSlim LoadThrottle = new System.Threading.SemaphoreSlim(MaxLoadThreads);
-
         public static ContextMenuWindow ContextMenuWin;
 
         private void App_Startup(object sender, StartupEventArgs e) {
@@ -84,10 +81,7 @@ namespace ZipImageViewer
                 Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
 
                 //show mainwindow
-                new MainWindow() {
-                    Width = Setting.LastWindowSize.Width,
-                    Height = Setting.LastWindowSize.Height,
-                }.Show();
+                new MainWindow().Show();
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Application Start Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -105,10 +99,10 @@ namespace ZipImageViewer
         }
 
         private void App_Exit(object sender, ExitEventArgs e) {
-            while (LoadThrottle.CurrentCount < MaxLoadThreads) {
+            while (LoadHelper.LoadThrottle.CurrentCount < LoadHelper.MaxLoadThreads) {
                 System.Threading.Thread.Sleep(100);
             }
-            LoadThrottle.Dispose();
+            LoadHelper.LoadThrottle.Dispose();
 
             Setting.SaveConfigToFile();
 

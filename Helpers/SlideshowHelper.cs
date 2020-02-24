@@ -21,7 +21,7 @@ namespace ZipImageViewer
             public event PropertyChangedEventHandler PropertyChanged;
 
 
-            private SlideTransition transition;
+            private SlideTransition transition = SlideTransition.KenBurns;
             public SlideTransition Transition {
                 get => transition;
                 set {
@@ -31,7 +31,7 @@ namespace ZipImageViewer
                 }
             }
 
-            private TimeSpan imageDuration;
+            private TimeSpan imageDuration = new TimeSpan(0, 0, 7);
             public TimeSpan ImageDuration {
                 get => imageDuration;
                 set {
@@ -48,7 +48,7 @@ namespace ZipImageViewer
                 }
             }
 
-            private TimeSpan fadeInDuration;
+            private TimeSpan fadeInDuration = new TimeSpan(0, 0, 2);
             /// <summary>
             /// When setting this property, if total fade time + 1 (seconds) is less than ImageDuration, ImageDuration will be extended.
             /// </summary>
@@ -70,7 +70,7 @@ namespace ZipImageViewer
                 }
             }
 
-            private TimeSpan fadeOutDuration;
+            private TimeSpan fadeOutDuration = new TimeSpan(0, 0, 2);
             /// <summary>
             /// When setting this property, if total fade time + 1 (seconds) is less than ImageDuration, ImageDuration will be extended.
             /// </summary>
@@ -122,6 +122,16 @@ namespace ZipImageViewer
                 }
             }
 
+            private bool yPanUpOnly = true;
+            public bool YPanUpOnly {
+                get => yPanUpOnly;
+                set {
+                    if (yPanUpOnly == value) return;
+                    yPanUpOnly = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(YPanUpOnly)));
+                }
+            }
+
             private bool blur = false;
             public bool Blur {
                 get => blur;
@@ -147,7 +157,7 @@ namespace ZipImageViewer
             /// </summary>
             internal bool lastBool1;
 
-
+            public SlideAnimConfig() { }
 
             public SlideAnimConfig(SlideTransition transition = SlideTransition.KenBurns, double imgDur = 7d, double fadeInDur = 2d, double fadeOutDur = 2d) {
                 Transition = transition;
@@ -166,6 +176,7 @@ namespace ZipImageViewer
                 fadeOutDuration = config.fadeOutDuration;
                 xPanDistanceR = config.xPanDistanceR;
                 yPanDistanceR = config.yPanDistanceR;
+                yPanUpOnly = config.yPanUpOnly;
                 blur = config.blur;
                 resolutionScale = config.resolutionScale;
             }
@@ -237,10 +248,10 @@ namespace ZipImageViewer
                 tgtImg.Height = frameSize.Height;
                 tgtImg.Width = tgtImg.Height * rImage;
                 transEdge = TranslateTransform.XProperty;
-                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0d, 0.5d) : new Point(1d, 0.5d);
-
                 delta = tgtImg.Width - frameSize.Width;
                 startPoint = delta * cfg.XPanDistanceR;
+                
+                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0d, 0.5d) : new Point(1d, 0.5d);
                 animPan = panLeftTop ?
                     new DoubleAnimation(startPoint - delta, zoomIn ? -delta - tgtImg.Width * 0.2d : -delta, imageDur) :
                     new DoubleAnimation(-startPoint, zoomIn ? tgtImg.Width * 0.2d : 0d, imageDur);
@@ -250,10 +261,13 @@ namespace ZipImageViewer
                 tgtImg.Width = frameSize.Width;
                 tgtImg.Height = tgtImg.Width / rImage;
                 transEdge = TranslateTransform.YProperty;
-                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0.5d, 0d) : new Point(0.5d, 1d);
-
                 delta = tgtImg.Height - frameSize.Height;
                 startPoint = delta * cfg.YPanDistanceR;
+
+                if (cfg.YPanUpOnly && tgtImg.Height > frameSize.Height * cfg.YPanDistanceR)
+                    panLeftTop = false; //only move down for pics with height larger than YPanDistanceR * screen height after converted to same width as screen
+                
+                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0.5d, 0d) : new Point(0.5d, 1d);
                 animPan = panLeftTop ?
                     new DoubleAnimation(startPoint - delta, zoomIn ? -delta - tgtImg.Height * 0.2d : -delta, imageDur) :
                     new DoubleAnimation(-startPoint, zoomIn ? tgtImg.Height * 0.2d : 0d, imageDur);
@@ -291,10 +305,10 @@ namespace ZipImageViewer
                 tgtImg.Height = frameSize.Height;
                 tgtImg.Width = tgtImg.Height * rImage;
                 transEdge = TranslateTransform.XProperty;
-                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0d, 0.5d) : new Point(1d, 0.5d);
-
                 delta = tgtImg.Width - frameSize.Width;
                 startPoint = delta * cfg.XPanDistanceR;
+                
+                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0d, 0.5d) : new Point(1d, 0.5d);
                 animPan = panLeftTop ?
                     new DoubleAnimation(startPoint - delta, !cfg.lastBool1 ? -delta - tgtImg.Width * 0.1d : -delta, new Duration(cfg.ImageDuration)) :
                     new DoubleAnimation(-startPoint,        !cfg.lastBool1 ? tgtImg.Width * 0.1d          : 0d,     new Duration(cfg.ImageDuration));
@@ -305,10 +319,11 @@ namespace ZipImageViewer
                 tgtImg.Width = frameSize.Width;
                 tgtImg.Height = tgtImg.Width / rImage;
                 transEdge = TranslateTransform.YProperty;
-                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0.5d, 0d) : new Point(0.5d, 1d);
-
                 delta = tgtImg.Height - frameSize.Height;
                 startPoint = delta * cfg.YPanDistanceR;
+
+                if (cfg.YPanUpOnly) panLeftTop = false;
+                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0.5d, 0d) : new Point(0.5d, 1d);
                 animPan = panLeftTop ?
                     new DoubleAnimation(startPoint - delta, !cfg.lastBool1 ? -delta - tgtImg.Height * 0.1d : -delta, new Duration(cfg.ImageDuration)) :
                     new DoubleAnimation(-startPoint,        !cfg.lastBool1 ? tgtImg.Height * 0.1d          : 0d,     new Duration(cfg.ImageDuration));

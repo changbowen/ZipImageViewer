@@ -20,13 +20,12 @@ namespace ZipImageViewer
             set {
                 if (fileName == value) return;
                 fileName = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(FileName)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FileName)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
                 if (Flags.HasFlag(FileFlags.Archive))
-                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
                 if (Flags.HasFlag(FileFlags.Image) && Flags.HasFlag(FileFlags.Archive))
-                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
             }
         }
 
@@ -46,12 +45,11 @@ namespace ZipImageViewer
             set {
                 if (flags == value) return;
                 flags = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Flags)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ContainerPath)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Flags)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ContainerPath)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
             }
         }
 
@@ -102,9 +100,8 @@ namespace ZipImageViewer
             set {
                 if (sourcePaths == value) return;
                 sourcePaths = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(SourcePaths)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SourcePaths)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
             }
         }
 
@@ -118,8 +115,7 @@ namespace ZipImageViewer
             set {
                 if (imageSource == value) return;
                 imageSource = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ImageSource)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImageSource)));
             }
         }
 
@@ -141,9 +137,8 @@ namespace ZipImageViewer
             set {
                 if (comments == value) return;
                 comments = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Comments)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Comments)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
             }
         }
 

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
@@ -158,25 +160,36 @@ namespace ZipImageViewer
 
         private void Owner_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
             if (e.ChangedButton == MouseButton.Left) {
-                Owner.PreviewMouseDown -= Owner_PreviewMouseDown;
-                subscribedOwnerMouseDown = false;
+                unsubOwnerMouseDown();
                 Close();
             }//right click moves the window
         }
 
-        private bool subscribedOwnerMouseDown = false;
+        private HashSet<IntPtr> subscribedOwners = new HashSet<IntPtr>();
         private void subscribeOwnerMouseDown() {
-            if (subscribedOwnerMouseDown) return;
-            if (Owner != null) Owner.PreviewMouseDown += Owner_PreviewMouseDown;
-            subscribedOwnerMouseDown = true;
+            if (Owner == null) return;
+            var hwnd = new WindowInteropHelper(this).Owner;
+            if (hwnd == null || hwnd == IntPtr.Zero) return;
+            if (subscribedOwners.Contains(hwnd)) return;
+            Owner.PreviewMouseDown += Owner_PreviewMouseDown;
+            subscribedOwners.Add(hwnd);
+        }
+        private void unsubOwnerMouseDown() {
+            if (Owner == null) return;
+            var hwnd = new WindowInteropHelper(this).Owner;
+            if (hwnd == null || hwnd == IntPtr.Zero) return;
+            Owner.PreviewMouseDown -= Owner_PreviewMouseDown;
+            subscribedOwners.Remove(hwnd);
         }
 
         public new void Show() {
             subscribeOwnerMouseDown();
             base.Show();
         }
-
+        
         protected override void OnClosing(CancelEventArgs e) {
+            unsubOwnerMouseDown();
+
             base.OnClosing(e);
             switch (CloseBehavior) {
                 case CloseBehaviors.Close:

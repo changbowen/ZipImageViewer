@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using SizeInt = System.Drawing.Size;
 using static ZipImageViewer.SlideshowHelper;
+using static ZipImageViewer.LoadHelper;
 
 namespace ZipImageViewer
 {
@@ -71,7 +72,7 @@ namespace ZipImageViewer
 
             //get list of images to use
             ObjectInfo.Flags = Helpers.GetPathType(new DirectoryInfo(ObjectInfo.FileSystemPath));
-            Helpers.UpdateSourcePaths(ObjectInfo);
+            UpdateSourcePaths(ObjectInfo);
 
             //fullscreen
             Helpers.SwitchFullScreen(this, ref lastRect, true);
@@ -90,6 +91,10 @@ namespace ZipImageViewer
                 case SlideTransition.KenBurns:
                     AnimConfig.FadeInDuration = new TimeSpan(0, 0, 2);
                     AnimConfig.FadeOutDuration = new TimeSpan(0, 0, 2);
+                    AnimConfig.ImageDuration = new TimeSpan(0, 0, 7);
+                    AnimConfig.XPanDistanceR = 0.5;
+                    AnimConfig.YPanDistanceR = 0.5;
+                    AnimConfig.YPanUpOnly = true;
                     break;
                 case SlideTransition.Breath:
                     AnimConfig.FadeInDuration = TimeSpan.FromMilliseconds(1500);
@@ -123,7 +128,7 @@ namespace ZipImageViewer
             
             //convert screen size to physical size
             var dpi = VisualTreeHelper.GetDpi(this);
-            var nextSrc = await Helpers.GetImageSourceAsync(ObjectInfo, index,
+            var nextSrc = await GetImageSourceAsync(ObjectInfo, index,
                 decodeSize: new SizeInt(Convert.ToInt32(canvas.ActualWidth * dpi.DpiScaleX * AnimConfig.ResolutionScale),
                                         Convert.ToInt32(canvas.ActualHeight * dpi.DpiScaleY * AnimConfig.ResolutionScale)));
 

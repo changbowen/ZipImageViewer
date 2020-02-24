@@ -44,6 +44,11 @@
                     <Style TargetType="StackPanel">
                         <Setter Property="Orientation" Value="Horizontal" />
                     </Style>
+                    <Style TargetType="CheckBox">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="HorizontalAlignment" Value="Right" />
+                        <Setter Property="Foreground" Value="{Binding Foreground, ElementName=SlideWin, Mode=OneTime}" />
+                    </Style>
                 </StackPanel.Resources>
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
@@ -98,9 +103,7 @@
                 <Border>
                     <DockPanel>
                         <TextBlock Text="Blur" Style="{StaticResource HeaderStyle}"/>
-                        <CheckBox IsChecked="{Binding AnimConfig.Blur, ElementName=SlideWin}" Content="Enabled"
-                                  VerticalAlignment="Center" HorizontalAlignment="Right"
-                                  Foreground="{Binding Foreground, ElementName=SlideWin, Mode=OneTime}"/>
+                        <CheckBox IsChecked="{Binding AnimConfig.Blur, ElementName=SlideWin}" Content="Enabled"/>
                     </DockPanel>
                 </Border>
                 <Border>
@@ -119,7 +122,13 @@
                         </ContentControl>
                     </DockPanel>
                 </Border>
-                
+                <Border>
+                    <DockPanel>
+                        <TextBlock Text="Y Axis Pan Up Only" Style="{StaticResource HeaderStyle}"/>
+                        <CheckBox IsChecked="{Binding AnimConfig.YPanUpOnly, ElementName=SlideWin}" Content="Enabled"/>
+                    </DockPanel>
+                </Border>
+
                 <Button Style="{StaticResource ButtonStyle}" Margin="10 8" Content="Reset Transition Default"
                         Click="Btn_Preset_Click"/>
             </StackPanel>

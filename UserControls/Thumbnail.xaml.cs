@@ -11,6 +11,7 @@ using SizeInt = System.Drawing.Size;
 using System.Windows.Threading;
 using System.Threading;
 using System.Windows.Media.Imaging;
+using static ZipImageViewer.LoadHelper;
 
 namespace ZipImageViewer
 {
@@ -129,14 +130,18 @@ namespace ZipImageViewer
             cycleTimer.Tick += cycleImageSource;
 
             mainWin = (MainWindow)Window.GetWindow(this);
-            
-            var objInfo = ObjectInfo;
-            Task.Run(() => {
-                if (objInfo.SourcePaths == null) {//non-null indicate SourcePaths has already been updated
-                    Helpers.UpdateSourcePaths(objInfo);
-                }
-                Dispatcher.Invoke(() => cycleImageSource(null, null));
-            });
+
+            cycleImageSource(null, null);
+            //var objInfo = ObjectInfo;
+            //Task.Run(() => {
+            //    if (objInfo.SourcePaths == null) {//non-null indicate SourcePaths has already been updated
+            //        var now = System.Diagnostics.Stopwatch.StartNew();
+            //        UpdateSourcePaths(objInfo);
+            //        now.Stop();
+            //        Console.WriteLine(now.ElapsedMilliseconds);
+            //    }
+            //    //Dispatcher.Invoke(() => cycleImageSource(null, null));
+            //});
         }
 
         private void TN_Unloaded(object sender, RoutedEventArgs e) {
@@ -156,13 +161,23 @@ namespace ZipImageViewer
             cycleTimer.Tick -= cycleImageSource;
         }
 
+        private static int workingThreads = 0;
+
         private async void cycleImageSource(object sender, EventArgs e) {
             var tn = this;
             tn.cycleTimer.Stop();
 
-            if (!tn.IsLoaded) return; //dont do anything before or after the lifecycle
+            //dont do anything before or after the lifecycle, or if not loaded in virtualizing panel
+            if (!tn.IsLoaded) return;
             if (tn.ObjectInfo == null) return;
 
+            //update source paths if needed
+            if (tn.ObjectInfo.SourcePaths == null) {
+                var objInfo = tn.ObjectInfo;
+                await Task.Run(() => UpdateSourcePaths(objInfo));
+            }
+
+            //get the next path index to use
             var cycle = false;
             if (tn.ObjectInfo.SourcePaths?.Length > 1) {
                 tn.thumbIndex = tn.thumbIndex == tn.ObjectInfo.SourcePaths.Length - 1 ? 0 : tn.thumbIndex + 1;
@@ -171,30 +186,21 @@ namespace ZipImageViewer
             else
                 tn.thumbIndex = 0;
 
+            //wait to get image
+            if (Interlocked.CompareExchange(ref workingThreads, 0, 0) >= MaxLoadThreads) {
+                tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(200);
+                tn.cycleTimer.Start();
+                return;
+            }
+            Interlocked.Increment(ref workingThreads);
+            tn.ThumbImageSource = await GetImageSourceAsync(tn.ObjectInfo, tn.thumbIndex, decodeSize: (SizeInt)Setting.ThumbnailSize);
+            Interlocked.Decrement(ref workingThreads);
 
-//#if DEBUG
-//            Console.WriteLine($"Cycling {tn.ObjectInfo.VirtualPath}... Delay {delay} ms.");
-//#endif
+            //dont do anything before or after the lifecycle
+            if (!tn.IsLoaded || !mainWin.IsLoaded || !cycle) return;
 
-            //var objInfo = ObjectInfo;
-            //ThreadPool.QueueUserWorkItem(s => {
-            //    tn.ThumbImageSource = Helpers.GetImageSource(objInfo, tn.thumbIndex, (SizeInt)Setting.ThumbnailSize);
-
-            //    Dispatcher.Invoke(() => {
-            //        if (!tn.IsLoaded || !cycle) return;
-            //        var delay = mainWin.ThumbChangeDelay;
-            //        tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(delay);
-            //        tn.cycleTimer.Start();
-            //    });
-
-            //});
-
-            tn.ThumbImageSource = await Helpers.GetImageSourceAsync(tn.ObjectInfo, tn.thumbIndex, decodeSize: (SizeInt)Setting.ThumbnailSize);
-
-            if (!tn.IsLoaded || !mainWin.IsLoaded || !cycle) return; //dont do anything before or after the lifecycle
-
+            //plan for the next run
             var delay = mainWin.ThumbChangeDelay;
-
             tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(delay);
             tn.cycleTimer.Start();
         }
