@@ -1,5 +1,5 @@
 # ZipImageViewer
-Minimalistic image viewer that introduce no "DPI blurriness" and views contents of password-protected archives on the fly.
+Minimalistic image viewer that introduces no "DPI blurriness", browses password-protected archives on the fly and has a slideshow feature much like [Ken-Burns-Slideshow](https://github.com/changbowen/Ken-Burns-Slideshow).
 
 Need 64bit Windows and .Net Framework 4.7.2 (included in Windows 10 April 2018 Update)
 
