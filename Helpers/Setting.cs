@@ -194,8 +194,7 @@ namespace ZipImageViewer
             LastWindowSize =           ParseConfig(iniData, nameof(LastWindowSize),        LastWindowSize);
             LastPath =                 ParseConfig(iniData, nameof(LastPath),              LastPath);
             LiteMode =                 ParseConfig(iniData, nameof(LiteMode),              LiteMode);
-
-            SlideAnimConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<SlideAnimConfig>(iniData["App Config"][nameof(SlideAnimConfig)]);
+            SlideAnimConfig =          ParseConfig(iniData, nameof(SlideAnimConfig),       SlideAnimConfig);
 
             //parse custom commands
             CustomCommands = new ObservableCollection<ObservableObj>();
@@ -281,6 +280,9 @@ namespace ZipImageViewer
                 case TransitionSpeed _:
                     TransitionSpeed ts;
                     if (Enum.TryParse(value, out ts)) result = ts;
+                    break;
+                case SlideAnimConfig _:
+                    result = Newtonsoft.Json.JsonConvert.DeserializeObject<SlideAnimConfig>(iniData["App Config"][nameof(SlideAnimConfig)]);
                     break;
             }
             return (T)result;

@@ -177,6 +177,13 @@ namespace ZipImageViewer
                 await Task.Run(() => UpdateSourcePaths(objInfo));
             }
 
+            //wait to get image
+            if (Interlocked.CompareExchange(ref workingThreads, 0, 0) >= MaxLoadThreads) {
+                tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(200);
+                tn.cycleTimer.Start();
+                return;
+            }
+            Interlocked.Increment(ref workingThreads);
             //get the next path index to use
             var cycle = false;
             if (tn.ObjectInfo.SourcePaths?.Length > 1) {
@@ -185,14 +192,6 @@ namespace ZipImageViewer
             }
             else
                 tn.thumbIndex = 0;
-
-            //wait to get image
-            if (Interlocked.CompareExchange(ref workingThreads, 0, 0) >= MaxLoadThreads) {
-                tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(200);
-                tn.cycleTimer.Start();
-                return;
-            }
-            Interlocked.Increment(ref workingThreads);
             tn.ThumbImageSource = await GetImageSourceAsync(tn.ObjectInfo, tn.thumbIndex, decodeSize: (SizeInt)Setting.ThumbnailSize);
             Interlocked.Decrement(ref workingThreads);
 

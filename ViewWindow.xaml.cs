@@ -97,6 +97,9 @@ namespace ZipImageViewer
                         Width = mainWin.lastViewWindowRect.Width;
                         Height = mainWin.lastViewWindowRect.Height;
                     }
+                    else {
+                        WindowState = WindowState.Maximized;
+                    }
                 }
                 if (Setting.ImmersionMode)
                     Helpers.SwitchFullScreen(this, ref mainWin.lastViewWindowRect, true);
