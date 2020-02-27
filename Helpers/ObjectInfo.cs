@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Media;
+using SizeInt = System.Drawing.Size;
 
 namespace ZipImageViewer
 {
@@ -20,13 +21,12 @@ namespace ZipImageViewer
             set {
                 if (fileName == value) return;
                 fileName = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(FileName)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FileName)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
                 if (Flags.HasFlag(FileFlags.Archive))
-                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
                 if (Flags.HasFlag(FileFlags.Image) && Flags.HasFlag(FileFlags.Archive))
-                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
             }
         }
 
@@ -46,12 +46,11 @@ namespace ZipImageViewer
             set {
                 if (flags == value) return;
                 flags = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Flags)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Parent)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Flags)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ContainerPath)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
             }
         }
 
@@ -80,12 +79,16 @@ namespace ZipImageViewer
             }
         }
 
-        public string Parent {
+        /// <summary>
+        /// Return the immediate container path. If self is a container, same as FileSystemPath.
+        /// </summary>
+        public string ContainerPath {
             get {
-                if (Flags.HasFlag(FileFlags.Directory) || Flags.HasFlag(FileFlags.Archive))
-                    return Path.GetDirectoryName(FileSystemPath);
+                if (Flags.HasFlag(FileFlags.Directory) ||
+                    Flags.HasFlag(FileFlags.Archive))
+                    return FileSystemPath;
                 else
-                    return Path.GetDirectoryName(Path.GetDirectoryName(FileSystemPath));
+                    return Path.GetDirectoryName(FileSystemPath);
             }
         }
 
@@ -98,9 +101,8 @@ namespace ZipImageViewer
             set {
                 if (sourcePaths == value) return;
                 sourcePaths = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(SourcePaths)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SourcePaths)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
             }
         }
 
@@ -114,8 +116,7 @@ namespace ZipImageViewer
             set {
                 if (imageSource == value) return;
                 imageSource = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(ImageSource)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImageSource)));
             }
         }
 
@@ -137,29 +138,10 @@ namespace ZipImageViewer
             set {
                 if (comments == value) return;
                 comments = value;
-                if (PropertyChanged == null) return;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Comments)));
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Comments)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
             }
         }
-
-        //public bool? HasImage {
-        //    get {
-        //        if (Flags == FileFlags.Unknown || Flags.HasFlag(FileFlags.Error)) return false;
-        //        if (SourcePaths != null) {
-        //            if (SourcePaths.Length == 0) return false;
-        //            else return true;
-        //        }
-        //        if (ImageSource != null) return true;
-        //        return null;
-        //    }
-        //    //set {
-        //    //    if (notAnImage == value) return;
-        //    //    notAnImage = value;
-        //    //    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NotAnImage)));
-        //    //}
-        //}
-
 
         public ObjectInfo(string fsPath, FileFlags flag = FileFlags.Unknown) {
             FileSystemPath = fsPath;
@@ -167,5 +149,82 @@ namespace ZipImageViewer
         }
     }
 
+    public class ImageInfo : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
 
+        private long fileSize;
+        public long FileSize {
+            get => fileSize;
+            set {
+                if (fileSize == value) return;
+                fileSize = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FileSize)));
+            }
+        }
+
+        private SizeInt dimensions;
+        public SizeInt Dimensions {
+            get => dimensions;
+            set {
+                if (dimensions == value) return;
+                dimensions = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Dimensions)));
+            }
+        }
+
+        private DateTime created;
+        public DateTime Created {
+            get => created;
+            set {
+                if (created == value) return;
+                created = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Created)));
+            }
+        }
+
+        private DateTime modified;
+        public DateTime Modified {
+            get => modified;
+            set {
+                if (modified == value) return;
+                modified = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Modified)));
+            }
+        }
+
+        private string meta_DateTaken;
+        public string Meta_DateTaken {
+            get => meta_DateTaken;
+            set {
+                if (meta_DateTaken == value) return;
+                meta_DateTaken = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Meta_DateTaken)));
+            }
+        }
+
+        private string meta_Camera;
+        public string Meta_Camera {
+            get => meta_Camera;
+            set {
+                if (meta_Camera == value) return;
+                meta_Camera = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Meta_Camera)));
+            }
+        }
+
+        private string meta_applicationName;
+        public string Meta_ApplicationName {
+            get => meta_applicationName;
+            set {
+                if (meta_applicationName == value) return;
+                meta_applicationName = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Meta_ApplicationName)));
+            }
+        }
+
+
+        public ImageInfo() { }
+
+    }
 }

@@ -8,10 +8,11 @@
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:vir="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
         Icon="Resources/ZipImageViewer.ico"
-        mc:Ignorable="d" UseLayoutRounding="True" Background="#FF1F1F1F" Foreground="LightGray"
+        mc:Ignorable="d" UseLayoutRounding="True" Background="{StaticResource BackgroundDarkBrush}" Foreground="{StaticResource ForegroundBrush}"
         Title="{Binding ElementName=MainWin, Path=CurrentPath, Mode=OneWay}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
         Loaded="MainWin_Loaded" Unloaded="MainWin_Unloaded" Closing="MainWin_Closing" DpiChanged="MainWin_DpiChanged">
     <Window.Resources>
+        <local:FlagToImageConverter x:Key="FlagToImageConverter"/>
         <CollectionViewSource x:Key="ObjectListViewSource"
                               Source="{Binding ElementName=MainWin, Path=ObjectList, Mode=OneTime}">
         </CollectionViewSource>
@@ -28,24 +29,28 @@
                     </local:Thumbnail.Style>
                 </local:Thumbnail>
 
-                <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10" Foreground="Gray"
-                           MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
-                           HorizontalAlignment="Center" Panel.ZIndex="0" TextWrapping="Wrap">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ImmersionMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Panel.ZIndex="0">
+                    <fa:FontAwesome FontSize="12" Margin="0 0 4 0"
+                                    Icon="{Binding Flags, Converter={StaticResource FlagToImageConverter}, Mode=OneWay}"/>
+                    <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10"
+                               MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ImmersionMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
     <Grid>
-        <Border HorizontalAlignment="Left" VerticalAlignment="Center" Panel.ZIndex="10000" Margin="0 10" Padding="0 20 20 20" Background="Transparent">
+        <Border x:Name="B_SidePanel" HorizontalAlignment="Left" VerticalAlignment="Center"
+                Panel.ZIndex="99" Padding="0 20 20 20" Background="Transparent">
             <Border.Style>
                 <Style TargetType="Border">
                     <Setter Property="RenderTransform">
@@ -76,21 +81,16 @@
                 </Style>
             </Border.Style>
 
-            <Border Background="#FF444444" CornerRadius="10" Width="100">
+            <Border Background="{StaticResource BackgroundLightBrush}" CornerRadius="0 10 10 0" Width="100">
                 <Border.Effect>
                     <DropShadowEffect ShadowDepth="0" BlurRadius="10"/>
                 </Border.Effect>
                 <Border.Resources>
-                    <Style TargetType="fa:ImageAwesome">
+                    <Style TargetType="fa:ImageAwesome" BasedOn="{StaticResource S_DropShadow}">
                         <Setter Property="Width" Value="48"/>
                         <Setter Property="Height" Value="48"/>
-                        <Setter Property="Foreground" Value="#FFAAAAAA"/>
+                        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
                         <Setter Property="Cursor" Value="Hand"/>
-                        <Setter Property="Effect">
-                            <Setter.Value>
-                                <DropShadowEffect Direction="270" ShadowDepth="2" BlurRadius="5" />
-                            </Setter.Value>
-                        </Setter>
                         <Setter Property="RenderTransformOrigin" Value="0.5 0.5"/>
                         <Setter Property="RenderTransform">
                             <Setter.Value>
@@ -108,6 +108,9 @@
                                     <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down_L}"/>
                                 </Trigger.ExitActions>
                             </Trigger>
+                            <DataTrigger Binding="{Binding Opacity, ElementName=B_SidePanel, Mode=OneWay}" Value="0.2">
+                                <Setter Property="Visibility" Value="Hidden" />
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Resources>

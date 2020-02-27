@@ -11,6 +11,7 @@ using SevenZip;
 using SizeInt = System.Drawing.Size;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
+using static ZipImageViewer.SlideshowHelper;
 
 namespace ZipImageViewer
 {
@@ -169,6 +170,10 @@ namespace ZipImageViewer
             }
         }
 
+        //this one is not used for binding
+        public static SlideAnimConfig SlideAnimConfig = new SlideAnimConfig();
+
+
         public static void LoadConfigFromFile(string path = "config.ini") {
             //load config
             if (!File.Exists(path)) {
@@ -189,6 +194,7 @@ namespace ZipImageViewer
             LastWindowSize =           ParseConfig(iniData, nameof(LastWindowSize),        LastWindowSize);
             LastPath =                 ParseConfig(iniData, nameof(LastPath),              LastPath);
             LiteMode =                 ParseConfig(iniData, nameof(LiteMode),              LiteMode);
+            SlideAnimConfig =          ParseConfig(iniData, nameof(SlideAnimConfig),       SlideAnimConfig);
 
             //parse custom commands
             CustomCommands = new ObservableCollection<ObservableObj>();
@@ -275,6 +281,9 @@ namespace ZipImageViewer
                     TransitionSpeed ts;
                     if (Enum.TryParse(value, out ts)) result = ts;
                     break;
+                case SlideAnimConfig _:
+                    result = Newtonsoft.Json.JsonConvert.DeserializeObject<SlideAnimConfig>(iniData["App Config"][nameof(SlideAnimConfig)]);
+                    break;
             }
             return (T)result;
         }
@@ -289,8 +298,7 @@ namespace ZipImageViewer
             }
 
             MappedPasswords?.WriteXml(Tables[Table.MappedPasswords].FullPath, XmlWriteMode.WriteSchema);
-
-
+            
             File.WriteAllText(path, $@"
 [App Config]
 {nameof(SevenZipDllPath)}={SevenZipDllPath}
@@ -303,6 +311,7 @@ namespace ZipImageViewer
 {nameof(LastWindowSize)}={LastWindowSize.Width}x{LastWindowSize.Height}
 {nameof(LastPath)}={LastPath}
 {nameof(LiteMode)}={LiteMode}
+{nameof(SlideAnimConfig)}={Newtonsoft.Json.JsonConvert.SerializeObject(SlideAnimConfig)}
 
 [Custom Commands]
 {(CustomCommands?.Count > 0 ?

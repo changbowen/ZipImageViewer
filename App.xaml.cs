@@ -29,13 +29,13 @@ namespace ZipImageViewer
         //public const int PreviewCount = 4;
         public static Random Random = new Random();
 
-        internal static ImageSource fa_meh;
-        internal static ImageSource fa_spinner;
-        internal static ImageSource fa_exclamation;
-        internal static ImageSource fa_file;
-        internal static ImageSource fa_folder;
-        internal static ImageSource fa_archive;
-        internal static ImageSource fa_image;
+        public static ImageSource fa_meh { get; private set; }
+        public static ImageSource fa_spinner { get; private set; }
+        public static ImageSource fa_exclamation { get; private set; }
+        public static ImageSource fa_file { get; private set; }
+        public static ImageSource fa_folder { get; private set; }
+        public static ImageSource fa_archive { get; private set; }
+        public static ImageSource fa_image { get; private set; }
 
 
         public static CubicEase CE_EaseIn => (CubicEase)Current.FindResource("CE_EaseIn");
@@ -43,9 +43,6 @@ namespace ZipImageViewer
         public static CubicEase CE_EaseInOut => (CubicEase)Current.FindResource("CE_EaseInOut");
 
         public static Setting Setting { get; } = new Setting();
-
-        public static readonly int MaxLoadThreads = Environment.ProcessorCount;
-        public static System.Threading.SemaphoreSlim LoadThrottle = new System.Threading.SemaphoreSlim(MaxLoadThreads);
 
         public static ContextMenuWindow ContextMenuWin;
 
@@ -67,25 +64,24 @@ namespace ZipImageViewer
                 CheckThumbsDB();
 
 #if DEBUG
-                Execute(Table.Thumbs, (table, con) => {
-                    using (var cmd = new SQLiteCommand(con)) {
-                        cmd.CommandText = $@"delete from {table.Name}";
-                        cmd.ExecuteNonQuery();
-                        cmd.CommandText = @"vacuum";
-                        cmd.ExecuteNonQuery();
-                    }
-                    return 0;
-                });
+                if (e.Args?.Length > 0 && e.Args[0] == "-cleandb") {
+                    Execute(Table.Thumbs, (table, con) => {
+                        using (var cmd = new SQLiteCommand(con)) {
+                            cmd.CommandText = $@"delete from {table.Name}";
+                            cmd.ExecuteNonQuery();
+                            cmd.CommandText = @"vacuum";
+                            cmd.ExecuteNonQuery();
+                        }
+                        return 0;
+                    });
+                }
 #endif
 
                 //handle immersion mode change
                 Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
 
                 //show mainwindow
-                new MainWindow() {
-                    Width = Setting.LastWindowSize.Width,
-                    Height = Setting.LastWindowSize.Height,
-                }.Show();
+                new MainWindow().Show();
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Application Start Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -103,10 +99,10 @@ namespace ZipImageViewer
         }
 
         private void App_Exit(object sender, ExitEventArgs e) {
-            while (LoadThrottle.CurrentCount < MaxLoadThreads) {
+            while (LoadHelper.LoadThrottle.CurrentCount < LoadHelper.MaxLoadThreads) {
                 System.Threading.Thread.Sleep(100);
             }
-            LoadThrottle.Dispose();
+            LoadHelper.LoadThrottle.Dispose();
 
             Setting.SaveConfigToFile();
 

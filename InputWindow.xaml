@@ -3,29 +3,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" ResizeMode="NoResize" SizeToContent="Height"
-        xmlns:local="clr-namespace:ZipImageViewer" Background="#CCDDDDDD" Foreground="#FF333333" ShowInTaskbar="False"
-        mc:Ignorable="d" Width="400">
+        xmlns:local="clr-namespace:ZipImageViewer" ShowInTaskbar="False"
+        Background="{StaticResource BackgroundLightBrush}"
+        Foreground="{StaticResource ForegroundBrush}" 
+        mc:Ignorable="d" Width="400" WindowStartupLocation="CenterScreen">
     <StackPanel>
         <StackPanel.Resources>
-            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource ContentControlBaseStyle}">
+            <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
                 <Setter Property="Height" Value="30"/>
                 <Setter Property="Width" Value="60"/>
-                <Style.Triggers>
-                    <Trigger Property="IsPressed" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"/>
-                    </Trigger>
-                </Style.Triggers>
             </Style>
-            <Style TargetType="{x:Type ContentControl}" BasedOn="{StaticResource ContentControlBaseStyle}">
-                <Setter Property="Padding" Value="0"/>
-                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-            </Style>
+            <Style TargetType="ContentControl" BasedOn="{StaticResource RoundContentControlBaseStyle}"/>
         </StackPanel.Resources>
-        <TextBlock Margin="10" FontSize="20"
+        
+        <TextBlock Margin="10" FontSize="16"
                    Text="Password for this archive"/>
         <ContentControl Margin="10 0">
-            <TextBox x:Name="TB_Password" BorderThickness="0" FontSize="24" Padding="10"/>
+            <TextBox x:Name="TB_Password" BorderThickness="0" FontSize="18" Padding="4"/>
         </ContentControl>
         <CheckBox x:Name="CB_Fallback" HorizontalAlignment="Right" Margin="10 5" Foreground="{Binding Foreground, ElementName=InputWin, Mode=OneTime}"
                   Content="Add to fallback password list" IsChecked="True"/>

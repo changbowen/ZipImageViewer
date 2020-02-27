@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
@@ -74,7 +76,7 @@ namespace ZipImageViewer
             set { SetValue(RenderTransformOrigin_BGProperty, value); }
         }
         public static readonly DependencyProperty RenderTransformOrigin_BGProperty =
-            DependencyProperty.Register("RenderTransformOrigin_BG", typeof(Point), typeof(RoundedWindow), new PropertyMetadata(new Point(0d, 0d)));
+            DependencyProperty.Register("RenderTransformOrigin_BG", typeof(Point), typeof(RoundedWindow), new PropertyMetadata(new Point(0.5d, 0.5d)));
 
 
         public double CornerRadius {
@@ -84,27 +86,42 @@ namespace ZipImageViewer
         public static readonly DependencyProperty CornerRadiusProperty =
             DependencyProperty.Register("CornerRadius", typeof(double), typeof(RoundedWindow), new PropertyMetadata(8d));
 
+        public bool MenuMode
+        {
+            get { return (bool)GetValue(MenuModeProperty); }
+            set { SetValue(MenuModeProperty, value); }
+        }
+        public static readonly DependencyProperty MenuModeProperty =
+            DependencyProperty.Register("MenuMode", typeof(bool), typeof(RoundedWindow), new PropertyMetadata(false));
 
         #endregion
 
 
         public static readonly RoutedEvent FadingInEvent = EventManager.RegisterRoutedEvent("FadingIn", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(RoundedWindow));
-        public event RoutedEventHandler FadingIn {
-            add {
-                AddHandler(FadingInEvent, value);
-            }
-            remove {
-                RemoveHandler(FadingInEvent, value);
-            }
+        public event RoutedEventHandler FadingIn
+        {
+            add { AddHandler(FadingInEvent, value); }
+            remove { RemoveHandler(FadingInEvent, value); }
         }
 
+        
         public static readonly RoutedEvent FadingOutEvent = EventManager.RegisterRoutedEvent("FadingOut", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(RoundedWindow));
-        public event RoutedEventHandler FadingOut {
-            add {
-                AddHandler(FadingOutEvent, value);
-            }
-            remove {
-                RemoveHandler(FadingOutEvent, value);
+        public event RoutedEventHandler FadingOut
+        {
+            add { AddHandler(FadingOutEvent, value); }
+            remove { RemoveHandler(FadingOutEvent, value); }
+        }
+
+        public static readonly RoutedEvent FadedOutEvent = EventManager.RegisterRoutedEvent("FadedOut", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(RoundedWindow));
+        public event RoutedEventHandler FadedOut {
+            add { AddHandler(FadedOutEvent, value); }
+            remove { RemoveHandler(FadedOutEvent, value); }
+        }
+
+        public bool? IsModal {
+            get {
+                var result = typeof(Window).GetField("_showingAsDialog", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(this);
+                return (bool?)result;
             }
         }
 
@@ -112,7 +129,7 @@ namespace ZipImageViewer
         /// This is a grid on which the scaling animations are applied.
         /// </summary>
         internal Grid BackgroundGrid { get; set; }
-
+        public Window ParentWindow { get; set; }
         private bool? dialogResult;
 
         public RoundedWindow() {
@@ -156,30 +173,48 @@ namespace ZipImageViewer
         }
         #endregion
 
-        private void Owner_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton == MouseButton.Left) {
-                Owner.PreviewMouseDown -= Owner_PreviewMouseDown;
-                subscribedOwnerMouseDown = false;
+        private void ParentWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton == MouseButton.Left) {//right click moves the window
+                //unsubParentMouseDown();
                 Close();
-            }//right click moves the window
+            }
         }
 
-        private bool subscribedOwnerMouseDown = false;
-        private void subscribeOwnerMouseDown() {
-            if (subscribedOwnerMouseDown) return;
-            if (Owner != null) Owner.PreviewMouseDown += Owner_PreviewMouseDown;
-            subscribedOwnerMouseDown = true;
+        private readonly HashSet<IntPtr> subscribedOwners = new HashSet<IntPtr>();
+        private void subParentMouseDown() {
+            if (ParentWindow == null) return;
+            var hwnd = new WindowInteropHelper(ParentWindow).Handle;
+            if (hwnd == null || hwnd == IntPtr.Zero) return;
+            if (subscribedOwners.Contains(hwnd)) return;
+            ParentWindow.PreviewMouseDown += ParentWindow_PreviewMouseDown;
+            subscribedOwners.Add(hwnd);
+        }
+        private void unsubParentMouseDown() {
+            if (ParentWindow == null) return;
+            var hwnd = new WindowInteropHelper(ParentWindow).Handle;
+            if (hwnd == null || hwnd == IntPtr.Zero) return;
+            ParentWindow.PreviewMouseDown -= ParentWindow_PreviewMouseDown;
+            subscribedOwners.Remove(hwnd);
         }
 
         public new void Show() {
-            subscribeOwnerMouseDown();
+            if (MenuMode) {
+                if (ParentWindow == null)
+                    throw new ArgumentNullException($"{nameof(ParentWindow)} cannot be null when {nameof(MenuMode)} is true.");
+                Topmost = true;
+                subParentMouseDown();
+            }
             base.Show();
         }
 
         protected override void OnClosing(CancelEventArgs e) {
-            base.OnClosing(e);
+            unsubParentMouseDown();
+
             switch (CloseBehavior) {
                 case CloseBehaviors.Close:
+                    //really closing
+                    ParentWindow = null;
+                    base.OnClosing(e);
                     break;
                 case CloseBehaviors.FadeOutAndClose:
                     dialogResult = DialogResult;
@@ -208,47 +243,50 @@ namespace ZipImageViewer
             }
 
             //compute mouse position or set to existing values
-            Point newpos, realpos;
+            Point newpos, realpos = default;
             var mon = NativeHelpers.GetMonitorFromWindow(this);
             double currscrnW = mon.Right;
             double currscrnH = mon.Bottom;
-            if (left.Equals(double.NaN) || top.Equals(double.NaN))//nan==nan returns false.
-            {
-                //get the physical pixel-based position.
-                newpos = PointToScreen(Mouse.GetPosition(this));
-                //convert to the actual position considering the DPI settings etc.
-                realpos = PresentationSource.FromVisual(this).CompositionTarget.TransformFromDevice.Transform(newpos);
+            if (WindowStartupLocation == WindowStartupLocation.Manual) {
+                if (left.Equals(double.NaN) || top.Equals(double.NaN)) {
+                    //get the physical pixel-based position.
+                    newpos = PointToScreen(Mouse.GetPosition(this));
+                    //convert to the actual position considering the DPI settings etc.
+                    realpos = PresentationSource.FromVisual(this).CompositionTarget.TransformFromDevice.Transform(newpos);
 
-                //make sure the window is displayed inside the screens.
-                double originX, originY;
-                if (currscrnW - realpos.X > ActualWidth)
-                    originX = 0d;
-                else {
-                    originX = 1d;
-                    realpos.X -= ActualWidth;
+                    //make sure the window is displayed inside the screens.
+                    double originX, originY;
+                    if (currscrnW - realpos.X > ActualWidth)
+                        originX = 0d;
+                    else {
+                        originX = 1d;
+                        realpos.X -= ActualWidth;
+                    }
+                    if (currscrnH - realpos.Y > ActualHeight)
+                        originY = 0d;
+                    else {
+                        originY = 1d;
+                        realpos.Y -= ActualHeight;
+                    }
+                    RenderTransformOrigin_BG = new Point(originX, originY);
                 }
-                if (currscrnH - realpos.Y > ActualHeight)
-                    originY = 0d;
                 else {
-                    originY = 1d;
-                    realpos.Y -= ActualHeight;
+                    //make sure the window is displayed inside the screens.
+                    if (left < 0d) left = 0d;
+                    if (top < 0d) top = 0d;
+                    if (left + ActualWidth > currscrnW)
+                        left = currscrnW - ActualWidth;
+                    if (top + ActualHeight > currscrnH)
+                        top = currscrnH - ActualHeight;
+                    realpos = new Point(left, top);
                 }
-                RenderTransformOrigin_BG = new Point(originX, originY);
-            }
-            else {
-                //make sure the window is displayed inside the screens.
-                if (left < 0d) left = 0d;
-                if (top < 0d) top = 0d;
-                if (left + ActualWidth > currscrnW)
-                    left = currscrnW - ActualWidth;
-                if (top + ActualHeight > currscrnH)
-                    top = currscrnH - ActualHeight;
-                realpos = new Point(left, top);
             }
 
             if (Opacity == 0) {
-                Left = realpos.X;
-                Top = realpos.Y;
+                if (realpos != default) {
+                    Left = realpos.X;
+                    Top = realpos.Y;
+                }
                 Show();
                 RaiseEvent(new RoutedEventArgs(FadingInEvent));
             }
@@ -266,20 +304,18 @@ namespace ZipImageViewer
         /// </summary>
         /// <param name="closeafterfade">Set to true to close the window after. Otherwise it is only hidden.</param>
         public async Task FadeOut(bool closeafterfade = false) {
-            if (IsLoaded)//without this it will crash at the below line.
-            {
-                RaiseEvent(new RoutedEventArgs(FadingOutEvent));
-                //need to be longer than the fading animation otherwise the window will flash when Show() is called.
-                await Task.Delay(250);
-                if (closeafterfade) {
-                    CloseBehavior = CloseBehaviors.Close;
-                    if (System.Windows.Interop.ComponentDispatcher.IsThreadModal)
-                        DialogResult = dialogResult;
-                    else
-                        Close();
-                }
-                else Hide();
+            if (!IsLoaded) return;//without this it will crash at the below line.
+            RaiseEvent(new RoutedEventArgs(FadingOutEvent));
+            //need to be longer than the fading animation otherwise the window will flash when Show() is called.
+            await Task.Delay(250);
+            if (closeafterfade) {
+                CloseBehavior = CloseBehaviors.Close;
+                if (IsModal == true)
+                    DialogResult = dialogResult;
+                Close();
             }
+            else Hide();
+            RaiseEvent(new RoutedEventArgs(FadedOutEvent));
         }
 
         protected override void OnMouseDown(MouseButtonEventArgs e) {

@@ -1,28 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using static ZipImageViewer.LoadHelper;
 
 namespace ZipImageViewer
 {
     public partial class ContextMenuWindow : RoundedWindow, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        
+        public MainWindow MainWin { get; set; }
+
         public ContextMenuWindow() {
             InitializeComponent();
         }
-
 
         private ObjectInfo objectInfo;
         public ObjectInfo ObjectInfo {
@@ -31,23 +27,63 @@ namespace ZipImageViewer
                 if (objectInfo == value) return;
                 objectInfo = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ObjectInfo)));
+                Task.Run(() => {
+                    var imgInfo = getImageInfo(ObjectInfo);
+                    Dispatcher.Invoke(() => ImageInfo = imgInfo);
+                });
             }
         }
 
 
+        public ImageInfo ImageInfo {
+            get { return (ImageInfo)GetValue(ImageInfoProperty); }
+            set { SetValue(ImageInfoProperty, value); }
+        }
+        public static readonly DependencyProperty ImageInfoProperty =
+            DependencyProperty.Register("ImageInfo", typeof(ImageInfo), typeof(ContextMenuWindow), new PropertyMetadata(null));
+
+
+        private static ImageInfo getImageInfo(ObjectInfo objInfo) {
+            if (objInfo == null) return null;
+            var imgInfo = new ImageInfo();
+            try {
+                if (objInfo.Flags == (FileFlags.Archive | FileFlags.Image)) {
+                    ExtractFile(objInfo.FileSystemPath, objInfo.FileName, (fileInfo, stream) => {
+                        imgInfo.Created = fileInfo.CreationTime;
+                        imgInfo.Modified = fileInfo.LastWriteTime;
+                        imgInfo.FileSize = (long)fileInfo.Size;
+                        UpdateImageInfo(stream, imgInfo);
+                    });
+                }
+                else {
+                    var fileInfo = new FileInfo(objInfo.FileSystemPath);
+                    imgInfo.Created = fileInfo.CreationTime;
+                    imgInfo.Modified = fileInfo.LastWriteTime;
+                    if (!fileInfo.Attributes.HasFlag(FileAttributes.Directory)) {
+                        imgInfo.FileSize = fileInfo.Length;
+                        if (objInfo.Flags.HasFlag(FileFlags.Image)) {
+                            using (var stream = new FileStream(objInfo.FileSystemPath, FileMode.Open, FileAccess.Read)) {
+                                UpdateImageInfo(stream, imgInfo);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return imgInfo;
+        }
+
         private void Menu_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
             if (ObjectInfo == null) return;
-            if (!(Owner is MainWindow mainWin)) return;
 
             var border = (Border)sender;
             switch (border.Name) {
                 case nameof(B_OpenInExplorer):
                     Helpers.Run("explorer", $"/select, \"{ObjectInfo.FileSystemPath}\"");
-                    Close();
                     break;
                 case nameof(B_OpenInNewWindow):
                     if (ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
-                        mainWin.LoadPath(ObjectInfo);
+                        MainWin?.LoadPath(ObjectInfo);
                     }
                     else if (ObjectInfo.Flags.HasFlag(FileFlags.Directory) ||
                         ObjectInfo.Flags.HasFlag(FileFlags.Archive)) {
@@ -56,13 +92,20 @@ namespace ZipImageViewer
                         };
                         win.Show();
                     }
-                    Close();
+                    break;
+                case nameof(B_Slideshow):
+                    var sldWin = new SlideshowWindow(ObjectInfo);
+                    sldWin.Show();
                     break;
             }
 
-            ObjectInfo = null;
+            Close();
         }
 
-
+        private void CTMWin_FadedOut(object sender, RoutedEventArgs e) {
+            ObjectInfo = null;
+            ImageInfo = null;
+            MainWin = null;
+        }
     }
 }

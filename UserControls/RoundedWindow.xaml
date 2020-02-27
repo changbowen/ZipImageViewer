@@ -86,10 +86,10 @@
                                 <Storyboard>
                                     <DoubleAnimation Storyboard.TargetProperty="(Window.Opacity)" From="0" To="1" Duration="0:0:0.3"/>
                                     <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                     Storyboard.TargetName="Grid_Main" From="0.5" To="1" Duration="0:0:0.3"
+                                                     Storyboard.TargetName="Grid_Main" From="0.8" To="1" Duration="0:0:0.3"
                                                      EasingFunction="{StaticResource CE_EaseOut}"/>
                                     <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                     Storyboard.TargetName="Grid_Main" From="0.5" To="1" Duration="0:0:0.3"
+                                                     Storyboard.TargetName="Grid_Main" From="0.8" To="1" Duration="0:0:0.3"
                                                      EasingFunction="{StaticResource CE_EaseOut}"/>
                                 </Storyboard>
                             </BeginStoryboard>
@@ -99,10 +99,10 @@
                                 <Storyboard>
                                     <DoubleAnimation Storyboard.TargetProperty="(Window.Opacity)" To="0" Duration="0:0:0.2"/>
                                     <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                     Storyboard.TargetName="Grid_Main" To="0.5" Duration="0:0:0.2"
+                                                     Storyboard.TargetName="Grid_Main" To="0.8" Duration="0:0:0.2"
                                                      EasingFunction="{StaticResource CE_EaseIn}"/>
                                     <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                     Storyboard.TargetName="Grid_Main" To="0.5" Duration="0:0:0.2"
+                                                     Storyboard.TargetName="Grid_Main" To="0.8" Duration="0:0:0.2"
                                                      EasingFunction="{StaticResource CE_EaseIn}"/>
                                 </Storyboard>
                             </BeginStoryboard>

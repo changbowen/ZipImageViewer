@@ -7,6 +7,14 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <SolidColorBrush x:Key="BackgroundBrush" Color="#FF333333"/>
+                    <SolidColorBrush x:Key="BackgroundDarkBrush" Color="#FF1F1F1F"/>
+                    <SolidColorBrush x:Key="BackgroundLightBrush" Color="#FF444444"/>
+                    <SolidColorBrush x:Key="BackgroundHighlightBrush" Color="#FF6E6E6E"/>
+                    <SolidColorBrush x:Key="ForegroundBrush" Color="LightGray"/>
+                    <SolidColorBrush x:Key="ForegroundGrayBrush" Color="#FFA6A6A6"/>
+                </ResourceDictionary>
                 <ResourceDictionary Source="UserControls/AppleStyleScrollBar.xaml"/>
                 <ResourceDictionary Source="UserControls/StylesAndAnimations.xaml"/>
                 <ResourceDictionary Source="UserControls/Generic.xaml"/>

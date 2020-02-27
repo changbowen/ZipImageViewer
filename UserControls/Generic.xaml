@@ -4,11 +4,12 @@
     <local:RectConverter x:Key="RectConverter"/>
     
     <!--rounded content control base-->
-    <Style x:Key="ContentControlBaseStyle" TargetType="{x:Type ContentControl}">
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
-        <Setter Property="Padding" Value="4"/>
-        <Setter Property="Margin" Value="2"/>
+    <Style x:Key="RoundContentControlBaseStyle" TargetType="{x:Type ContentControl}">
+        <Setter Property="IsTabStop" Value="False"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
         <Setter Property="Effect">
             <Setter.Value>
                 <DropShadowEffect ShadowDepth="0"/>
@@ -37,17 +38,57 @@
                         </ContentPresenter>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"/>
-                        </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"/>
-                            <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource BackgroundHighlightBrush}"/>
+                            <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{StaticResource ForegroundGrayBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!--control styles-->
+    <Style x:Key="TipTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontStyle" Value="Italic"/>
+        <Setter Property="Padding" Value="0 2"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Margin" Value="0 0 0 8"/>
+    </Style>
+    <Style x:Key="BorderBlockStyle" TargetType="{x:Type Border}">
+        <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
+        <Setter Property="Margin" Value="8 4"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect ShadowDepth="2" Direction="270" Opacity="0.5" BlurRadius="8"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="BorderlessStyle" TargetType="Control">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="{x:Null}"/>
+        <Setter Property="Padding" Value="4"/>
+    </Style>
+    <Style x:Key="ButtonStyle" TargetType="Button" BasedOn="{StaticResource RoundContentControlBaseStyle}">
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="4"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="true">
+                <Setter Property="Background" Value="{StaticResource BackgroundHighlightBrush}"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="true">
+                <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!--system buttons-->
