@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
+using System.Threading;
 
 namespace ZipImageViewer
 {
@@ -136,6 +137,32 @@ namespace ZipImageViewer
             }
         }
 
+        private void Btn_CacheFolder_Click(object sender, RoutedEventArgs e) {
+            var mainWin = (MainWindow)Owner;
+            var bw = new BlockWindow(Owner) {
+                MessageTitle = "Processing..."
+            };
+            //callback used to update progress
+            Action<string, int, int> cb = (path, i, count) => {
+                var p = Convert.ToInt32((double)i / count * 100);
+                Dispatcher.Invoke(() => {
+                    bw.Percentage = p;
+                    bw.MessageBody = path;
+                    if (bw.Percentage == 100) bw.MessageTitle = "All Done";
+                });
+            };
+            //work thread
+            bw.Work = () => {
+                mainWin.tknSrc_LoadThumb?.Cancel();
+                while (mainWin.tknSrc_LoadThumb != null) {
+                    Thread.Sleep(200);
+                }
+                mainWin.preRefreshActions();
+                LoadHelper.CacheFolder(mainWin.CurrentPath, ref bw.tknSrc_Work, bw.lock_Work, cb);
+                Task.Run(() => mainWin.LoadPath(mainWin.CurrentPath));
+            };
+            bw.FadeIn();
+        }
     }
 
     //public class ObservablesValidationRule : ValidationRule

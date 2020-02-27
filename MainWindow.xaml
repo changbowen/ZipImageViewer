@@ -45,7 +45,8 @@
         </DataTemplate>
     </Window.Resources>
     <Grid>
-        <Border HorizontalAlignment="Left" VerticalAlignment="Center" Panel.ZIndex="10000" Margin="0 10" Padding="0 20 20 20" Background="Transparent">
+        <Border x:Name="B_SidePanel" HorizontalAlignment="Left" VerticalAlignment="Center"
+                Panel.ZIndex="99" Padding="0 20 20 20" Background="Transparent">
             <Border.Style>
                 <Style TargetType="Border">
                     <Setter Property="RenderTransform">
@@ -76,21 +77,16 @@
                 </Style>
             </Border.Style>
 
-            <Border Background="{StaticResource BackgroundLightBrush}" CornerRadius="10" Width="100">
+            <Border Background="{StaticResource BackgroundLightBrush}" CornerRadius="0 10 10 0" Width="100">
                 <Border.Effect>
                     <DropShadowEffect ShadowDepth="0" BlurRadius="10"/>
                 </Border.Effect>
                 <Border.Resources>
-                    <Style TargetType="fa:ImageAwesome">
+                    <Style TargetType="fa:ImageAwesome" BasedOn="{StaticResource S_DropShadow}">
                         <Setter Property="Width" Value="48"/>
                         <Setter Property="Height" Value="48"/>
                         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
                         <Setter Property="Cursor" Value="Hand"/>
-                        <Setter Property="Effect">
-                            <Setter.Value>
-                                <DropShadowEffect Direction="270" ShadowDepth="2" BlurRadius="5" />
-                            </Setter.Value>
-                        </Setter>
                         <Setter Property="RenderTransformOrigin" Value="0.5 0.5"/>
                         <Setter Property="RenderTransform">
                             <Setter.Value>
@@ -108,6 +104,9 @@
                                     <BeginStoryboard Storyboard="{StaticResource SB_Rise_Down_L}"/>
                                 </Trigger.ExitActions>
                             </Trigger>
+                            <DataTrigger Binding="{Binding Opacity, ElementName=B_SidePanel, Mode=OneWay}" Value="0.2">
+                                <Setter Property="Visibility" Value="Hidden" />
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Resources>

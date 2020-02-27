@@ -124,17 +124,6 @@ namespace ZipImageViewer
         }
     }
 
-    //public class ContextMenuTemplateSelector : DataTemplateSelector
-    //{
-    //    public override DataTemplate SelectTemplate(object item, DependencyObject container) {
-    //        if (item == CollectionView.NewItemPlaceholder)
-    //            return (container as FrameworkElement).TryFindResource("EmptyDataTemplate") as DataTemplate;
-    //        else
-    //            return (container as FrameworkElement).TryFindResource("ContextMenuDataTemplate") as DataTemplate;
-    //    }
-    //}
-
-
     public class CustomCmdArgsConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
@@ -146,6 +135,46 @@ namespace ZipImageViewer
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class CenterParentConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+            if (values.Length < 3) return Binding.DoNothing;
+            if (values[0] is double ownerXY && values[1] is double ownerWH && values[2] is double selfWH) {
+                return ownerXY + (ownerWH - selfWH) / 2;
+            }
+            else return Binding.DoNothing;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class FileSizeHumanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            if (!(value is long l)) return Binding.DoNothing;
+            return Helpers.BytesToString(l);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class DrawingSizeStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            if (value == null) return Binding.DoNothing;
+            var sizeInt = (System.Drawing.Size)value;
+            return sizeInt.Width + @" x " + sizeInt.Height;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
             throw new NotImplementedException();
         }
     }

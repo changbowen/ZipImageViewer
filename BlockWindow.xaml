@@ -1,0 +1,47 @@
+﻿<local:RoundedWindow x:Class="ZipImageViewer.BlockWindow" x:Name="BlockWin"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ZipImageViewer" WindowStartupLocation="CenterOwner" CloseBehavior="FadeOutAndClose"
+        Background="{StaticResource BackgroundLightBrush}" Foreground="{StaticResource ForegroundBrush}"
+        mc:Ignorable="d" Height="170" Width="260" ShowInTaskbar="False" Loaded="BlockWin_Loaded" Closing="BlockWin_Closing"
+        ResizeMode="NoResize" Topmost="True">
+    <Window.Resources>
+        <!--<local:CenterParentConverter x:Key="CenterParentConverter"/>-->
+    </Window.Resources>
+    <!--<Window.Left>
+        <MultiBinding Converter="{StaticResource CenterParentConverter}" Mode="OneWayToSource">
+            <Binding RelativeSource="{RelativeSource Self}" Path="Owner.Left"/>
+            <Binding RelativeSource="{RelativeSource Self}" Path="Owner.Width"/>
+            <Binding RelativeSource="{RelativeSource Self}" Path="Width"/>
+        </MultiBinding>
+    </Window.Left>
+    <Window.Top>
+        <MultiBinding Converter="{StaticResource CenterParentConverter}" Mode="OneWayToSource">
+            <Binding RelativeSource="{RelativeSource Self}" Path="Owner.Top"/>
+            <Binding RelativeSource="{RelativeSource Self}" Path="Owner.Height"/>
+            <Binding RelativeSource="{RelativeSource Self}" Path="Height"/>
+        </MultiBinding>
+    </Window.Top>-->
+    <Grid x:Name="grid" RenderTransformOrigin="0.5,0.5">
+        <TextBlock x:Name="T_Title" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,15,0,0" FontWeight="Bold"
+                   Text="{Binding MessageTitle, ElementName=BlockWin, Mode=OneWay}"/>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock x:Name="TB_Message" HorizontalAlignment="Center" TextWrapping="Wrap" FontSize="10"
+                       Text="{Binding MessageBody, ElementName=BlockWin, Mode=OneWay}"/>
+            <ProgressBar x:Name="PB_Message" Height="{Binding FontSize, ElementName=BlockWin, Mode=OneWay}" Width="200" Margin="0,10,0,0"
+                         Value="{Binding Percentage, ElementName=BlockWin, Mode=OneWay}">
+                <ProgressBar.Style>
+                    <Style TargetType="ProgressBar">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Percentage, ElementName=BlockWin, Mode=OneWay}" Value="-1">
+                                <Setter Property="IsIndeterminate" Value="True" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ProgressBar.Style>
+            </ProgressBar>
+        </StackPanel>
+    </Grid>
+</local:RoundedWindow>

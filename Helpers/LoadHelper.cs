@@ -37,6 +37,7 @@ namespace ZipImageViewer
             /// Should be called on returning of each child ObjectInfo (thumbnails, raw images).
             /// </summary>
             public Action<ObjectInfo> CldInfoCallback { get; set; } = null;
+            public bool TryCache { get; set; } = true;
 
             public LoadOptions(string filePath) {
                 FilePath = filePath;
@@ -86,18 +87,18 @@ namespace ZipImageViewer
                         //first check if there is a match in saved passwords
                         case 0 when Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow row:
                             options.Password = (string)row[nameof(Column.Password)];
-                            success = ExtractZip(options, objInfo, done, tknSrc);
+                            success = extractZip(options, objInfo, done, tknSrc);
                             break;
                         //then try no password
                         case 1:
                             options.Password = null;
-                            success = ExtractZip(options, objInfo, done, tknSrc);
+                            success = extractZip(options, objInfo, done, tknSrc);
                             break;
                         //then try all saved passwords with no filename
                         case 2:
                             foreach (var fp in Setting.FallbackPasswords) {
                                 options.Password = fp;
-                                success = ExtractZip(options, objInfo, done, tknSrc);
+                                success = extractZip(options, objInfo, done, tknSrc);
                                 if (success) break;
                             }
                             break;
@@ -120,7 +121,7 @@ namespace ZipImageViewer
 
                                     if (!string.IsNullOrEmpty(pwd)) {
                                         options.Password = pwd;
-                                        success = ExtractZip(options, objInfo, done, tknSrc);
+                                        success = extractZip(options, objInfo, done, tknSrc);
                                         if (success) {
                                             //make sure the password is saved when task is cancelled
                                             Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), pwd);
@@ -151,7 +152,7 @@ namespace ZipImageViewer
         /// <summary>
         /// Returns true or false based on whether extraction succeeds.
         /// </summary>
-        private static bool ExtractZip(LoadOptions options, ObjectInfo objInfo, HashSet<string> done, CancellationTokenSource tknSrc = null) {
+        private static bool extractZip(LoadOptions options, ObjectInfo objInfo, HashSet<string> done, CancellationTokenSource tknSrc = null) {
             var success = false;
             if (tknSrc?.IsCancellationRequested == true) return success;
             SevenZipExtractor ext = null;
@@ -179,7 +180,7 @@ namespace ZipImageViewer
                     ImageSource source = null;
                     if (options.LoadImage) {
                         var thumbPathInDb = Path.Combine(options.FilePath, fileName);
-                        if (isThumb) {
+                        if (options.TryCache && isThumb) {
                             //try load from cache
                             source = SQLiteHelper.GetFromThumbDB(thumbPathInDb, options.DecodeSize);
                         }
@@ -239,6 +240,55 @@ namespace ZipImageViewer
             }
         }
 
+        public static void ExtractFile(string path, string fileName, Action<ArchiveFileInfo, Stream> callback) {
+            SevenZipExtractor ext = null;
+            try {
+                for (int caseIdx = 0; caseIdx < 3; caseIdx++) {
+                    var success = false;
+                    switch (caseIdx) {
+                        case 0 when Setting.MappedPasswords.Rows.Find(path) is DataRow row:
+                            success = extractFile(path, fileName, callback, (string)row[nameof(Column.Password)]);
+                            break;
+                        case 1:
+                            success = extractFile(path, fileName, callback);
+                            break;
+                        case 2:
+                            foreach (var fp in Setting.FallbackPasswords) {
+                                success = extractFile(path, fileName, callback, fp);
+                                if (success) break;
+                            }
+                            break;
+                    }
+                    
+                    if (success) break;
+                }
+            }
+            catch { }
+            finally {
+                ext?.Dispose();
+            }
+        }
+
+        private static bool extractFile(string path, string fileName, Action<ArchiveFileInfo, Stream> callback, string password = null) {
+            SevenZipExtractor ext = null;
+            try {
+                ext = password?.Length > 0 ?
+                new SevenZipExtractor(path, password) :
+                new SevenZipExtractor(path);
+                using (var ms = new MemoryStream()) {
+                    ext.ExtractFile(fileName, ms);
+                    callback.Invoke(ext.ArchiveFileData.First(f => f.FileName == fileName), ms);
+                }
+                return true;
+            }
+            catch {
+                return false;
+            }
+            finally {
+                ext?.Dispose();
+            }
+        }
+
         /// <summary>
         /// Only udpate when SourcePaths is null. Call from background thread.
         /// This is faster than you think.
@@ -289,15 +339,15 @@ namespace ZipImageViewer
         /// </summary>
         /// <param name="objInfo">The ObjectInfo of the container.</param>
         /// <param name="sourcePathIdx">Index of the file to load in ObjectInfo.SourcePaths.</param>
-        public static async Task<ImageSource> GetImageSourceAsync(ObjectInfo objInfo, int sourcePathIdx, SizeInt decodeSize = default) {
-            return await Task.Run(() => GetImageSource(objInfo, sourcePathIdx, decodeSize));
+        public static async Task<ImageSource> GetImageSourceAsync(ObjectInfo objInfo, int sourcePathIdx, SizeInt decodeSize = default, bool tryCache = true) {
+            return await Task.Run(() => GetImageSource(objInfo, sourcePathIdx, decodeSize, tryCache));
         }
 
         /// <summary>
         /// Used to get image from within a container.
         /// </summary>
         /// <param name="decodeSize">Decode size.</param>
-        public static ImageSource GetImageSource(ObjectInfo objInfo, int sourcePathIdx, SizeInt decodeSize = default) {
+        public static ImageSource GetImageSource(ObjectInfo objInfo, int sourcePathIdx, SizeInt decodeSize = default, bool tryCache = true) {
             if (objInfo.Flags.HasFlag(FileFlags.Error)) return App.fa_exclamation;
             if (objInfo.Flags == FileFlags.Unknown) return App.fa_file;
 
@@ -315,13 +365,13 @@ namespace ZipImageViewer
                 switch (objInfo.Flags) {
                     case FileFlags.Directory:
                         if (objInfo.SourcePaths?.Length > 0)
-                            source = GetImageSource(objInfo.SourcePaths[sourcePathIdx], decodeSize);
+                            source = GetImageSource(objInfo.SourcePaths[sourcePathIdx], decodeSize, tryCache);
                         if (source == null) {
                             source = App.fa_folder;
                         }
                         break;
                     case FileFlags.Image:
-                        source = GetImageSource(objInfo.FileSystemPath, decodeSize);
+                        source = GetImageSource(objInfo.FileSystemPath, decodeSize, tryCache);
                         if (source == null) {
                             source = App.fa_image;
                         }
@@ -331,6 +381,7 @@ namespace ZipImageViewer
                             LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                                 DecodeSize = decodeSize,
                                 LoadImage = true,
+                                TryCache = tryCache,
                                 FileNames = new[] { objInfo.SourcePaths[sourcePathIdx] },
                                 Flags = FileFlags.Archive,
                                 CldInfoCallback = oi => source = oi.ImageSource,
@@ -349,6 +400,7 @@ namespace ZipImageViewer
                         break;
                 }
             }
+            catch { }
             finally {
                 objInfo = null;
 
@@ -363,28 +415,39 @@ namespace ZipImageViewer
         /// <summary>
         /// <para>Load image from disk if cache is not availble.</para>
         /// </summary>
-        public static BitmapSource GetImageSource(string path, SizeInt decodeSize = default) {
+        public static BitmapSource GetImageSource(string path, SizeInt decodeSize = default, bool tryCache = true) {
             BitmapSource bs = null;
-            try {
-                var isThumb = decodeSize == (SizeInt)Setting.ThumbnailSize;
-                if (isThumb) {
-                    //try load from cache when decodeSize is non-zero
-                    bs = SQLiteHelper.GetFromThumbDB(path, decodeSize);
-                    if (bs != null) return bs;
-                }
+            var isThumb = decodeSize == (SizeInt)Setting.ThumbnailSize;
+            if (tryCache && isThumb) {
+                //try load from cache when decodeSize is non-zero
+                bs = SQLiteHelper.GetFromThumbDB(path, decodeSize);
+                if (bs != null) return bs;
+            }
 #if DEBUG
-                Console.WriteLine("Loading from disk: " + path);
+            Console.WriteLine("Loading from disk: " + path);
 #endif
-                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
-                    bs = GetImageSource(fs, decodeSize);
-                }
-                if (isThumb && bs != null) SQLiteHelper.AddToThumbDB(bs, path, decodeSize);
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
+                bs = GetImageSource(fs, decodeSize);
             }
-            catch (Exception ex) {
-                MessageBox.Show($"Error loading file {path}.\r\n{ex.Message}", "Error Loading File", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            if (isThumb && bs != null)
+                SQLiteHelper.AddToThumbDB(bs, path, decodeSize);
 
             return bs;
+        }
+
+        public static void UpdateImageInfo(Stream stream, ImageInfo imgInfo) {
+            stream.Position = 0;
+            var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
+            ushort orien = 0;
+            if (frame.Metadata is BitmapMetadata meta) {
+                if (meta.GetQuery("/app1/ifd/{ushort=274}") is ushort u) orien = u;
+                imgInfo.Meta_DateTaken = meta.DateTaken;
+                imgInfo.Meta_ApplicationName = meta.ApplicationName;
+                imgInfo.Meta_Camera = $@"{meta.CameraManufacturer} {meta.CameraModel}";
+            }
+            imgInfo.Dimensions = orien > 4 ?
+                new SizeInt(frame.PixelHeight, frame.PixelWidth) :
+                new SizeInt(frame.PixelWidth, frame.PixelHeight);
         }
 
         /// <summary>
@@ -475,6 +538,78 @@ namespace ZipImageViewer
             tb.EndInit();
             tb.Freeze();
             return tb;
+        }
+
+        public static void CacheFolder(string folderPath, ref CancellationTokenSource tknSrc, object tknLock, Action<string, int, int> callback) {
+            tknSrc?.Cancel();
+            tknSrc?.Dispose();
+            Monitor.Enter(tknLock);
+            tknSrc = new CancellationTokenSource();
+
+            var decodeSize = (SizeInt)Setting.ThumbnailSize;
+            var threadCount = MaxLoadThreads / 2;
+            if (threadCount < 1) threadCount = 1;
+            else if (threadCount > 6) threadCount = 6;
+            var paraOptions = new ParallelOptions() {
+                CancellationToken = tknSrc.Token,
+                MaxDegreeOfParallelism = threadCount,
+            };
+            var count = 0;
+            try {
+                var infos = new DirectoryInfo(folderPath).EnumerateFileSystemInfos();
+                var total = infos.Count();
+                Parallel.ForEach(infos, paraOptions, (info, state) => {
+                    if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
+                    var flag = GetPathType(info);
+                    var objInfo = new ObjectInfo(info.FullName, flag) {
+                        FileName = info.Name,
+                    };
+                    try {
+                        UpdateSourcePaths(objInfo);
+                        if (objInfo.SourcePaths?.Length > 0) {
+                            var path = objInfo.Flags.HasFlag(FileFlags.Archive) ?
+                                Path.Combine(objInfo.FileSystemPath, objInfo.SourcePaths[0]) : objInfo.SourcePaths[0];
+                            if (!SQLiteHelper.ThumbExistInDB(path, decodeSize)) {
+                                GetImageSource(objInfo, 0, decodeSize, false);
+                            }
+                        }
+                    }
+                    catch { }
+                    finally {
+                        callback?.Invoke(info.FullName, Interlocked.Increment(ref count), total);
+                    }
+                    if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
+                });
+            }
+            catch (OperationCanceledException) { }
+            finally {
+                tknSrc.Dispose();
+                tknSrc = null;
+                Monitor.Exit(tknLock);
+            }
+
+            //            while (cacheThreadIdx < ObjectList.Count) {
+            //                while (tknSrc_LoadThumb != null || LoadThrottle.CurrentCount <= 1) {
+            //                    if (cacheThreadExit) break;
+            //                    Thread.Sleep(2000);
+            //                }
+
+            //                var objInfo = ObjectList[cacheThreadIdx];
+            //                var decodeSize = (SizeInt)Setting.ThumbnailSize;
+            //                if (objInfo.SourcePaths == null) UpdateSourcePaths(objInfo);
+            //                var path = objInfo.Flags.HasFlag(FileFlags.Archive) ?
+            //                    Path.Combine(objInfo.FileSystemPath, objInfo.SourcePaths[0]) :
+            //                    objInfo.SourcePaths[0];
+            //                if (!SQLiteHelper.ThumbExistInDB(path, decodeSize)) {
+            //#if DEBUG
+            //                    Console.WriteLine($"Caching to DB: {path}");
+            //#endif
+            //                    GetImageSource(objInfo, 0, decodeSize, false);
+            //                }
+
+            //                if (cacheThreadExit) break;
+            //                cacheThreadIdx += 1;
+            //            }
         }
     }
 }

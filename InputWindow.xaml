@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ZipImageViewer" ShowInTaskbar="False"
         Background="{StaticResource BackgroundLightBrush}"
         Foreground="{StaticResource ForegroundBrush}" 
-        mc:Ignorable="d" Width="400">
+        mc:Ignorable="d" Width="400" WindowStartupLocation="CenterScreen">
     <StackPanel>
         <StackPanel.Resources>
             <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
@@ -16,10 +16,10 @@
             <Style TargetType="ContentControl" BasedOn="{StaticResource RoundContentControlBaseStyle}"/>
         </StackPanel.Resources>
         
-        <TextBlock Margin="10" FontSize="20"
+        <TextBlock Margin="10" FontSize="16"
                    Text="Password for this archive"/>
         <ContentControl Margin="10 0">
-            <TextBox x:Name="TB_Password" BorderThickness="0" FontSize="24" Padding="10"/>
+            <TextBox x:Name="TB_Password" BorderThickness="0" FontSize="18" Padding="4"/>
         </ContentControl>
         <CheckBox x:Name="CB_Fallback" HorizontalAlignment="Right" Margin="10 5" Foreground="{Binding Foreground, ElementName=InputWin, Mode=OneTime}"
                   Content="Add to fallback password list" IsChecked="True"/>

@@ -3,11 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:fa="http://schemas.fontawesome.com/icons/"
+        xmlns:fa="http://schemas.fontawesome.com/icons/" UseLayoutRounding="True"
         xmlns:local="clr-namespace:ZipImageViewer" CloseBehavior="FadeOutAndHide" ButtonCloseVisible="False" ShowInTaskbar="False"
-        mc:Ignorable="d" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
-        Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource ForegroundBrush}">
+        mc:Ignorable="d" ResizeMode="NoResize" SizeToContent="WidthAndHeight" MenuMode="True"
+        Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource ForegroundBrush}"
+        FadedOut="CTMWin_FadedOut">
     <Window.Resources>
+        <local:FileSizeHumanConverter x:Key="FileSizeHumanConverter"/>
+        <local:DrawingSizeStringConverter x:Key="DrawingSizeStringConverter"/>
         <Style TargetType="fa:ImageAwesome">
             <Setter Property="Width" Value="24"/>
             <Setter Property="Height" Value="24"/>
@@ -35,18 +38,8 @@
             </Style>
         </Grid.Resources>
 
-        <local:PaddedGrid Padding="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <Grid.Resources>
+        <StackPanel Margin="0 2">
+            <StackPanel.Resources>
                 <Style TargetType="fa:ImageAwesome">
                     <Setter Property="Width" Value="16"/>
                     <Setter Property="Height" Value="16"/>
@@ -61,25 +54,100 @@
                 </Style>
                 <Style TargetType="Border">
                     <Setter Property="Padding" Value="4"/>
-                    <Setter Property="Margin" Value="2" />
+                    <Setter Property="Margin" Value="6 0 0 0" />
                     <Setter Property="CornerRadius" Value="4" />
                     <Setter Property="Background" Value="#33000000" />
                 </Style>
-            </Grid.Resources>
-            <fa:ImageAwesome Grid.Row="0" Grid.Column="0" Icon="Regular_File"/>
-            <fa:ImageAwesome Grid.Row="1" Grid.Column="0" Icon="Regular_Save"/>
-            <fa:ImageAwesome Grid.Row="2" Grid.Column="0" Icon="Solid_InfoCircle"/>
-            <Border Grid.Row="0" Grid.Column="1">
-                <TextBlock Text="{Binding ObjectInfo.FileName, ElementName=CTMWin, Mode=OneWay}"/>
-            </Border>
-            <Border Grid.Row="1" Grid.Column="1">
-                <TextBlock Text="{Binding ObjectInfo.FileSystemPath, ElementName=CTMWin, Mode=OneWay}"/>
-            </Border>
-            <Border Grid.Row="2" Grid.Column="1">
-                <TextBlock Text="{Binding ObjectInfo.Flags, ElementName=CTMWin, Mode=OneWay}"/>
-            </Border>
+            </StackPanel.Resources>
+            <DockPanel Margin="2">
+                <fa:ImageAwesome Icon="Regular_File"/>
+                <Border>
+                    <TextBlock Text="{Binding ObjectInfo.FileName, ElementName=CTMWin, Mode=OneWay}"/>
+                </Border>
+            </DockPanel>
+            <DockPanel Margin="2">
+                <fa:ImageAwesome Icon="Regular_Save"/>
+                <Border>
+                    <TextBlock Text="{Binding ObjectInfo.FileSystemPath, ElementName=CTMWin, Mode=OneWay}"/>
+                </Border>
+            </DockPanel>
 
-        </local:PaddedGrid>
+            <Grid Margin="2 0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.Resources>
+                    <Style TargetType="DockPanel">
+                        <Setter Property="Margin" Value="0 2 0 2" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Mode=OneWay}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Mode=OneWay}" Value=" ">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Mode=OneWay}" Value="0">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Mode=OneWay}">
+                                <DataTrigger.Value>
+                                    <draw:Size xmlns:draw="clr-namespace:System.Drawing;assembly=System.Drawing"/>
+                                </DataTrigger.Value>
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Resources>
+                <DockPanel Grid.Row="0" DataContext="{Binding ImageInfo.FileSize, ElementName=CTMWin, Mode=OneWay}">
+                    <fa:ImageAwesome Icon="Regular_Hdd"/>
+                    <Border>
+                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource FileSizeHumanConverter}}"/>
+                    </Border>
+                </DockPanel>
+                <DockPanel Grid.Row="1" DataContext="{Binding ImageInfo.Dimensions, ElementName=CTMWin, Mode=OneWay}">
+                    <fa:ImageAwesome Icon="Solid_RulerCombined"/>
+                    <Border>
+                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource DrawingSizeStringConverter}}"/>
+                    </Border>
+                </DockPanel>
+                <DockPanel Grid.Row="2" DataContext="{Binding ImageInfo.Created, ElementName=CTMWin, Mode=OneWay}">
+                    <fa:ImageAwesome Icon="Regular_CalendarPlus"/>
+                    <Border>
+                        <TextBlock Text="{Binding Mode=OneWay, StringFormat='\{0:yyyy-MM-dd HH:mm:ss} (Created)'}"/>
+                    </Border>
+                </DockPanel>
+                <DockPanel Grid.Row="3" DataContext="{Binding ImageInfo.Modified, ElementName=CTMWin, Mode=OneWay}">
+                    <fa:ImageAwesome Icon="Regular_CalendarCheck"/>
+                    <Border>
+                        <TextBlock Text="{Binding Mode=OneWay, StringFormat='\{0:yyyy-MM-dd HH:mm:ss} (Modified)'}"/>
+                    </Border>
+                </DockPanel>
+                <DockPanel Grid.Row="4" DataContext="{Binding ImageInfo.Meta_DateTaken, ElementName=CTMWin, Mode=OneWay}">
+                    <fa:ImageAwesome Icon="Solid_Camera"/>
+                    <Border>
+                        <TextBlock Text="{Binding Mode=OneWay, StringFormat='\{0} (Taken)'}"/>
+                    </Border>
+                </DockPanel>
+                <DockPanel Grid.Row="5" DataContext="{Binding ImageInfo.Meta_Camera, ElementName=CTMWin, Mode=OneWay}">
+                    <fa:ImageAwesome Icon="Solid_Camera"/>
+                    <Border>
+                        <TextBlock Text="{Binding Mode=OneWay}"/>
+                    </Border>
+                </DockPanel>
+                <DockPanel Grid.Row="6" DataContext="{Binding ImageInfo.Meta_ApplicationName, ElementName=CTMWin, Mode=OneWay}">
+                    <fa:ImageAwesome Icon="Solid_Camera"/>
+                    <Border>
+                        <TextBlock Text="{Binding Mode=OneWay}"/>
+                    </Border>
+                </DockPanel>
+            </Grid>
+        </StackPanel>
 
         <Border Grid.Row="1" x:Name="B_OpenInExplorer">
             <StackPanel Orientation="Horizontal">

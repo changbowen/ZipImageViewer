@@ -131,6 +131,18 @@ namespace ZipImageViewer
             IM = null;
         }
 
+        private void CA_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton != MouseButton.Right) return;
+            //save window state
+            if (mainWin != null) {
+                if (WindowState == WindowState.Maximized || Helpers.IsFullScreen(this))
+                    mainWin.lastViewWindowRect = new Rect(Left, Top, 0d, 0d);
+                else
+                    mainWin.lastViewWindowRect = new Rect(Left, Top, ActualWidth, ActualHeight);
+            }
+            Close();
+        }
+
         /// <param name="altAnim">Set this to true or false to override alternate zoom & move animation.</param>
         private void transform(int ms, Size? newSize = null, Point? transPoint = null, bool? altAnim = null) {
             var sb = new Storyboard();
@@ -234,50 +246,37 @@ namespace ZipImageViewer
                                     IM_TT.Y + (IM.Height/ 2d - relativePos.Y) * (targetSize.Height/ IM.Height - 1d)));
         }
 
-
         private Point mouseCapturePoint;
         private Matrix existingTranslate;
 
+        private void IM_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton != MouseButton.Left) return;
+            IM.ReleaseMouseCapture();
+        }
 
-        private void ViewWin_MouseUp(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton == MouseButton.Right) {
-                //save window state
-                if (mainWin != null) {
-                    if (WindowState == WindowState.Maximized || Helpers.IsFullScreen(this))
-                        mainWin.lastViewWindowRect = new Rect(Left, Top, 0d, 0d);
+        private void IM_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton != MouseButton.Left) return;
+            switch (e.ClickCount) {
+                case 1:
+                    mouseCapturePoint = e.GetPosition(CA);
+                    existingTranslate = IM_TT.Value;
+                    IM.CaptureMouse();
+                    break;
+                case 2:
+                    if (!IM.IsRealSize)
+                        scaleCenterMouse(e.GetPosition(IM), IM.RealSize);
                     else
-                        mainWin.lastViewWindowRect = new Rect(Left, Top, ActualWidth, ActualHeight);
-                }
-                Close();
+                        scaleToCanvas();
+                    break;
             }
         }
 
-        private void CA_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-            if (e.ClickCount == 1) {
-                mouseCapturePoint = e.GetPosition(CA);
-                existingTranslate = IM_TT.Value;
-                CA.CaptureMouse();
-            }
-            else if (e.ClickCount == 2) {
-                if (!IM.IsRealSize)
-                    scaleCenterMouse(e.GetPosition(IM), IM.RealSize);
-                else
-                    scaleToCanvas();
-            }
-        }
-
-        private void CA_PreviewMouseMove(object sender, MouseEventArgs e) {
-            if (!CA.IsMouseCaptured) return;
+        private void IM_PreviewMouseMove(object sender, MouseEventArgs e) {
+            if (!IM.IsMouseCaptured) return;
             transform(50, transPoint:
                 new Point(existingTranslate.OffsetX + ((e.GetPosition(CA).X - mouseCapturePoint.X) * IM.Scale * 2d).RoundToMultiplesOf(IM.DpiMultiplier.X),
                           existingTranslate.OffsetY + ((e.GetPosition(CA).Y - mouseCapturePoint.Y) * IM.Scale * 2d).RoundToMultiplesOf(IM.DpiMultiplier.Y)));
         }
-
-        private void CA_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            CA.ReleaseMouseCapture();
-        }
-
 
         private void CA_PreviewMouseWheel(object sender, MouseWheelEventArgs e) {
             //if (Transforming) return;
@@ -285,78 +284,91 @@ namespace ZipImageViewer
             scaleCenterMouse(e.GetPosition(IM), new Size(IM.ActualWidth * scale, IM.ActualHeight * scale), 80);
         }
 
-        private void CA_PreviewKeyUp(object sender, KeyEventArgs e) {
+        private void ViewWin_PreviewKeyUp(object sender, KeyEventArgs e) {
             if (mainWin == null) return;
             if (IM.Transforming) return;
             switch (e.Key) {
                 case Key.Left:
+                    navigate(-1);
+                    break;
                 case Key.Right:
                 case Key.Space:
-                    //get direction for the next items.
-                    //also used to determine direction for some animations.
-                    var increment = e.Key == Key.Left ? -1 : 1;
-                    //get index of the next item
-                    var i = mainWin.ObjectList.IndexOf(mainWin.ObjectList[ObjectInfo.VirtualPath]) + increment;
-                    while (i > -1 && i < mainWin.ObjectList.Count) {
-                        var next = mainWin.ObjectList[i];
-                        //check for non-images and skip
-                        if (!next.Flags.HasFlag(FileFlags.Image)) {
-                            i += increment;
-                            continue;
-                        }
-                        //out animation
-                        if (Setting.ViewerTransition == Setting.Transition.Random) {
-                            var transVals = Enum.GetValues(typeof(Setting.Transition));
-                            LastTransition = (Setting.Transition)transVals.GetValue(App.Random.Next(2, transVals.Length));
-                        }
-                        else LastTransition = Setting.ViewerTransition;
-
-                        int multi = 1;
-                        switch (Setting.ViewerTransitionSpeed) {
-                            case Setting.TransitionSpeed.Medium:
-                                multi = 2;
-                                break;
-                            case Setting.TransitionSpeed.Slow:
-                                multi = 3;
-                                break;
-                        }
-                        switch (LastTransition) {
-                            case Setting.Transition.ZoomFadeBlur:
-                                TransParams = new ObservablePair<DependencyProps, DependencyProps>(
-                                    new DependencyProps(1 - 0.05 * increment, dur1: 200 * multi),
-                                    new DependencyProps(dur1: 500 * multi));
-                                break;
-
-                            case Setting.Transition.Fade:
-                                TransParams = new ObservablePair<DependencyProps, DependencyProps>(
-                                    new DependencyProps(dur1: 200 * multi),
-                                    new DependencyProps(dur1: 500 * multi));
-                                break;
-
-                            case Setting.Transition.HorizontalSwipe:
-                                //bound to From, To and Duration respectively
-                                TransParams = new ObservablePair<DependencyProps, DependencyProps>(
-                                    new DependencyProps(0d, (IM_TT.X - IM.Width / 2d) * increment, 400 * multi),
-                                    new DependencyProps(IM.Width / 2d * increment, 0d, 500 * multi));
-                                break;
-                            case Setting.Transition.None:
-                                break;
-                        }
-                        if (LastTransition != Setting.Transition.None) {
-                            IM.BeginStoryboard((Storyboard)IM.FindResource($"SB_Trans_{LastTransition}_Out"));
-                            IM.AnimateBool(DpiImage.TransformingProperty, true, false, (int)TransParams.Item1.Dur1.TimeSpan.TotalMilliseconds);
-                        }
-
-                        //load next or previous image
-                        Task.Run(() => {
-                            mainWin.LoadPath(next, this);
-                        });
-                        return;
-                    }
-
-                    BM.Show("No more!");
+                    navigate(1);
                     break;
             }
+        }
+
+        /// <param name="increment">Direction for the next item (forwards / backwards). Also used to determine direction for some animations.</param>
+        private void navigate(int increment) {
+            //get index of the next item
+            var i = mainWin.ObjectList.IndexOf(mainWin.ObjectList[ObjectInfo.VirtualPath]) + increment;
+            while (i > -1 && i < mainWin.ObjectList.Count) {
+                var next = mainWin.ObjectList[i];
+                //check for non-images and skip
+                if (!next.Flags.HasFlag(FileFlags.Image)) {
+                    i += increment;
+                    continue;
+                }
+                //out animation
+                if (Setting.ViewerTransition == Setting.Transition.Random) {
+                    var transVals = Enum.GetValues(typeof(Setting.Transition));
+                    LastTransition = (Setting.Transition)transVals.GetValue(App.Random.Next(2, transVals.Length));
+                }
+                else LastTransition = Setting.ViewerTransition;
+
+                int multi = 1;
+                switch (Setting.ViewerTransitionSpeed) {
+                    case Setting.TransitionSpeed.Medium:
+                        multi = 2;
+                        break;
+                    case Setting.TransitionSpeed.Slow:
+                        multi = 3;
+                        break;
+                }
+                switch (LastTransition) {
+                    case Setting.Transition.ZoomFadeBlur:
+                        TransParams = new ObservablePair<DependencyProps, DependencyProps>(
+                            new DependencyProps(1 - 0.05 * increment, dur1: 200 * multi),
+                            new DependencyProps(dur1: 500 * multi));
+                        break;
+
+                    case Setting.Transition.Fade:
+                        TransParams = new ObservablePair<DependencyProps, DependencyProps>(
+                            new DependencyProps(dur1: 200 * multi),
+                            new DependencyProps(dur1: 500 * multi));
+                        break;
+
+                    case Setting.Transition.HorizontalSwipe:
+                        //bound to From, To and Duration respectively
+                        TransParams = new ObservablePair<DependencyProps, DependencyProps>(
+                            new DependencyProps(0d, (IM_TT.X - IM.Width / 2d) * increment, 400 * multi),
+                            new DependencyProps(IM.Width / 2d * increment, 0d, 500 * multi));
+                        break;
+                    case Setting.Transition.None:
+                        break;
+                }
+                if (LastTransition != Setting.Transition.None) {
+                    IM.BeginStoryboard((Storyboard)IM.FindResource($"SB_Trans_{LastTransition}_Out"));
+                    IM.AnimateBool(DpiImage.TransformingProperty, true, false, (int)TransParams.Item1.Dur1.TimeSpan.TotalMilliseconds);
+                }
+
+                //load next or previous image
+                Task.Run(() => {
+                    mainWin.LoadPath(next, this);
+                });
+                return;
+            }
+
+            BM.Show("No more!");
+        }
+
+
+        private void DockPanelLeft_MouseUp(object sender, MouseButtonEventArgs e) {
+            navigate(-1);
+        }
+
+        private void DockPanelRight_MouseUp(object sender, MouseButtonEventArgs e) {
+            navigate(1);
         }
 
     }

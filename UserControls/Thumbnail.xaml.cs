@@ -24,21 +24,6 @@ namespace ZipImageViewer
             DependencyProperty.Register("ObjectInfo", typeof(ObjectInfo), typeof(Thumbnail), new PropertyMetadata(null));
 
 
-        //public Visibility FlagIconVisibility {
-        //    get { return (Visibility)GetValue(FlagIconVisibilityProperty); }
-        //    set { SetValue(FlagIconVisibilityProperty, value); }
-        //}
-        //public static readonly DependencyProperty FlagIconVisibilityProperty =
-        //    DependencyProperty.Register("FlagIconVisibility", typeof(Visibility), typeof(Thumbnail), new PropertyMetadata(Visibility.Visible));
-
-
-        //public bool HasImage => thumbImageSource != App.fa_meh &&
-        //                        thumbImageSource != App.fa_exclamation &&
-        //                        thumbImageSource != App.fa_file &&
-        //                        thumbImageSource != App.fa_folder &&
-        //                        thumbImageSource != App.fa_archive &&
-        //                        thumbImageSource != App.fa_image;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         private int thumbIndex = -1;
@@ -131,17 +116,8 @@ namespace ZipImageViewer
 
             mainWin = (MainWindow)Window.GetWindow(this);
 
+            thumbIndex = -1;
             cycleImageSource(null, null);
-            //var objInfo = ObjectInfo;
-            //Task.Run(() => {
-            //    if (objInfo.SourcePaths == null) {//non-null indicate SourcePaths has already been updated
-            //        var now = System.Diagnostics.Stopwatch.StartNew();
-            //        UpdateSourcePaths(objInfo);
-            //        now.Stop();
-            //        Console.WriteLine(now.ElapsedMilliseconds);
-            //    }
-            //    //Dispatcher.Invoke(() => cycleImageSource(null, null));
-            //});
         }
 
         private void TN_Unloaded(object sender, RoutedEventArgs e) {
@@ -167,33 +143,40 @@ namespace ZipImageViewer
             var tn = this;
             tn.cycleTimer.Stop();
 
+            //wait to get image
+            if (tn.ObjectInfo.ImageSource == null && !Setting.ImmersionMode &&
+                (mainWin.tknSrc_LoadThumb != null || Interlocked.CompareExchange(ref workingThreads, 0, 0) >= MaxLoadThreads)) {
+                tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(100);
+                tn.cycleTimer.Start();
+                return;
+            }
+
             //dont do anything before or after the lifecycle, or if not loaded in virtualizing panel
             if (!tn.IsLoaded) return;
             if (tn.ObjectInfo == null) return;
 
-            //update source paths if needed
-            if (tn.ObjectInfo.SourcePaths == null) {
-                var objInfo = tn.ObjectInfo;
-                await Task.Run(() => UpdateSourcePaths(objInfo));
-            }
-
-            //wait to get image
-            if (Interlocked.CompareExchange(ref workingThreads, 0, 0) >= MaxLoadThreads) {
-                tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(200);
-                tn.cycleTimer.Start();
-                return;
-            }
-            Interlocked.Increment(ref workingThreads);
-            //get the next path index to use
             var cycle = false;
-            if (tn.ObjectInfo.SourcePaths?.Length > 1) {
-                tn.thumbIndex = tn.thumbIndex == tn.ObjectInfo.SourcePaths.Length - 1 ? 0 : tn.thumbIndex + 1;
-                cycle = true;
+            Interlocked.Increment(ref workingThreads);
+            try {
+                //update source paths if needed
+                if (tn.ObjectInfo.SourcePaths == null) {
+                    var objInfo = tn.ObjectInfo;
+                    await Task.Run(() => UpdateSourcePaths(objInfo));
+                }
+                //get the next path index to use
+                var thumbSize = (SizeInt)Setting.ThumbnailSize;
+                if (tn.ObjectInfo.SourcePaths?.Length > 1) {
+                    tn.thumbIndex = tn.thumbIndex == tn.ObjectInfo.SourcePaths.Length - 1 ? 0 : tn.thumbIndex + 1;
+                    cycle = true;
+                }
+                else
+                    tn.thumbIndex = 0;
+                tn.ThumbImageSource = await GetImageSourceAsync(tn.ObjectInfo, tn.thumbIndex, decodeSize: thumbSize);
             }
-            else
-                tn.thumbIndex = 0;
-            tn.ThumbImageSource = await GetImageSourceAsync(tn.ObjectInfo, tn.thumbIndex, decodeSize: (SizeInt)Setting.ThumbnailSize);
-            Interlocked.Decrement(ref workingThreads);
+            catch { }
+            finally {
+                Interlocked.Decrement(ref workingThreads);
+            }
 
             //dont do anything before or after the lifecycle
             if (!tn.IsLoaded || !mainWin.IsLoaded || !cycle) return;

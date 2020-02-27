@@ -45,12 +45,11 @@ namespace ZipImageViewer
             virWrapPanel.Children.Cast<ContentPresenter>().Count(cp => ((ObjectInfo)cp.Content).SourcePaths?.Length > 0) * 200 + App.Random.Next(2, 7) * 1000));
 
         internal CancellationTokenSource tknSrc_LoadThumb;
-        private readonly object lock_LoadThumb = new object();
+        internal readonly object lock_LoadThumb = new object();
 
         private VirtualizingWrapPanel virWrapPanel;
         private Rect lastWindowRect;
         internal Rect lastViewWindowRect;
-        private readonly Dictionary<string, double> scrollPositions = new Dictionary<string, double>();
 
         public MainWindow()
         {
@@ -98,6 +97,7 @@ namespace ZipImageViewer
             Setting.ThumbnailSize.PropertyChanged -= ThumbnailSizeChanged;
 
             tknSrc_LoadThumb?.Cancel();
+            tknSrc_LoadThumb?.Dispose();
             while (tknSrc_LoadThumb != null) { await Task.Delay(100); }
 
             Dispatcher.Invoke(() => ObjectList.Clear());
@@ -157,7 +157,7 @@ namespace ZipImageViewer
             Helpers.OpenFolderDialog(this, path => Task.Run(() => LoadPath(path)));
         }
 
-        private void Callback_AddToImageList(ObjectInfo objInfo) {
+        private void callback_AddToImageList(ObjectInfo objInfo) {
             //exclude non-image items in immersion mode
             if (Setting.ImmersionMode && objInfo.SourcePaths == null) {
                 UpdateSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
@@ -167,17 +167,20 @@ namespace ZipImageViewer
             ObjectList.Add(objInfo);
         }
 
-        private void clearObjectList() {
+        internal void preRefreshActions() {
             //save scrollbar position
             Dispatcher.Invoke(() => scrollPosition(virWrapPanel.ScrollOwner.VerticalOffset));
             //try to free resources
             foreach (var objInfo in ObjectList) {
                 objInfo.ImageSource = null;
             }
+            //clear list
             ObjectList.Clear();
+            //reset scroll
             Dispatcher.Invoke(() => virWrapPanel.ScrollOwner.ScrollToTop());
         }
 
+        private readonly Dictionary<string, double> scrollPositions = new Dictionary<string, double>();
         /// <summary>
         /// Save the current or set the last scroll position.
         /// </summary>
@@ -222,21 +225,23 @@ namespace ZipImageViewer
                 //directory -> load thumbs
                 try {
                     tknSrc_LoadThumb?.Cancel();
+                    tknSrc_LoadThumb?.Dispose();
                     Monitor.Enter(lock_LoadThumb);
                     tknSrc_LoadThumb = new CancellationTokenSource();
-                    clearObjectList();
+                    preRefreshActions();
                     CurrentPath = objInfo.FileSystemPath;
                     foreach (var childInfo in new DirectoryInfo(objInfo.FileSystemPath).EnumerateFileSystemInfos()) {
                         if (tknSrc_LoadThumb?.IsCancellationRequested == true) return;
 
                         var flag = Helpers.GetPathType(childInfo);
-                        Callback_AddToImageList(new ObjectInfo(childInfo.FullName, flag) {
+                        callback_AddToImageList(new ObjectInfo(childInfo.FullName, flag) {
                             FileName = childInfo.Name,
                         });
                     }
                     Dispatcher.Invoke(() => scrollPosition());
                 }
                 finally {
+                    tknSrc_LoadThumb.Dispose();
                     tknSrc_LoadThumb = null;
                     Monitor.Exit(lock_LoadThumb);
                 }
@@ -258,19 +263,22 @@ namespace ZipImageViewer
                     //archive itself -> extract and load thumbs
                     try {
                         tknSrc_LoadThumb?.Cancel();
+                        tknSrc_LoadThumb?.Dispose();
                         Monitor.Enter(lock_LoadThumb);
                         tknSrc_LoadThumb = new CancellationTokenSource();
-                        clearObjectList();
+                        preRefreshActions();
                         CurrentPath = objInfo.FileSystemPath;
                         LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                             Flags = objInfo.Flags,
                             LoadImage = true,
                             DecodeSize = (SizeInt)Setting.ThumbnailSize,
-                            CldInfoCallback = Callback_AddToImageList,
+                            CldInfoCallback = callback_AddToImageList,
                         }, tknSrc_LoadThumb);
                         Dispatcher.Invoke(() => scrollPosition());
+                        //postRefreshActions();
                     }
                     finally {
+                        tknSrc_LoadThumb.Dispose();
                         tknSrc_LoadThumb = null;
                         Monitor.Exit(lock_LoadThumb);
                     }
@@ -305,14 +313,14 @@ namespace ZipImageViewer
                         Task.Run(() => LoadPath(objInfo));
                         break;
                     case MouseButton.Right:
-                        App.ContextMenuWin.Owner = this;
+                        App.ContextMenuWin.MainWin = this;
+                        App.ContextMenuWin.ParentWindow = this;
                         App.ContextMenuWin.ObjectInfo = objInfo;
                         App.ContextMenuWin.FadeIn();
                         break;
                 }
             }
         }
-
 
         private void Nav_Up(object sender, RoutedEventArgs e) {
             Task.Run(() => LoadPath(Path.GetDirectoryName(CurrentPath)));
@@ -383,48 +391,6 @@ namespace ZipImageViewer
                 }
             }
         }
-
-
-        //private void CTM_Click(object sender, RoutedEventArgs e) {
-        //    var mi = (MenuItem)sender;
-        //    var ctm = (ContextMenu)mi.CommandParameter;
-        //    switch (mi.DataContext) {
-        //        case ObjectInfo oi:
-        //            switch (mi.Header) {
-        //                case "View in Explorer":
-        //                    Helpers.Run("explorer", $"/select, \"{oi.FileSystemPath}\"");
-        //                    break;
-        //                case "Open in New Window":
-        //                    if (oi.Flags.HasFlag(FileFlags.Image)) {
-        //                        LoadPath(oi);
-        //                    }
-        //                    else if (oi.Flags.HasFlag(FileFlags.Directory) ||
-        //                        oi.Flags.HasFlag(FileFlags.Archive)) {
-        //                        var win = new MainWindow {
-        //                            InitialPath = oi.FileSystemPath
-        //                        };
-        //                        win.Show();
-        //                    }
-        //                    break;
-        //            }
-        //            break;
-        //        //case ObservablePair<string, string> op:
-        //        //    Helpers.Run(op.Item1, Helpers.CustomCmdArgsReplace(op.Item2, tn.ObjectInfo));
-        //        //    break;
-        //    }
-
-        //}
-
-        //private void CTM_Opened(object sender, RoutedEventArgs e) {
-        //    //var ctm = (ContextMenu)sender;
-        //    //var tn = (Thumbnail)ctm.PlacementTarget;
-        //    //ctm.Tag = tn.ObjectInfo.FileSystemPath;
-
-        //    //foreach (MenuItem item in mi.Items) {
-        //    //    var op = (ObservablePair<string, string>)item.DataContext;
-        //    //    item.DataContext = new ObservablePair<string, string>(op.Item1, op.Item2.Replace(@"%FileSystemPath%", tn.ObjectInfo.FileSystemPath));
-        //    //}
-        //}
 
         #endregion
 
