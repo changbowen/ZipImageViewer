@@ -108,8 +108,7 @@ namespace ZipImageViewer
 
         private ImageSource imageSource;
         /// <summary>
-        /// Only used for displaying images in archives because it is not practical to start more than one Task to extract an archive.
-        /// Thus loading images in archive will be a single thread.
+        /// Be careful when setting this property. Clean up when necessary to avoid memory leaks.
         /// </summary>
         public ImageSource ImageSource {
             get => imageSource;

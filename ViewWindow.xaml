@@ -9,7 +9,7 @@
         Title="{Binding ElementName=ViewWin, Path=ObjectInfo.VirtualPath, Mode=OneWay}"
         Width="1280" Height="960" Foreground="{StaticResource ForegroundBrush}" Background="{StaticResource BackgroundBrush}"
         UseLayoutRounding="True" SizeChanged="ViewWin_SizeChanged"
-        Loaded="ViewWindow_Loaded" Unloaded="ViewWin_Unloaded"
+        Loaded="ViewWindow_Loaded" Closing="ViewWin_Closing" Closed="ViewWin_Closed"
         PreviewKeyUp="ViewWin_PreviewKeyUp">
     <Window.Resources>
         <local:CenterConverter x:Key="CenterConverter"/>
@@ -17,7 +17,7 @@
         
         <Style x:Key="NavPanelStyle" TargetType="Panel">
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="Background" Value="#33AAAAAA" />
             <Setter Property="Panel.ZIndex" Value="10" />
             <Setter Property="Opacity" Value="0" />
             <Style.Triggers>
@@ -78,80 +78,80 @@
             <local:DpiImage.Resources>
                 <Storyboard x:Key="SB_Trans_ZoomFadeBlur_Out">
                     <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="0"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="0"/>
                     <DoubleAnimation Storyboard.TargetProperty="Effect.Radius" EasingFunction="{StaticResource CE_EaseInOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="20"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="20"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseInOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="{Binding ElementName=ViewWin, Path=TransParams.Item1.Double1, Mode=OneWay}"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="{Binding ElementName=ViewWin, Path=TransParams.Item1.Double1, Mode=OneWay}"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseInOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="{Binding ElementName=ViewWin, Path=TransParams.Item1.Double1, Mode=OneWay}"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="{Binding ElementName=ViewWin, Path=TransParams.Item1.Double1, Mode=OneWay}"/>
                 </Storyboard>
                 <Storyboard x:Key="SB_Trans_ZoomFadeBlur_In">
                     <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         To="1"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     To="1"/>
                     <DoubleAnimation Storyboard.TargetProperty="Effect.Radius" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         To="0"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     To="0"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         To="1"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     To="1"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         To="1"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     To="1"/>
                 </Storyboard>
 
 
                 <Storyboard x:Key="SB_Trans_Fade_Out">
                     <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseInOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="0"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="0"/>
                 </Storyboard>
                 <Storyboard x:Key="SB_Trans_Fade_In">
                     <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         To="1"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     To="1"/>
                 </Storyboard>
 
 
                 <Storyboard x:Key="SB_Trans_HorizontalSwipe_Out">
                     <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseIn}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="0"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="0"/>
                     <DoubleAnimation Storyboard.TargetProperty="Effect.Radius" EasingFunction="{StaticResource CE_EaseIn}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="40"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="40"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].X" EasingFunction="{StaticResource CE_EaseIn}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="{Binding ElementName=ViewWin, Path=TransParams.Item1.Double2, Mode=OneWay}"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="{Binding ElementName=ViewWin, Path=TransParams.Item1.Double2, Mode=OneWay}"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseIn}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="0.9"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="0.9"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseIn}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
-                                         To="0.9"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item1.Duration1, Mode=OneWay}"
+                                     To="0.9"/>
                 </Storyboard>
                 <Storyboard x:Key="SB_Trans_HorizontalSwipe_In">
                     <DoubleAnimation Storyboard.TargetProperty="Opacity" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         To="1"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     To="1"/>
                     <DoubleAnimation Storyboard.TargetProperty="Effect.Radius" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         To="0"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     To="0"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[0].X" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         From="{Binding ElementName=ViewWin, Path=TransParams.Item2.Double1, Mode=OneWay}"
-                                         To="{Binding ElementName=ViewWin, Path=TransParams.Item2.Double2, Mode=OneWay}"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     From="{Binding ElementName=ViewWin, Path=TransParams.Item2.Double1, Mode=OneWay}"
+                                     To="{Binding ElementName=ViewWin, Path=TransParams.Item2.Double2, Mode=OneWay}"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleX" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         To="1"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     To="1"/>
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Children[1].ScaleY" EasingFunction="{StaticResource CE_EaseOut}"
-                                         Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
-                                         To="1"/>
+                                     Duration="{Binding ElementName=ViewWin, Path=TransParams.Item2.Duration1, Mode=OneWay}"
+                                     To="1"/>
                 </Storyboard>
             </local:DpiImage.Resources>
         </local:DpiImage>

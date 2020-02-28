@@ -83,9 +83,8 @@ namespace ZipImageViewer
                 openFolderPrompt();
         }
 
-        private void MainWin_Unloaded(object sender, RoutedEventArgs e) {
-            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow) == 0)
-                Application.Current.Shutdown();
+        private void MainWin_Closed(object sender, EventArgs e) {
+            Helpers.ShutdownCheck();
         }
 
         private bool reallyClose = false;
@@ -246,54 +245,42 @@ namespace ZipImageViewer
                     Monitor.Exit(lock_LoadThumb);
                 }
             }
+            else if (objInfo.Flags.HasFlag(FileFlags.Image)) {
+                //plain image file or image inside archive -> open viewer
+                //using a new ObjectInfo to avoid confusion and reduce chance of holding ImageSource
+                var oi = new ObjectInfo(objInfo.FileSystemPath, objInfo.Flags) {
+                    FileName = objInfo.FileName
+                };
+                Dispatcher.Invoke(() => {
+                    if (viewWin == null)
+                        new ViewWindow(this) { ObjectInfo = oi }.Show();
+                    else
+                        viewWin.ObjectInfo = oi;
+                });
+            }
             else if (objInfo.Flags.HasFlag(FileFlags.Archive)) {
-                if (objInfo.Flags.HasFlag(FileFlags.Image)) {
-                    //image inside archive -> open viewer
+                //archive itself -> extract and load thumbs
+                try {
+                    tknSrc_LoadThumb?.Cancel();
+                    tknSrc_LoadThumb?.Dispose();
+                    Monitor.Enter(lock_LoadThumb);
+                    tknSrc_LoadThumb = new CancellationTokenSource();
+                    preRefreshActions();
+                    CurrentPath = objInfo.FileSystemPath;
                     LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                         Flags = objInfo.Flags,
                         LoadImage = true,
-                        FileNames = new[] { objInfo.FileName },
-                        CldInfoCallback = oi => Dispatcher.Invoke(() => {
-                            if (viewWin == null) new ViewWindow(this) { ObjectInfo = oi }.Show();
-                            else viewWin.ObjectInfo = oi;
-                        }),
-                    });
+                        DecodeSize = (SizeInt)Setting.ThumbnailSize,
+                        CldInfoCallback = callback_AddToImageList,
+                    }, tknSrc_LoadThumb);
+                    Dispatcher.Invoke(() => scrollPosition());
+                    //postRefreshActions();
                 }
-                else {
-                    //archive itself -> extract and load thumbs
-                    try {
-                        tknSrc_LoadThumb?.Cancel();
-                        tknSrc_LoadThumb?.Dispose();
-                        Monitor.Enter(lock_LoadThumb);
-                        tknSrc_LoadThumb = new CancellationTokenSource();
-                        preRefreshActions();
-                        CurrentPath = objInfo.FileSystemPath;
-                        LoadFile(new LoadOptions(objInfo.FileSystemPath) {
-                            Flags = objInfo.Flags,
-                            LoadImage = true,
-                            DecodeSize = (SizeInt)Setting.ThumbnailSize,
-                            CldInfoCallback = callback_AddToImageList,
-                        }, tknSrc_LoadThumb);
-                        Dispatcher.Invoke(() => scrollPosition());
-                        //postRefreshActions();
-                    }
-                    finally {
-                        tknSrc_LoadThumb.Dispose();
-                        tknSrc_LoadThumb = null;
-                        Monitor.Exit(lock_LoadThumb);
-                    }
+                finally {
+                    tknSrc_LoadThumb.Dispose();
+                    tknSrc_LoadThumb = null;
+                    Monitor.Exit(lock_LoadThumb);
                 }
-            }
-            else if (objInfo.Flags.HasFlag(FileFlags.Image)) {
-                //plain image file -> open viewer
-                LoadFile(new LoadOptions(objInfo.FileSystemPath) {
-                    Flags = objInfo.Flags,
-                    LoadImage = true,
-                    ObjInfoCallback = oi => Dispatcher.Invoke(() => {
-                        if (viewWin == null) new ViewWindow(this) { ObjectInfo = oi }.Show();
-                        else viewWin.ObjectInfo = oi;
-                    }),
-                });
             }
         }
 

@@ -16,34 +16,49 @@ namespace ZipImageViewer
 
         private readonly MainWindow mainWin;
 
-
         public ObjectInfo ObjectInfo {
             get { return (ObjectInfo)GetValue(ObjectInfoProperty); }
             set { SetValue(ObjectInfoProperty, value); }
         }
         public static readonly DependencyProperty ObjectInfoProperty =
-            DependencyProperty.Register("ObjectInfo", typeof(ObjectInfo), typeof(ViewWindow), new PropertyMetadata(null, new PropertyChangedCallback((o, e) => {
-                if (!(e.NewValue is ObjectInfo objInfo) || objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0) return;
+            DependencyProperty.Register("ObjectInfo", typeof(ObjectInfo), typeof(ViewWindow), new PropertyMetadata(null, new PropertyChangedCallback(async (o, e) => {
+                //clean up old ImageSource (very important!)
+                if (e.OldValue is ObjectInfo oldInfo) oldInfo.ImageSource = null;
+
+                if (!(e.NewValue is ObjectInfo newInfo)) return;
+                //load image if needed
+                if (newInfo.SourcePaths == null) LoadHelper.UpdateSourcePaths(newInfo);
+                if (newInfo.ImageSource == null)
+                    newInfo.ImageSource = await LoadHelper.GetImageSourceAsync(newInfo, 0);
+
                 var win = (ViewWindow)o;
-                if (!win.IsLoaded)
-                    //update directly without animations when window is not loaded yet (first time opening)
-                    win.ViewImageSource = win.ObjectInfo.ImageSource;
+                if (!win.IsLoaded || win.IM == null || win.ObjectInfo == null) {
+                    //window closed before image is shown
+                    newInfo.ImageSource = null;
+                    return;
+                }
                 else if (win.IM.Transforming)
                     //update after transform end
                     DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).AddValueChanged(win.IM, updateViewImageSource);
-                else
+                else {
+                    if (e.OldValue == null) {
+                        //initialize anim params when it's from blank
+                        win.IM.Opacity = 0d;
+                        ((System.Windows.Media.Effects.BlurEffect)win.IM.Effect).Radius = 40d;
+                        win.LastTransition = Setting.Transition.ZoomFadeBlur;
+                        int multi = 1;
+                        switch (Setting.ViewerTransitionSpeed) {
+                            case Setting.TransitionSpeed.Medium: multi = 2; break;
+                            case Setting.TransitionSpeed.Slow: multi = 3; break;
+                        }
+                        win.TransParams = new ObservablePair<DependencyProps, DependencyProps>() {
+                            Item2 = new DependencyProps(dur1: 500 * multi)
+                        };
+                    }
                     //update with "in" animations following the previous "out" animations
                     updateViewImageSource(win.IM, null);
+                }
             })));
-
-        //public ObjectInfo ObjectInfo
-        //{
-        //    get { return (ObjectInfo)GetValue(ObjectInfoProperty); }
-        //    set { SetValue(ObjectInfoProperty, value); }
-        //}
-        //public static readonly DependencyProperty ObjectInfoProperty =
-        //    Thumbnail.ObjectInfoProperty.AddOwner(typeof(ViewWindow), new PropertyMetadata());
-
 
         private static void updateViewImageSource(object obj, EventArgs e) {
             DependencyPropertyDescriptor.FromProperty(DpiImage.TransformingProperty, typeof(DpiImage)).RemoveValueChanged(obj, updateViewImageSource);
@@ -79,11 +94,10 @@ namespace ZipImageViewer
         //public Point CenterPoint =>
         //    new Point((CA.ActualWidth - IM.ActualWidth) / 2, (CA.ActualHeight - IM.ActualHeight) / 2);
 
-        public ViewWindow(MainWindow win)
+        public ViewWindow(MainWindow win = null)
         {
             InitializeComponent();
             Opacity = 0d;
-
             mainWin = win;
         }
 
@@ -105,34 +119,15 @@ namespace ZipImageViewer
                     Helpers.SwitchFullScreen(this, ref mainWin.lastViewWindowRect, true);
             }
 
-            ////adjust window size according to image size
-            //var mon = NativeHelpers.GetMonitorFromWindow(this);
-            //if (Width < IM.RealSize.Width)
-            //    Width = Math.Min(IM.RealSize.Width, mon.Width);
-            //if (Height < IM.RealSize.Height)
-            //    Height = Math.Min(IM.RealSize.Height, mon.Height);
-            scaleToCanvas(0); //needed for first time opening due to impossible to layout before loaded
-
             //fade in window content
             this.AnimateDoubleCubicEase(OpacityProperty, 1d, 100, EasingMode.EaseOut);
         }
 
-        private void ViewWin_SizeChanged(object sender, SizeChangedEventArgs e) {
-            if (e.PreviousSize != default)
-                scaleToCanvas(0);
+        private void ViewWin_Closed(object sender, EventArgs e) {
+            Helpers.ShutdownCheck();
         }
 
-        private void ViewWin_Unloaded(object sender, RoutedEventArgs e) {
-            ViewImageSource = null;
-            ObjectInfo.SourcePaths = null;
-            ObjectInfo.ImageSource = null;
-            ObjectInfo = null;
-            IM.Source = null;
-            IM = null;
-        }
-
-        private void CA_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton != MouseButton.Right) return;
+        private void ViewWin_Closing(object sender, CancelEventArgs e) {
             //save window state
             if (mainWin != null) {
                 if (WindowState == WindowState.Maximized || Helpers.IsFullScreen(this))
@@ -140,6 +135,21 @@ namespace ZipImageViewer
                 else
                     mainWin.lastViewWindowRect = new Rect(Left, Top, ActualWidth, ActualHeight);
             }
+
+            IM.Source = null;
+            IM = null;
+            ViewImageSource = null;
+            ObjectInfo.ImageSource = null;
+            ObjectInfo = null;
+        }
+
+        private void ViewWin_SizeChanged(object sender, SizeChangedEventArgs e) {
+            if (e.PreviousSize != default)
+                scaleToCanvas(0);
+        }
+
+        private void CA_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton != MouseButton.Right) return;
             Close();
         }
 
@@ -301,7 +311,10 @@ namespace ZipImageViewer
         /// <param name="increment">Direction for the next item (forwards / backwards). Also used to determine direction for some animations.</param>
         private void navigate(int increment) {
             //get index of the next item
-            var i = mainWin.ObjectList.IndexOf(mainWin.ObjectList[ObjectInfo.VirtualPath]) + increment;
+            int i;
+            if (mainWin == null) i = -1;
+            else i = mainWin.ObjectList.IndexOf(mainWin.ObjectList[ObjectInfo.VirtualPath]) + increment;
+
             while (i > -1 && i < mainWin.ObjectList.Count) {
                 var next = mainWin.ObjectList[i];
                 //check for non-images and skip

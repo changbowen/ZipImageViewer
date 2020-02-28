@@ -10,6 +10,7 @@ namespace ZipImageViewer
 {
     public static class NativeHelpers
     {
+        #region Monitor Info
         ////hide taskbar
         //[DllImport("user32.dll")]
         //private static extern int FindWindow(string className, string windowText);
@@ -70,5 +71,45 @@ namespace ZipImageViewer
             else
                 throw new Exception("Failed to get monitor info.");
         }
+        #endregion
+
+        #region Supported WIC decoders
+        /// <summary>
+        /// GUID of the component registration group for WIC decoders
+        /// </summary>
+        private const string WICDecoderCategory = @"{7ED96837-96F0-4812-B211-F13C24117ED3}";
+        
+        public static List<string> GetWICDecoders() {
+            var result = new List<string>(new string[] { ".BMP", ".GIF", ".ICO", ".JPEG", ".PNG", ".TIFF", ".DDS", ".JPG", ".JXR", ".HDP", ".WDP" });
+            string baseKeyPath;
+
+            if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess)
+                baseKeyPath = "Wow6432Node\\CLSID";
+            else
+                baseKeyPath = "CLSID";
+
+            using (var baseKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(baseKeyPath)) {
+                if (baseKey == null) return null;
+                using (var categoryKey = baseKey.OpenSubKey(WICDecoderCategory + @"\instance", false)) {
+                    if (categoryKey == null) return null;
+                    // Read the guids of the registered decoders
+                    var codecGuids = categoryKey.GetSubKeyNames();
+
+                    foreach (var codecGuid in codecGuids) {
+                        // Read the properties of the single registered decoder
+                        using (var codecKey = baseKey.OpenSubKey(codecGuid)) {
+                            if (codecKey == null) continue;
+                            var split = codecKey.GetValue("FileExtensions", "").ToString().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                            result.AddRange(split);
+                        }
+                    }
+                    return result;
+                }
+
+            }
+        }
+        #endregion
+
+
     }
 }

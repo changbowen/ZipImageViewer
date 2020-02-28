@@ -18,13 +18,19 @@ namespace ZipImageViewer
         public static readonly string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         public static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] {
-                "jpg", "jpeg", "png", "gif", "tiff", "bmp",
-                ".jpg", ".jpeg", ".png", ".gif", ".tiff", ".bmp",
+                ".jpg", ".jpeg", ".png", ".tiff", ".gif", ".bmp", ".ico", ".dds", ".jxr", ".hdp", ".wdp"
             });
         public static readonly HashSet<string> ZipExtensions =
             new HashSet<string>(new[] {
-                "zip", "rar", "7z",
-                ".zip", ".rar", ".7z",
+                ".zip", ".rar", ".7z", ".bz2", ".bzip2", ".tbz2", ".tbz", ".gz", ".gzip", ".tgz", ".tar",
+                ".wim", ".swm", ".esd", ".xz", ".txz", ".zipx", ".jar", ".xpi", ".odt", ".ods", ".docx",
+                ".xlsx", ".epub", ".apm", ".ar", ".a", ".deb", ".lib", ".arj", ".cab", ".chm", ".chw",
+                ".chi", ".chq", ".msi", ".msp", ".doc", ".xls", ".ppt", ".cpio", ".cramfs", ".dmg",
+                ".ext", ".ext2", ".ext3", ".ext4", ".img", ".fat", ".img", ".hfs", ".hfsx", ".hxs",
+                ".hxi", ".hxr", ".hxq", ".hxw", ".lit", ".ihex", ".iso", ".img", ".lzh", ".lha", ".lzma",
+                ".mbr", ".mslz", ".mub", ".nsis", ".ntfs", ".img", ".mbr", ".r00", ".rpm", ".ppmd",
+                ".qcow", ".qcow2", ".qcow2c", ".001", ".squashfs", ".udf", ".iso", ".img", ".scap",
+                ".uefif", ".vdi", ".vhd", ".vmdk", ".xar", ".pkg", ".z", ".taz"
             });
         //public const int PreviewCount = 4;
         public static Random Random = new Random();
@@ -48,6 +54,18 @@ namespace ZipImageViewer
 
         private void App_Startup(object sender, StartupEventArgs e) {
             try {
+                //handle immersion mode change
+                Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
+
+                //get supported extensions
+                foreach (var ext in NativeHelpers.GetWICDecoders().Select(s => s.ToLowerInvariant())) {
+                    if (!ImageExtensions.Contains(ext)) ImageExtensions.Add(ext);
+                }
+
+                //set working directory
+                Directory.SetCurrentDirectory(ExeDir);
+
+                //load config
                 Setting.LoadConfigFromFile();
 
                 //create resources
@@ -63,24 +81,34 @@ namespace ZipImageViewer
                 //make sure thumbs db is correct
                 CheckThumbsDB();
 
+                //check args
+                if (e.Args?.Length > 0) {
 #if DEBUG
-                if (e.Args?.Length > 0 && e.Args[0] == "-cleandb") {
-                    Execute(Table.Thumbs, (table, con) => {
-                        using (var cmd = new SQLiteCommand(con)) {
-                            cmd.CommandText = $@"delete from {table.Name}";
-                            cmd.ExecuteNonQuery();
-                            cmd.CommandText = @"vacuum";
-                            cmd.ExecuteNonQuery();
-                        }
-                        return 0;
-                    });
-                }
+                    if (e.Args.Contains("-cleandb")) {
+                        Execute(Table.Thumbs, (table, con) => {
+                            using (var cmd = new SQLiteCommand(con)) {
+                                cmd.CommandText = $@"delete from {table.Name}";
+                                cmd.ExecuteNonQuery();
+                                cmd.CommandText = @"vacuum";
+                                cmd.ExecuteNonQuery();
+                            }
+                            return 0;
+                        });
+                    }
 #endif
+                    switch (Helpers.GetPathType(new DirectoryInfo(e.Args[0]))) {
+                        case FileFlags.Directory:
+                        case FileFlags.Archive:
+                            new MainWindow() { InitialPath = e.Args[0] }.Show();
+                            return;
+                        case FileFlags.Image:
+                            var objInfo = new ObjectInfo(e.Args[0], FileFlags.Image);
+                            new ViewWindow() { ObjectInfo = objInfo }.Show();
+                            return;
+                    }
+                }
 
-                //handle immersion mode change
-                Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
-
-                //show mainwindow
+                //show mainwindow if no cmdline args
                 new MainWindow().Show();
             }
             catch (Exception ex) {

@@ -144,7 +144,7 @@ namespace ZipImageViewer
             };
             //callback used to update progress
             Action<string, int, int> cb = (path, i, count) => {
-                var p = Convert.ToInt32((double)i / count * 100);
+                var p = (int)Math.Floor((double)i / count * 100);
                 Dispatcher.Invoke(() => {
                     bw.Percentage = p;
                     bw.MessageBody = path;

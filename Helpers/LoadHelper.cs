@@ -312,6 +312,7 @@ namespace ZipImageViewer
                 case FileFlags.Archive:
                     LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                         Flags = FileFlags.Archive,
+                        LoadImage = false,
                         ObjInfoCallback = oi => objInfo.SourcePaths = oi.SourcePaths,
                     });
                     break;
@@ -377,25 +378,20 @@ namespace ZipImageViewer
                         }
                         break;
                     case FileFlags.Archive:
+                    case FileFlags.Archive | FileFlags.Image:
                         if (objInfo.SourcePaths?.Length > 0) {
                             LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                                 DecodeSize = decodeSize,
                                 LoadImage = true,
                                 TryCache = tryCache,
                                 FileNames = new[] { objInfo.SourcePaths[sourcePathIdx] },
-                                Flags = FileFlags.Archive,
+                                Flags = objInfo.Flags,
                                 CldInfoCallback = oi => source = oi.ImageSource,
                                 ObjInfoCallback = oi => objInfo.Flags = oi.Flags
                             });
                         }
                         if (source == null) {
-                            source = App.fa_archive;
-                        }
-                        break;
-                    case FileFlags.Archive | FileFlags.Image:
-                        source = objInfo.ImageSource;
-                        if (source == null) {
-                            source = App.fa_image;
+                            source = objInfo.Flags.HasFlag(FileFlags.Image) ? App.fa_image : App.fa_archive;
                         }
                         break;
                 }
@@ -455,89 +451,95 @@ namespace ZipImageViewer
         /// <para>A <paramref name="decodeSize"/> higher than the actual resolution will be ignored.
         /// Note that this is the size in pixel instead of the device-independent size used in WPF.</para>
         /// </summary>
+        /// <returns>Returns null if error occured.</returns>
         public static BitmapSource GetImageSource(Stream stream, SizeInt decodeSize = default) {
-            stream.Position = 0;
-            var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
-            var pixelSize = new SizeInt(frame.PixelWidth, frame.PixelHeight);
-            ushort orien = 0;
-            if ((frame.Metadata as BitmapMetadata)?.GetQuery("/app1/ifd/{ushort=274}") is ushort u)
-                orien = u;
-            frame = null;
+            try {
+                stream.Position = 0;
+                var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
+                var pixelSize = new SizeInt(frame.PixelWidth, frame.PixelHeight);
+                ushort orien = 0;
+                if ((frame.Metadata as BitmapMetadata)?.GetQuery("/app1/ifd/{ushort=274}") is ushort u)
+                    orien = u;
+                frame = null;
 
-            //calculate decode size
-            if (decodeSize.Width + decodeSize.Height > 0) {
-                //use pixelSize if decodeSize is too big
-                //DecodePixelWidth / Height is set to PixelWidth / Height anyway in reference source
-                if (decodeSize.Width > pixelSize.Width) decodeSize.Width = pixelSize.Width;
-                if (decodeSize.Height > pixelSize.Height) decodeSize.Height = pixelSize.Height;
-                
-                //flip decodeSize according to orientation
-                if (orien > 4 && orien < 9)
-                    decodeSize = new SizeInt(decodeSize.Height, decodeSize.Width);
-            }
+                //calculate decode size
+                if (decodeSize.Width + decodeSize.Height > 0) {
+                    //use pixelSize if decodeSize is too big
+                    //DecodePixelWidth / Height is set to PixelWidth / Height anyway in reference source
+                    if (decodeSize.Width > pixelSize.Width) decodeSize.Width = pixelSize.Width;
+                    if (decodeSize.Height > pixelSize.Height) decodeSize.Height = pixelSize.Height;
 
-            //init bitmapimage
-            stream.Position = 0;
-            var bi = new BitmapImage();
-            bi.BeginInit();
-            bi.CacheOption = BitmapCacheOption.OnLoad;
-            if (pixelSize.Width > 0 && pixelSize.Height > 0) {
-                //setting both DecodePixelWidth and Height will break the aspect ratio
-                var imgRatio = (double)pixelSize.Width / pixelSize.Height;
-                if (decodeSize.Width > 0 && decodeSize.Height > 0) {
-                    if (imgRatio > (double)decodeSize.Width / decodeSize.Height)
+                    //flip decodeSize according to orientation
+                    if (orien > 4 && orien < 9)
+                        decodeSize = new SizeInt(decodeSize.Height, decodeSize.Width);
+                }
+
+                //init bitmapimage
+                stream.Position = 0;
+                var bi = new BitmapImage();
+                bi.BeginInit();
+                bi.CacheOption = BitmapCacheOption.OnLoad;
+                if (pixelSize.Width > 0 && pixelSize.Height > 0) {
+                    //setting both DecodePixelWidth and Height will break the aspect ratio
+                    var imgRatio = (double)pixelSize.Width / pixelSize.Height;
+                    if (decodeSize.Width > 0 && decodeSize.Height > 0) {
+                        if (imgRatio > (double)decodeSize.Width / decodeSize.Height)
+                            bi.DecodePixelHeight = decodeSize.Height;
+                        else
+                            bi.DecodePixelWidth = decodeSize.Width;
+                    }
+                    else if (decodeSize.Width == 0 && decodeSize.Height > 0)
                         bi.DecodePixelHeight = decodeSize.Height;
-                    else
+                    else if (decodeSize.Height == 0 && decodeSize.Width > 0)
                         bi.DecodePixelWidth = decodeSize.Width;
                 }
-                else if (decodeSize.Width == 0 && decodeSize.Height > 0)
-                    bi.DecodePixelHeight = decodeSize.Height;
-                else if (decodeSize.Height == 0 && decodeSize.Width > 0)
-                    bi.DecodePixelWidth = decodeSize.Width;
-            }
-            bi.StreamSource = stream;
-            bi.EndInit();
-            bi.Freeze();
+                bi.StreamSource = stream;
+                bi.EndInit();
+                bi.Freeze();
 
-            if (orien < 2) return bi;
-            //apply orientation based on metadata
-            var tb = new TransformedBitmap();
-            tb.BeginInit();
-            tb.Source = bi;
-            switch (orien) {
-                case 2:
-                    tb.Transform = new ScaleTransform(-1d, 1d);
-                    break;
-                case 3:
-                    tb.Transform = new RotateTransform(180d);
-                    break;
-                case 4:
-                    tb.Transform = new ScaleTransform(1d, -1d);
-                    break;
-                case 5: {
-                        var tg = new TransformGroup();
-                        tg.Children.Add(new RotateTransform(90d));
-                        tg.Children.Add(new ScaleTransform(-1d, 1d));
-                        tb.Transform = tg;
+                if (orien < 2) return bi;
+                //apply orientation based on metadata
+                var tb = new TransformedBitmap();
+                tb.BeginInit();
+                tb.Source = bi;
+                switch (orien) {
+                    case 2:
+                        tb.Transform = new ScaleTransform(-1d, 1d);
                         break;
-                    }
-                case 6:
-                    tb.Transform = new RotateTransform(90d);
-                    break;
-                case 7: {
-                        var tg = new TransformGroup();
-                        tg.Children.Add(new RotateTransform(90d));
-                        tg.Children.Add(new ScaleTransform(1d, -1d));
-                        tb.Transform = tg;
+                    case 3:
+                        tb.Transform = new RotateTransform(180d);
                         break;
-                    }
-                case 8:
-                    tb.Transform = new RotateTransform(270d);
-                    break;
+                    case 4:
+                        tb.Transform = new ScaleTransform(1d, -1d);
+                        break;
+                    case 5: {
+                            var tg = new TransformGroup();
+                            tg.Children.Add(new RotateTransform(90d));
+                            tg.Children.Add(new ScaleTransform(-1d, 1d));
+                            tb.Transform = tg;
+                            break;
+                        }
+                    case 6:
+                        tb.Transform = new RotateTransform(90d);
+                        break;
+                    case 7: {
+                            var tg = new TransformGroup();
+                            tg.Children.Add(new RotateTransform(90d));
+                            tg.Children.Add(new ScaleTransform(1d, -1d));
+                            tb.Transform = tg;
+                            break;
+                        }
+                    case 8:
+                        tb.Transform = new RotateTransform(270d);
+                        break;
+                }
+                tb.EndInit();
+                tb.Freeze();
+                return tb;
             }
-            tb.EndInit();
-            tb.Freeze();
-            return tb;
+            catch {
+                return null;
+            }
         }
 
         public static void CacheFolder(string folderPath, ref CancellationTokenSource tknSrc, object tknLock, Action<string, int, int> callback) {
@@ -587,29 +589,6 @@ namespace ZipImageViewer
                 tknSrc = null;
                 Monitor.Exit(tknLock);
             }
-
-            //            while (cacheThreadIdx < ObjectList.Count) {
-            //                while (tknSrc_LoadThumb != null || LoadThrottle.CurrentCount <= 1) {
-            //                    if (cacheThreadExit) break;
-            //                    Thread.Sleep(2000);
-            //                }
-
-            //                var objInfo = ObjectList[cacheThreadIdx];
-            //                var decodeSize = (SizeInt)Setting.ThumbnailSize;
-            //                if (objInfo.SourcePaths == null) UpdateSourcePaths(objInfo);
-            //                var path = objInfo.Flags.HasFlag(FileFlags.Archive) ?
-            //                    Path.Combine(objInfo.FileSystemPath, objInfo.SourcePaths[0]) :
-            //                    objInfo.SourcePaths[0];
-            //                if (!SQLiteHelper.ThumbExistInDB(path, decodeSize)) {
-            //#if DEBUG
-            //                    Console.WriteLine($"Caching to DB: {path}");
-            //#endif
-            //                    GetImageSource(objInfo, 0, decodeSize, false);
-            //                }
-
-            //                if (cacheThreadExit) break;
-            //                cacheThreadIdx += 1;
-            //            }
         }
     }
 }

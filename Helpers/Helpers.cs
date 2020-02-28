@@ -126,7 +126,7 @@ namespace ZipImageViewer
         /// <returns></returns>
         public static FileFlags GetPathType(string fileName) {
             var ft = FileFlags.Unknown;
-            var extension = Path.GetExtension(fileName)?.TrimStart('.').ToLowerInvariant();
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
             if (extension?.Length == 0) return ft;
 
             if (App.ImageExtensions.Contains(extension)) ft = FileFlags.Image;
@@ -135,6 +135,8 @@ namespace ZipImageViewer
         }
 
         public static FileFlags GetPathType(FileSystemInfo fsInfo) {
+            if (fsInfo.Attributes == (FileAttributes)(-1))//doesnt exist
+                return FileFlags.Error;
             if (fsInfo.Attributes.HasFlag(FileAttributes.Directory))
                 return FileFlags.Directory;
             if (App.ZipExtensions.Contains(fsInfo.Extension.ToLowerInvariant()))
@@ -351,6 +353,11 @@ namespace ZipImageViewer
                 win.Width = lastRect.Width;
                 win.Height = lastRect.Height;
             }
+        }
+
+        public static void ShutdownCheck() {
+            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow || w is ViewWindow) == 0)
+                Application.Current.Shutdown();
         }
     }
 

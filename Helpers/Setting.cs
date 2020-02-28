@@ -19,6 +19,7 @@ namespace ZipImageViewer
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public static event EventHandler<PropertyChangedEventArgs> StaticPropertyChanged;
+        public static string FilePath => Path.Combine(App.ExeDir, @"config.ini");
 
         private static void OnStaticPropertyChanged(string propName) {
             StaticPropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propName));
@@ -174,7 +175,9 @@ namespace ZipImageViewer
         public static SlideAnimConfig SlideAnimConfig = new SlideAnimConfig();
 
 
-        public static void LoadConfigFromFile(string path = "config.ini") {
+        public static void LoadConfigFromFile(string path = null) {
+            if (path == null) path = FilePath;
+
             //load config
             if (!File.Exists(path)) {
                 //initialize default config
@@ -288,7 +291,9 @@ namespace ZipImageViewer
             return (T)result;
         }
 
-        public static void SaveConfigToFile(string path = "config.ini") {
+        public static void SaveConfigToFile(string path = null) {
+            if (path == null) path = FilePath;
+
             var savedPwds = "";
             if (FallbackPasswords != null && FallbackPasswords.Count > 0) {
                 foreach (var s in FallbackPasswords) {

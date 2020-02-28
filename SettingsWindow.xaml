@@ -159,7 +159,7 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Transition Animation"/>
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Viewer Transition"/>
                         <ContentControl>
                             <ComboBox x:Name="CB_ViewerTransition" SelectionChanged="CB_SelectionChanged"/>
                         </ContentControl>
