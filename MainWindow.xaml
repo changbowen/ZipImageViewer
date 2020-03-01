@@ -30,20 +30,20 @@
                 </local:Thumbnail>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Panel.ZIndex="0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ImmersionMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    
                     <fa:FontAwesome FontSize="12" Margin="0 0 4 0"
                                     Icon="{Binding Flags, Converter={StaticResource FlagToImageConverter}, Mode=OneWay}"/>
                     <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10"
-                               MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ImmersionMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="True">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                               MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"/>
                 </StackPanel>
             </StackPanel>
         </DataTemplate>

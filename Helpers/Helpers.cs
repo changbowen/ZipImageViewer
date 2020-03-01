@@ -13,6 +13,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace ZipImageViewer
 {
@@ -74,6 +75,20 @@ namespace ZipImageViewer
         public static SizeInt DivideBy(this SizeInt input, double d) {
             return new SizeInt((int)Math.Round(input.Width / d), (int)Math.Round(input.Height / d));
         }
+
+        //using StrCmpLogicalW instead to match Windows Explorer behavior
+        //public static IEnumerable<string> SortAlphanumeric(this IEnumerable<string> list) {
+        //    var maxLen = list.Select(s => s.Length).Max();
+        //    return list.OrderBy(s => Regex.Replace(s, @"\d+", n => n.Value.PadLeft(maxLen, '0')));
+        //}
+        //public static int CompareAlphanumeric(this string x, string y) {
+        //    var maxLen = Math.Max(x.Length, y.Length);
+        //    MatchEvaluator eval = m => m.Value.PadLeft(maxLen, '0');
+        //    return string.Compare(
+        //        Regex.Replace(x, @"\d+", eval),
+        //        Regex.Replace(y, @"\d+", eval),
+        //        StringComparison.OrdinalIgnoreCase);
+        //}
     }
 
     /// <summary>
@@ -87,35 +102,6 @@ namespace ZipImageViewer
         Directory = 2,
         Archive = 4,
         Image = 8,
-        ///// <summary>
-        ///// Indicate to load all archive content instead of a single image
-        ///// </summary>
-        //Archive_OpenSelf = 8
-    }
-
-    /// <summary>
-    /// Sort based on int value of FileFlag.
-    /// For same flags (same type of file), do string compare on VirtualPath.
-    /// </summary>
-    public class FolderSorter : IComparer
-    {
-        public int Compare(object x, object y) {
-            var oX = (ObjectInfo)x;
-            var oY = (ObjectInfo)y;
-
-            //strip supporting bits
-            var baseX = oX.Flags & ~FileFlags.Error;
-            var baseY = oY.Flags & ~FileFlags.Error;
-
-            if (baseX != baseY) {
-                if (baseX == FileFlags.Unknown) return 1; //put unknowns in last
-                if (baseY == FileFlags.Unknown) return -1; //put unknowns in last
-                return baseX - baseY;
-            }
-            else {
-                return string.Compare(oX.VirtualPath, oY.VirtualPath);
-            }
-        }
     }
 
     public static class Helpers {
@@ -123,8 +109,7 @@ namespace ZipImageViewer
         /// Get file type based on extension. Assumes fileName points to a file.
         /// </summary>
         /// <param name="fileName">A full or not full path of the file.</param>
-        /// <returns></returns>
-        public static FileFlags GetPathType(string fileName) {
+        public static FileFlags GetFileType(string fileName) {
             var ft = FileFlags.Unknown;
             var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
             if (extension?.Length == 0) return ft;
@@ -132,6 +117,14 @@ namespace ZipImageViewer
             if (App.ImageExtensions.Contains(extension)) ft = FileFlags.Image;
             else if (App.ZipExtensions.Contains(extension)) ft = FileFlags.Archive;
             return ft;
+        }
+
+        public static FileFlags GetPathType(string path) {
+            DirectoryInfo dirInfo = null;
+            try { dirInfo = new DirectoryInfo(path); }
+            catch { }
+            if (dirInfo == null) return FileFlags.Error;
+            return GetPathType(dirInfo);
         }
 
         public static FileFlags GetPathType(FileSystemInfo fsInfo) {
@@ -145,6 +138,27 @@ namespace ZipImageViewer
                 return FileFlags.Image;
             return FileFlags.Unknown;
         }
+
+        ///// <summary>
+        ///// Get the ObjectInfo pointing to <paramref name="path"/>'s container when itself is not a container, with ObjectInfo.FileName set to itself.
+        ///// Otherwise the ObjectInfo pointing to <paramref name="path"/> itself.
+        ///// Returns null if error occured.
+        ///// </summary>
+        //public static ObjectInfo GetContainerInfo(string path) {
+        //    try {
+        //        var dirInfo = new DirectoryInfo(path);
+        //        var flags = GetPathType(dirInfo);
+        //        if (flags != FileFlags.Directory && flags != FileFlags.Archive) {//path is a file
+        //            var parent = dirInfo.Parent?.FullName;
+        //            if (parent != null)
+        //                return new ObjectInfo(parent, FileFlags.Directory, dirInfo.Name);
+        //        }
+        //        return new ObjectInfo(path, flags);
+        //    }
+        //    catch {
+        //        return null;
+        //    }
+        //}
 
         private static double GetAverageBrightness(BitmapFrame frame) {
             using (var bmpStream = new MemoryStream()) {
@@ -356,8 +370,36 @@ namespace ZipImageViewer
         }
 
         public static void ShutdownCheck() {
-            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow || w is ViewWindow) == 0)
+            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow || w is ViewWindow || w is SlideshowWindow) == 0)
                 Application.Current.Shutdown();
+        }
+
+        /// <summary>
+        /// Sort based on int value of FileFlag.
+        /// For same flags (same type of file), do string compare on VirtualPath.
+        /// </summary>
+        public class ObjectInfoSorter : IComparer, IComparer<ObjectInfo>
+        {
+            public int Compare(ObjectInfo oX, ObjectInfo oY) {
+                //strip supporting bits
+                var baseX = oX.Flags & ~FileFlags.Error;
+                var baseY = oY.Flags & ~FileFlags.Error;
+
+                if (baseX != baseY) {
+                    if (baseX == FileFlags.Unknown) return 1; //put unknowns in last
+                    if (baseY == FileFlags.Unknown) return -1; //put unknowns in last
+                    return baseX - baseY;
+                }
+                else {
+                    return NativeHelpers.NaturalStringComparer.Compare(oX.VirtualPath, oY.VirtualPath);
+                }
+            }
+
+            public int Compare(object x, object y) {
+                var oX = (ObjectInfo)x;
+                var oY = (ObjectInfo)y;
+                return Compare(oX, oY);
+            }
         }
     }
 

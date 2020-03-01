@@ -2,14 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using SizeInt = System.Drawing.Size;
 using static ZipImageViewer.SlideshowHelper;
@@ -22,10 +18,8 @@ namespace ZipImageViewer
     /// </summary>
     public partial class SlideshowWindow : BorderlessWindow
     {
-        private readonly ObjectInfo ObjectInfo;
-
+        private readonly string basePath;
         private readonly DispatcherTimer animTimer;
-
 
         public SlideAnimConfig AnimConfig {
             get { return (SlideAnimConfig)GetValue(AnimConfigProperty); }
@@ -34,12 +28,15 @@ namespace ZipImageViewer
         public static readonly DependencyProperty AnimConfigProperty =
             DependencyProperty.Register("AnimConfig", typeof(SlideAnimConfig), typeof(SlideshowWindow), new PropertyMetadata(null));
 
-
-        public SlideshowWindow(ObjectInfo objInfo) {
+        /// <summary>
+        /// path will be used to get images from.
+        /// </summary>
+        public SlideshowWindow(string path) {
             InitializeComponent();
 
+            basePath = path;
+
             AnimConfig = new SlideAnimConfig(Setting.SlideAnimConfig);
-            ObjectInfo = new ObjectInfo(objInfo.ContainerPath);
             animTimer = new DispatcherTimer(DispatcherPriority.Normal, Application.Current.Dispatcher);
             animTimer.Tick += AnimTick;
 
@@ -61,18 +58,25 @@ namespace ZipImageViewer
             b.BeginAnimation(OpacityProperty, a);
         }
 
-        private int index = -1;
         private DpiImage currImage;
         private Rect lastRect;
+
+        private (int objIdx, int subIdx) index = (0, 0);
+        private ObjectInfo[] objectList;
 
         private void SlideWin_Loaded(object sender, RoutedEventArgs e) {
             //init controls
             CB_Transition.ItemsSource = Enum.GetValues(typeof(SlideTransition));
             CB_Transition.SelectedItem = AnimConfig.Transition;
 
-            //get list of images to use
-            ObjectInfo.Flags = Helpers.GetPathType(new DirectoryInfo(ObjectInfo.FileSystemPath));
-            UpdateSourcePaths(ObjectInfo);
+            //get image to use
+            objectList = getAllImages(basePath, Helpers.GetPathType(basePath));
+
+            if (objectList?.Length == 0) {
+                MessageBox.Show($@"No images found under {basePath}.", "No Images", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                Close();
+                return;
+            }
 
             //fullscreen
             Helpers.SwitchFullScreen(this, ref lastRect, true);
@@ -84,6 +88,34 @@ namespace ZipImageViewer
         private void SlideWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             animTimer.Stop();
             Setting.SlideAnimConfig = AnimConfig;//only the last closed window setting is saved
+        }
+
+        private void SlideWin_Closed(object sender, EventArgs e) {
+            Helpers.ShutdownCheck();
+        }
+
+        /// <summary>
+        /// Get a list of images and archives to use for slideshow.
+        /// </summary>
+        private static ObjectInfo[] getAllImages(string path, FileFlags flags) {
+            IEnumerable<ObjectInfo> infos = null;
+
+            switch (flags) {
+                case FileFlags.Directory:
+                    try {
+                        infos = from fsInfo in new DirectoryInfo(path).EnumerateFileSystemInfos(@"*", SearchOption.AllDirectories)
+                                let fType = Helpers.GetPathType(fsInfo)
+                                where fType == FileFlags.Image || fType == FileFlags.Archive
+                                select new ObjectInfo(fsInfo.FullName, fType);
+                    }
+                    catch { }
+                    break;
+                case FileFlags.Archive:
+                    infos = new[] { new ObjectInfo(path, FileFlags.Archive) };
+                    break;
+            }
+
+            return infos?.OrderBy(i => i.FileSystemPath, new NativeHelpers.NaturalStringComparer()).ToArray();
         }
 
         private void Btn_Preset_Click(object sender, RoutedEventArgs e) {
@@ -124,16 +156,32 @@ namespace ZipImageViewer
             animTimer.Stop();
             if (!IsLoaded) return;
 
-            index = index == ObjectInfo.SourcePaths.Length - 1 ? 0 : index + 1;
+            ImageSource nextSrc = null;
             
             //convert screen size to physical size
             var dpi = VisualTreeHelper.GetDpi(this);
-            var nextSrc = await GetImageSourceAsync(ObjectInfo, index,
-                decodeSize: new SizeInt(Convert.ToInt32(canvas.ActualWidth * dpi.DpiScaleX * AnimConfig.ResolutionScale),
-                                        Convert.ToInt32(canvas.ActualHeight * dpi.DpiScaleY * AnimConfig.ResolutionScale)));
+            var decodeSize = new SizeInt(Convert.ToInt32(canvas.ActualWidth * dpi.DpiScaleX * AnimConfig.ResolutionScale),
+                                         Convert.ToInt32(canvas.ActualHeight * dpi.DpiScaleY * AnimConfig.ResolutionScale));
+            //calculate index
+            var currObj = objectList[index.objIdx];
+            switch (currObj.Flags) {
+                case FileFlags.Image:
+                    nextSrc = await GetImageSourceAsync(currObj.FileSystemPath, decodeSize);
+                    index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
+                    break;
+                case FileFlags.Archive:
+                    if (currObj.SourcePaths == null)
+                        currObj.SourcePaths = await GetSourcePathsAsync(currObj);
+                    nextSrc = await GetImageSourceAsync(currObj, sourcePathIdx: index.subIdx, decodeSize: decodeSize);
+                    index.subIdx++;
+                    if (index.subIdx >= currObj.SourcePaths.Length) {
+                        index.subIdx = 0;
+                        index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
+                    }
+                    break;
+            }
 
             if (nextSrc != null) {
-                //currSource = nextSrc;
                 //switch target
                 if (currImage == IM0) {
                     Panel.SetZIndex(IM0, 8);

@@ -110,6 +110,27 @@ namespace ZipImageViewer
         }
         #endregion
 
+        #region Natual Sort
+        [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
+        public static extern int StrCmpLogicalW(string psz1, string psz2);
 
+        public class NaturalStringComparer : IComparer<string>
+        {
+            private readonly int modifier = 1;
+
+            public NaturalStringComparer() : this(false) { }
+            public NaturalStringComparer(bool descending) {
+                if (descending) modifier = -1;
+            }
+
+            public int Compare(string a, string b) {
+                return StrCmpLogicalW(a ?? "", b ?? "") * modifier;
+            }
+
+            public static int Compare(string a, string b, bool descending = false) {
+                return StrCmpLogicalW(a ?? "", b ?? "") * (descending ? -1 : 1);
+            }
+        }
+        #endregion
     }
 }

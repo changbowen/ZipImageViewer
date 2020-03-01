@@ -16,6 +16,7 @@
         <local:MathMultiplyConverter x:Key="MathMultiplyConverter"/>
         
         <Style x:Key="NavPanelStyle" TargetType="Panel">
+            <EventSetter Event="PreviewMouseDown" Handler="DockPanel_PreviewMouseDown"/>
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Background" Value="#33AAAAAA" />
             <Setter Property="Panel.ZIndex" Value="10" />
@@ -36,13 +37,13 @@
     <Canvas x:Name="CA" Background="Transparent"
             PreviewMouseWheel="CA_PreviewMouseWheel"
             PreviewMouseUp="CA_PreviewMouseUp">
-        <DockPanel Style="{StaticResource NavPanelStyle}" MouseUp="DockPanelLeft_MouseUp"
+        <DockPanel x:Name="DP_NavLeft" Style="{StaticResource NavPanelStyle}"
                    Width="{Binding ActualWidth, ElementName=CA, Converter={StaticResource MathMultiplyConverter}, ConverterParameter=0.1, Mode=OneWay}"
                    Height="{Binding ActualHeight,ElementName=CA, Mode=OneWay}"
                    Canvas.Left="0">
             <fa:FontAwesome Icon="Solid_ChevronLeft" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="24"/>
         </DockPanel>
-        <DockPanel Style="{StaticResource NavPanelStyle}" MouseUp="DockPanelRight_MouseUp"
+        <DockPanel x:Name="DP_NavRight" Style="{StaticResource NavPanelStyle}"
                    Width="{Binding ActualWidth, ElementName=CA, Converter={StaticResource MathMultiplyConverter}, ConverterParameter=0.1, Mode=OneWay}"
                    Height="{Binding ActualHeight,ElementName=CA, Mode=OneWay}"
                    Canvas.Right="0">

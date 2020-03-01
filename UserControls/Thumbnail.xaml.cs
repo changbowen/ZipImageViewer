@@ -142,6 +142,12 @@ namespace ZipImageViewer
         private async void cycleImageSource(object sender, EventArgs e) {
             var tn = this;
             tn.cycleTimer.Stop();
+            //wait if main window is minimized
+            if (mainWin.WindowState == WindowState.Minimized) {
+                tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(5000);
+                tn.cycleTimer.Start();
+                return;
+            }
 
             //wait to get image
             if (tn.ObjectInfo.ImageSource == null && !Setting.ImmersionMode &&
@@ -161,7 +167,7 @@ namespace ZipImageViewer
                 //update source paths if needed
                 if (tn.ObjectInfo.SourcePaths == null) {
                     var objInfo = tn.ObjectInfo;
-                    await Task.Run(() => UpdateSourcePaths(objInfo));
+                    objInfo.SourcePaths = await GetSourcePathsAsync(objInfo);
                 }
                 //get the next path index to use
                 var thumbSize = (SizeInt)Setting.ThumbnailSize;
@@ -171,7 +177,7 @@ namespace ZipImageViewer
                 }
                 else
                     tn.thumbIndex = 0;
-                tn.ThumbImageSource = await GetImageSourceAsync(tn.ObjectInfo, tn.thumbIndex, decodeSize: thumbSize);
+                tn.ThumbImageSource = await GetImageSourceAsync(tn.ObjectInfo, sourcePathIdx: tn.thumbIndex, decodeSize: thumbSize);
             }
             catch { }
             finally {

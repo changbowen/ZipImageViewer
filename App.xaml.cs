@@ -96,15 +96,27 @@ namespace ZipImageViewer
                         });
                     }
 #endif
-                    switch (Helpers.GetPathType(new DirectoryInfo(e.Args[0]))) {
-                        case FileFlags.Directory:
-                        case FileFlags.Archive:
-                            new MainWindow() { InitialPath = e.Args[0] }.Show();
+                    try {
+                        //use the last arg as path
+                        var path = e.Args[e.Args.Length - 1];
+                        var objInfo = new ObjectInfo(path, Helpers.GetPathType(new DirectoryInfo(path)));
+                        if (e.Args.Contains("-slideshow")) {
+                            new SlideshowWindow(objInfo.ContainerPath).Show();
                             return;
-                        case FileFlags.Image:
-                            var objInfo = new ObjectInfo(e.Args[0], FileFlags.Image);
-                            new ViewWindow() { ObjectInfo = objInfo }.Show();
-                            return;
+                        }
+                        else {
+                            switch (objInfo.Flags) {
+                                case FileFlags.Image:
+                                    new ViewWindow(objInfo.ContainerPath, objInfo.FileName).Show();
+                                    return;
+                                default:
+                                    new MainWindow() { InitialPath = objInfo.ContainerPath }.Show();
+                                    return;
+                            }
+                        }
+                    }
+                    catch (Exception ex) {
+                        MessageBox.Show(ex.Message, "Parametered Start Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
 
@@ -113,7 +125,7 @@ namespace ZipImageViewer
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Application Start Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                throw;
+                Current.Shutdown();
             }
         }
 

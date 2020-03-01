@@ -70,7 +70,7 @@ namespace ZipImageViewer
 
             //when file is an image
             if (options.Flags.HasFlag(FileFlags.Image) && !options.Flags.HasFlag(FileFlags.Archive)) {
-                objInfo.SourcePaths = new[] { options.FilePath };
+                //objInfo.SourcePaths = new[] { options.FilePath };
                 if (options.LoadImage)
                     objInfo.ImageSource = GetImageSource(options.FilePath, options.DecodeSize);
             }
@@ -168,7 +168,7 @@ namespace ZipImageViewer
                     toDo = options.FileNames;
                 else
                     toDo = ext.ArchiveFileData
-                        .Where(d => !d.IsDirectory && GetPathType(d.FileName) == FileFlags.Image)
+                        .Where(d => !d.IsDirectory && GetFileType(d.FileName) == FileFlags.Image)
                         .Select(d => d.FileName).ToArray();
 
                 foreach (var fileName in toDo) {
@@ -289,123 +289,149 @@ namespace ZipImageViewer
             }
         }
 
-        /// <summary>
-        /// Only udpate when SourcePaths is null. Call from background thread.
-        /// This is faster than you think.
-        /// </summary>
-        internal static void UpdateSourcePaths(ObjectInfo objInfo) {
-            if (objInfo.SourcePaths != null) return;
+        public static async Task<string[]> GetSourcePathsAsync(ObjectInfo objInfo) {
+            return await Task.Run(() => GetSourcePaths(objInfo));
+        }
 
+        /// <summary>
+        /// <para>If <paramref name="objInfo"/> is a container, fill its SourcePaths with a list of images.</para>
+        /// <para>If <paramref name="objInfo"/> is not a container, SourcePaths will be set to a string[1] with its <paramref name="objInfo"/>.FileName in it.</para>
+        /// <para>Only udpate when SourcePaths is null. Does not load any images. Call from background threads.</para>
+        /// </summary>
+        public static string[] GetSourcePaths(ObjectInfo objInfo) {
+            if (objInfo.SourcePaths != null) return objInfo.SourcePaths;
+
+            string[] paths = null;
             switch (objInfo.Flags) {
                 case FileFlags.Directory:
                     IEnumerable<FileSystemInfo> fsInfos = null;
-                    try { fsInfos = new DirectoryInfo(objInfo.FileSystemPath).EnumerateFileSystemInfos(); }
-                    catch { objInfo.Flags |= FileFlags.Error; }
-                    var srcPaths = new List<string>();
-                    foreach (var fsInfo in fsInfos) {
-                        var fType = GetPathType(fsInfo);
-                        if (fType != FileFlags.Image) continue;
-                        srcPaths.Add(fsInfo.FullName);
+                    try {
+                        fsInfos = new DirectoryInfo(objInfo.FileSystemPath).EnumerateFileSystemInfos();
+                        var srcPaths = new List<string>();
+                        foreach (var fsInfo in fsInfos) {
+                            var fType = GetPathType(fsInfo);
+                            if (fType != FileFlags.Image) continue;
+                            srcPaths.Add(fsInfo.Name);
+                        }
+                        srcPaths.Sort(new NativeHelpers.NaturalStringComparer());
+                        paths = srcPaths.ToArray();
                     }
-                    objInfo.SourcePaths = srcPaths.ToArray();
+                    catch {
+                        objInfo.Flags |= FileFlags.Error;
+                    }
                     break;
                 case FileFlags.Archive:
                     LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                         Flags = FileFlags.Archive,
                         LoadImage = false,
-                        ObjInfoCallback = oi => objInfo.SourcePaths = oi.SourcePaths,
+                        ObjInfoCallback = oi => {
+                            Array.Sort(oi.SourcePaths, new NativeHelpers.NaturalStringComparer());
+                            paths = oi.SourcePaths;
+                        }
                     });
                     break;
                 case FileFlags.Image:
-                    objInfo.SourcePaths = new[] { objInfo.FileSystemPath };
-                    break;
+                //FileFlags.Archive | FileFlags.Image should have SourcePaths[1] set when loaded the first time.
+                //this is only included for completeness and should never be reached unless something's wrong with the code.
                 case FileFlags.Archive | FileFlags.Image:
-                    //FileFlags.Archive | FileFlags.Image should have SourcePaths[1] set when loaded the first time.
-                    //this is only included for completeness and should never be reached unless something's wrong with the code.
-                    objInfo.SourcePaths = new[] { objInfo.FileName };
+                    paths = new[] { objInfo.FileName };
                     break;
                 default:
-                    objInfo.SourcePaths = new string[0];
+                    paths = new string[0];
                     break;
             }
-            //Console.WriteLine("Updated SourcePaths for: " + objInfo.FileSystemPath);
-        }
 
-
-        //private static HashSet<string> loading = new HashSet<string>();
-        //private static readonly object lock_Loading = new object();
-
-        /// <summary>
-        /// Used to get image from within a container. Flags will contain Error if error occurred.
-        /// </summary>
-        /// <param name="objInfo">The ObjectInfo of the container.</param>
-        /// <param name="sourcePathIdx">Index of the file to load in ObjectInfo.SourcePaths.</param>
-        public static async Task<ImageSource> GetImageSourceAsync(ObjectInfo objInfo, int sourcePathIdx, SizeInt decodeSize = default, bool tryCache = true) {
-            return await Task.Run(() => GetImageSource(objInfo, sourcePathIdx, decodeSize, tryCache));
+            return paths;
         }
 
         /// <summary>
-        /// Used to get image from within a container.
+        /// <para>Async version of <see cref="GetImageSource(ObjectInfo, int, SizeInt, bool)"/> and <see cref="GetImageSource(ObjectInfo, string, SizeInt, bool)"/></para>
+        /// <para>If <paramref name="sourcePath"/> is non-null, <paramref name="sourcePathIdx"/> will be ignored.</para>
         /// </summary>
-        /// <param name="decodeSize">Decode size.</param>
+        public static async Task<ImageSource> GetImageSourceAsync(ObjectInfo objInfo,
+            string sourcePath = null, int sourcePathIdx = 0, SizeInt decodeSize = default, bool tryCache = true) {
+            if (sourcePath == null)
+                return await Task.Run(() => GetImageSource(objInfo, sourcePathIdx, decodeSize, tryCache));
+            else
+                return await Task.Run(() => GetImageSource(objInfo, sourcePath, decodeSize, tryCache));
+        }
+
+        /// <summary>
+        /// <para>Used to get image source. Returns image source decoded from the source path at the specified index.</para>
+        /// <para><paramref name="sourcePathIdx"/> is the index used to get from <paramref name="objInfo"/>.SourcePaths.</para>
+        /// <para>Calls <see cref="GetImageSource(ObjectInfo, string, SizeInt, bool)"/> ultimately.</para>
+        /// </summary>
         public static ImageSource GetImageSource(ObjectInfo objInfo, int sourcePathIdx, SizeInt decodeSize = default, bool tryCache = true) {
+            string sourcePath = null;
+            if (objInfo.SourcePaths?.Length > 0) sourcePath = objInfo.SourcePaths[sourcePathIdx];
+            return GetImageSource(objInfo, sourcePath, decodeSize, tryCache);
+        }
+
+        /// <summary>
+        /// <para>Used to get image source. Returns image source decoded from the source path at the specified index.</para>
+        /// <para>If <paramref name="sourcePath"/> is null, default icon based on <paramref name="objInfo"/>.Flags will be returned.</para>
+        /// </summary>
+        public static ImageSource GetImageSource(ObjectInfo objInfo, string sourcePath, SizeInt decodeSize = default, bool tryCache = true) {
             if (objInfo.Flags.HasFlag(FileFlags.Error)) return App.fa_exclamation;
             if (objInfo.Flags == FileFlags.Unknown) return App.fa_file;
-
 #if DEBUG
-            var now = DateTime.Now;
+            var watch = System.Diagnostics.Stopwatch.StartNew();
 #endif
             LoadThrottle.Wait();
 #if DEBUG
-            Console.WriteLine($"Helpers.GetImageSource() waited {(DateTime.Now - now).TotalMilliseconds}ms. Remaining slots: {LoadThrottle.CurrentCount}");
+            Console.WriteLine($"Helpers.GetImageSource() waited {watch.ElapsedMilliseconds}ms. Remaining slots: {LoadThrottle.CurrentCount}");
 #endif
-
             ImageSource source = null;
             try {
                 //flags is the parent container type
                 switch (objInfo.Flags) {
                     case FileFlags.Directory:
-                        if (objInfo.SourcePaths?.Length > 0)
-                            source = GetImageSource(objInfo.SourcePaths[sourcePathIdx], decodeSize, tryCache);
-                        if (source == null) {
+                        if (sourcePath != null)
+                            source = GetImageSource(Path.Combine(objInfo.FileSystemPath, sourcePath), decodeSize, tryCache);
+                        if (source == null)
                             source = App.fa_folder;
-                        }
                         break;
                     case FileFlags.Image:
                         source = GetImageSource(objInfo.FileSystemPath, decodeSize, tryCache);
-                        if (source == null) {
+                        if (source == null)
                             source = App.fa_image;
-                        }
                         break;
                     case FileFlags.Archive:
                     case FileFlags.Archive | FileFlags.Image:
-                        if (objInfo.SourcePaths?.Length > 0) {
+                        if (sourcePath != null) {
                             LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                                 DecodeSize = decodeSize,
                                 LoadImage = true,
                                 TryCache = tryCache,
-                                FileNames = new[] { objInfo.SourcePaths[sourcePathIdx] },
+                                FileNames = new[] { sourcePath },
                                 Flags = objInfo.Flags,
                                 CldInfoCallback = oi => source = oi.ImageSource,
                                 ObjInfoCallback = oi => objInfo.Flags = oi.Flags
                             });
                         }
-                        if (source == null) {
+                        if (source == null)
                             source = objInfo.Flags.HasFlag(FileFlags.Image) ? App.fa_image : App.fa_archive;
-                        }
                         break;
                 }
             }
             catch { }
             finally {
                 objInfo = null;
-
                 LoadThrottle.Release();
 #if DEBUG
-                Console.WriteLine($"Helpers.GetImageSource() exited leaving {LoadThrottle.CurrentCount} slots.");
+                watch.Stop();
+                Console.WriteLine($"Helpers.GetImageSource() exited after {watch.ElapsedMilliseconds}ms. Leaving {LoadThrottle.CurrentCount} slots.");
 #endif
             }
             return source;
+        }
+
+        /// <summary>
+        /// <para>Async version of <see cref="GetImageSource(string, SizeInt, bool)"/></para>
+        /// <inheritdoc cref="GetImageSource(string, SizeInt, bool)"/>
+        /// </summary>
+        public static async Task<BitmapSource> GetImageSourceAsync(string path, SizeInt decodeSize = default, bool tryCache = true) {
+            return await Task.Run(() => GetImageSource(path, decodeSize, tryCache));
         }
 
         /// <summary>
@@ -413,24 +439,32 @@ namespace ZipImageViewer
         /// </summary>
         public static BitmapSource GetImageSource(string path, SizeInt decodeSize = default, bool tryCache = true) {
             BitmapSource bs = null;
-            var isThumb = decodeSize == (SizeInt)Setting.ThumbnailSize;
-            if (tryCache && isThumb) {
-                //try load from cache when decodeSize is non-zero
-                bs = SQLiteHelper.GetFromThumbDB(path, decodeSize);
-                if (bs != null) return bs;
-            }
+            try {
+                var isThumb = decodeSize == (SizeInt)Setting.ThumbnailSize;
+                if (tryCache && isThumb) {
+                    //try load from cache when decodeSize is non-zero
+                    bs = SQLiteHelper.GetFromThumbDB(path, decodeSize);
+                    if (bs != null) return bs;
+                }
 #if DEBUG
-            Console.WriteLine("Loading from disk: " + path);
+                Console.WriteLine("Loading from disk: " + path);
 #endif
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
-                bs = GetImageSource(fs, decodeSize);
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
+                    bs = GetImageSource(fs, decodeSize);
+                }
+                if (isThumb && bs != null)
+                    SQLiteHelper.AddToThumbDB(bs, path, decodeSize);
             }
-            if (isThumb && bs != null)
-                SQLiteHelper.AddToThumbDB(bs, path, decodeSize);
-
+            catch { }
+            
             return bs;
         }
 
+        /// <summary>
+        /// Get information about an image such as dimensions and additionally other metadata.
+        /// Size will be updated only when <c><paramref name="imgInfo"/>.FileSize</c> is not already set.
+        /// Does not dispose the stream.
+        /// </summary>
         public static void UpdateImageInfo(Stream stream, ImageInfo imgInfo) {
             stream.Position = 0;
             var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
@@ -441,6 +475,8 @@ namespace ZipImageViewer
                 imgInfo.Meta_ApplicationName = meta.ApplicationName;
                 imgInfo.Meta_Camera = $@"{meta.CameraManufacturer} {meta.CameraModel}";
             }
+            if (imgInfo.FileSize == default)
+                imgInfo.FileSize = stream.Length;
             imgInfo.Dimensions = orien > 4 ?
                 new SizeInt(frame.PixelHeight, frame.PixelWidth) :
                 new SizeInt(frame.PixelWidth, frame.PixelHeight);
@@ -450,8 +486,8 @@ namespace ZipImageViewer
         /// <para>Decode image from stream (FileStream when loading from file or MemoryStream when loading from archive.</para>
         /// <para>A <paramref name="decodeSize"/> higher than the actual resolution will be ignored.
         /// Note that this is the size in pixel instead of the device-independent size used in WPF.</para>
+        /// <para>Returns null if error occured.</para>
         /// </summary>
-        /// <returns>Returns null if error occured.</returns>
         public static BitmapSource GetImageSource(Stream stream, SizeInt decodeSize = default) {
             try {
                 stream.Position = 0;
@@ -563,14 +599,11 @@ namespace ZipImageViewer
                 Parallel.ForEach(infos, paraOptions, (info, state) => {
                     if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
                     var flag = GetPathType(info);
-                    var objInfo = new ObjectInfo(info.FullName, flag) {
-                        FileName = info.Name,
-                    };
+                    var objInfo = new ObjectInfo(info.FullName, flag, info.Name);
                     try {
-                        UpdateSourcePaths(objInfo);
+                        objInfo.SourcePaths = GetSourcePaths(objInfo);
                         if (objInfo.SourcePaths?.Length > 0) {
-                            var path = objInfo.Flags.HasFlag(FileFlags.Archive) ?
-                                Path.Combine(objInfo.FileSystemPath, objInfo.SourcePaths[0]) : objInfo.SourcePaths[0];
+                            var path = Path.Combine(objInfo.ContainerPath, objInfo.SourcePaths[0]);
                             if (!SQLiteHelper.ThumbExistInDB(path, decodeSize)) {
                                 GetImageSource(objInfo, 0, decodeSize, false);
                             }

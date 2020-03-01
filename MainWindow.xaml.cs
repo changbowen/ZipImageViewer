@@ -15,6 +15,7 @@ using System.Windows.Threading;
 using System.Data;
 using Path = System.IO.Path;
 using SizeInt = System.Drawing.Size;
+using static ZipImageViewer.Helpers;
 using static ZipImageViewer.LoadHelper;
 
 namespace ZipImageViewer
@@ -66,13 +67,13 @@ namespace ZipImageViewer
             if (App.ContextMenuWin == null)
                 App.ContextMenuWin = new ContextMenuWindow();
 
-            virWrapPanel = Helpers.GetVisualChild<VirtualizingWrapPanel>(TV1);
+            virWrapPanel = GetVisualChild<VirtualizingWrapPanel>(TV1);
 
             DpiScale = VisualTreeHelper.GetDpi(this);
             Setting.ThumbnailSize.PropertyChanged += ThumbnailSizeChanged;
 
             var view = (ListCollectionView)((CollectionViewSource)FindResource("ObjectListViewSource")).View;
-            view.CustomSort = new FolderSorter();
+            view.CustomSort = new Helpers.ObjectInfoSorter();
 
             //load last path or open dialog
             if (InitialPath?.Length > 0)
@@ -84,7 +85,7 @@ namespace ZipImageViewer
         }
 
         private void MainWin_Closed(object sender, EventArgs e) {
-            Helpers.ShutdownCheck();
+            ShutdownCheck();
         }
 
         private bool reallyClose = false;
@@ -153,13 +154,13 @@ namespace ZipImageViewer
         #region Private Helper Methods
 
         private void openFolderPrompt() {
-            Helpers.OpenFolderDialog(this, path => Task.Run(() => LoadPath(path)));
+            OpenFolderDialog(this, path => Task.Run(() => LoadPath(path)));
         }
 
         private void callback_AddToImageList(ObjectInfo objInfo) {
             //exclude non-image items in immersion mode
             if (Setting.ImmersionMode && objInfo.SourcePaths == null) {
-                UpdateSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
+                objInfo.SourcePaths = GetSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
                 if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0)
                     return;
             }
@@ -206,7 +207,7 @@ namespace ZipImageViewer
         /// Flags are inferred from path. Not for opening image in an archive.
         /// </summary>
         internal void LoadPath(string path, ViewWindow viewWin = null) {
-            LoadPath(new ObjectInfo(path), viewWin);
+            LoadPath(new ObjectInfo(path, GetPathType(path)), viewWin);
         }
 
         /// <summary>
@@ -215,10 +216,6 @@ namespace ZipImageViewer
         /// Support cancellation. Used in Task.
         /// </summary>
         internal void LoadPath(ObjectInfo objInfo, ViewWindow viewWin = null) {
-            //infer path type (flags)
-            if (objInfo.Flags == FileFlags.Unknown)
-                objInfo.Flags = Helpers.GetPathType(new DirectoryInfo(objInfo.FileSystemPath));
-
             // action based on flags
             if (objInfo.Flags.HasFlag(FileFlags.Directory)) {
                 //directory -> load thumbs
@@ -232,10 +229,8 @@ namespace ZipImageViewer
                     foreach (var childInfo in new DirectoryInfo(objInfo.FileSystemPath).EnumerateFileSystemInfos()) {
                         if (tknSrc_LoadThumb?.IsCancellationRequested == true) return;
 
-                        var flag = Helpers.GetPathType(childInfo);
-                        callback_AddToImageList(new ObjectInfo(childInfo.FullName, flag) {
-                            FileName = childInfo.Name,
-                        });
+                        var flag = GetPathType(childInfo);
+                        callback_AddToImageList(new ObjectInfo(childInfo.FullName, flag, childInfo.Name));
                     }
                     Dispatcher.Invoke(() => scrollPosition());
                 }
@@ -248,14 +243,11 @@ namespace ZipImageViewer
             else if (objInfo.Flags.HasFlag(FileFlags.Image)) {
                 //plain image file or image inside archive -> open viewer
                 //using a new ObjectInfo to avoid confusion and reduce chance of holding ImageSource
-                var oi = new ObjectInfo(objInfo.FileSystemPath, objInfo.Flags) {
-                    FileName = objInfo.FileName
-                };
                 Dispatcher.Invoke(() => {
                     if (viewWin == null)
-                        new ViewWindow(this) { ObjectInfo = oi }.Show();
+                        new ViewWindow(objInfo.ContainerPath, objInfo.FileName, this).Show();
                     else
-                        viewWin.ObjectInfo = oi;
+                        viewWin.ViewPath = (objInfo.ContainerPath, objInfo.FileName);
                 });
             }
             else if (objInfo.Flags.HasFlag(FileFlags.Archive)) {

@@ -8,6 +8,7 @@ using SizeInt = System.Drawing.Size;
 
 namespace ZipImageViewer
 {
+    [System.Diagnostics.DebuggerDisplay("{Flags}: {VirtualPath}")]
     public class ObjectInfo : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -142,9 +143,12 @@ namespace ZipImageViewer
             }
         }
 
-        public ObjectInfo(string fsPath, FileFlags flag = FileFlags.Unknown) {
+        public ObjectInfo(string fsPath, FileFlags flag, string fName = null) {
             FileSystemPath = fsPath;
             flags = flag;
+            fileName = fName;
+            if (fileName == null && !flags.HasFlag(FileFlags.Archive))
+                fileName = Path.GetFileName(FileSystemPath);
         }
     }
 
