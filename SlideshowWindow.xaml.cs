@@ -70,7 +70,7 @@ namespace ZipImageViewer
             CB_Transition.SelectedItem = AnimConfig.Transition;
 
             //get image to use
-            objectList = getAllImages(basePath, Helpers.GetPathType(basePath));
+            objectList = GetAll(basePath).ToArray();
 
             if (objectList?.Length == 0) {
                 MessageBox.Show($@"No images found under {basePath}.", "No Images", MessageBoxButton.OK, MessageBoxImage.Exclamation);
@@ -92,30 +92,6 @@ namespace ZipImageViewer
 
         private void SlideWin_Closed(object sender, EventArgs e) {
             Helpers.ShutdownCheck();
-        }
-
-        /// <summary>
-        /// Get a list of images and archives to use for slideshow.
-        /// </summary>
-        private static ObjectInfo[] getAllImages(string path, FileFlags flags) {
-            IEnumerable<ObjectInfo> infos = null;
-
-            switch (flags) {
-                case FileFlags.Directory:
-                    try {
-                        infos = from fsInfo in new DirectoryInfo(path).EnumerateFileSystemInfos(@"*", SearchOption.AllDirectories)
-                                let fType = Helpers.GetPathType(fsInfo)
-                                where fType == FileFlags.Image || fType == FileFlags.Archive
-                                select new ObjectInfo(fsInfo.FullName, fType);
-                    }
-                    catch { }
-                    break;
-                case FileFlags.Archive:
-                    infos = new[] { new ObjectInfo(path, FileFlags.Archive) };
-                    break;
-            }
-
-            return infos?.OrderBy(i => i.FileSystemPath, new NativeHelpers.NaturalStringComparer()).ToArray();
         }
 
         private void Btn_Preset_Click(object sender, RoutedEventArgs e) {

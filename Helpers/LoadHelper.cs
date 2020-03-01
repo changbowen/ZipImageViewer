@@ -192,6 +192,7 @@ namespace ZipImageViewer
                             //load from disk
                             using (var ms = new MemoryStream()) {
                                 ext.ExtractFile(fileName, ms);
+                                if (ms.Length == 0) throw new ExtractionFailedException();
                                 success = true; //if the task is cancelled, success info is still returned correctly.
                                 source = GetImageSource(ms, options.DecodeSize);
                             }
@@ -397,20 +398,26 @@ namespace ZipImageViewer
                             source = App.fa_image;
                         break;
                     case FileFlags.Archive:
-                    case FileFlags.Archive | FileFlags.Image:
                         if (sourcePath != null) {
                             LoadFile(new LoadOptions(objInfo.FileSystemPath) {
                                 DecodeSize = decodeSize,
                                 LoadImage = true,
                                 TryCache = tryCache,
                                 FileNames = new[] { sourcePath },
-                                Flags = objInfo.Flags,
+                                Flags = FileFlags.Archive,
                                 CldInfoCallback = oi => source = oi.ImageSource,
                                 ObjInfoCallback = oi => objInfo.Flags = oi.Flags
                             });
                         }
                         if (source == null)
-                            source = objInfo.Flags.HasFlag(FileFlags.Image) ? App.fa_image : App.fa_archive;
+                            source = App.fa_archive;
+                        break;
+                    case FileFlags.Archive | FileFlags.Image:
+                        //archives are loaded with ImageSource in a single thread
+                        //this is only pointing to the source
+                        source = objInfo.ImageSource;
+                        if (source == null)
+                            source = App.fa_image;
                         break;
                 }
             }
@@ -578,7 +585,31 @@ namespace ZipImageViewer
             }
         }
 
-        public static void CacheFolder(string folderPath, ref CancellationTokenSource tknSrc, object tknLock, Action<string, int, int> callback) {
+        /// <summary>
+        /// Get a list of images and archives.
+        /// </summary>
+        public static IEnumerable<ObjectInfo> GetAll(string path) {
+            IEnumerable<ObjectInfo> infos = null;
+
+            switch (GetPathType(path)) {
+                case FileFlags.Directory:
+                    try {
+                        infos = from fsInfo in new DirectoryInfo(path).EnumerateFileSystemInfos(@"*", SearchOption.AllDirectories)
+                                let fType = Helpers.GetPathType(fsInfo)
+                                where fType == FileFlags.Image || fType == FileFlags.Archive
+                                select new ObjectInfo(fsInfo.FullName, fType);
+                    }
+                    catch { }
+                    break;
+                case FileFlags.Archive:
+                    infos = new[] { new ObjectInfo(path, FileFlags.Archive) };
+                    break;
+            }
+
+            return infos?.OrderBy(i => i.FileSystemPath, new NativeHelpers.NaturalStringComparer());
+        }
+
+        public static void CacheFolder(string path, ref CancellationTokenSource tknSrc, object tknLock, Action<string, int, int> callback) {
             tknSrc?.Cancel();
             tknSrc?.Dispose();
             Monitor.Enter(tknLock);
@@ -594,7 +625,7 @@ namespace ZipImageViewer
             };
             var count = 0;
             try {
-                var infos = new DirectoryInfo(folderPath).EnumerateFileSystemInfos();
+                var infos = new DirectoryInfo(path).EnumerateFileSystemInfos();
                 var total = infos.Count();
                 Parallel.ForEach(infos, paraOptions, (info, state) => {
                     if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
@@ -603,8 +634,8 @@ namespace ZipImageViewer
                     try {
                         objInfo.SourcePaths = GetSourcePaths(objInfo);
                         if (objInfo.SourcePaths?.Length > 0) {
-                            var path = Path.Combine(objInfo.ContainerPath, objInfo.SourcePaths[0]);
-                            if (!SQLiteHelper.ThumbExistInDB(path, decodeSize)) {
+                            var p = Path.Combine(objInfo.ContainerPath, objInfo.SourcePaths[0]);
+                            if (!SQLiteHelper.ThumbExistInDB(p, decodeSize)) {
                                 GetImageSource(objInfo, 0, decodeSize, false);
                             }
                         }

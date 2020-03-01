@@ -13,7 +13,6 @@ using System.Collections;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Text.RegularExpressions;
 
 namespace ZipImageViewer
 {
