@@ -236,10 +236,6 @@ namespace ZipImageViewer
             //zoon animation
             var animZoom = zoomIn ? new DoubleAnimation(1d, 1.2d, imageDur) : new DoubleAnimation(1.2d, 1d, imageDur);
             
-            //transform center point
-            //tgtImg.RenderTransformOrigin = new Point(ran.NextDouble(), ran.NextDouble());
-            //tgtImg.RenderTransformOrigin = new Point(0.5, 0d);
-
             //pan animation
             DoubleAnimation animPanPri;
             DependencyProperty transEdgePri;

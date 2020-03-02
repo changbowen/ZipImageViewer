@@ -179,10 +179,9 @@ namespace ZipImageViewer
 
                     ImageSource source = null;
                     if (options.LoadImage) {
-                        var thumbPathInDb = Path.Combine(options.FilePath, fileName);
                         if (options.TryCache && isThumb) {
                             //try load from cache
-                            source = SQLiteHelper.GetFromThumbDB(thumbPathInDb, options.DecodeSize);
+                            source = SQLiteHelper.GetFromThumbDB(options.FilePath, options.DecodeSize, fileName)?.Item1;
                         }
                         if (source == null) {
 #if DEBUG
@@ -196,7 +195,7 @@ namespace ZipImageViewer
                                 success = true; //if the task is cancelled, success info is still returned correctly.
                                 source = GetImageSource(ms, options.DecodeSize);
                             }
-                            if (isThumb && source != null) SQLiteHelper.AddToThumbDB(source, thumbPathInDb, options.DecodeSize);
+                            if (isThumb && source != null) SQLiteHelper.AddToThumbDB(source, options.FilePath, fileName, options.DecodeSize);
                         }
                     }
 
@@ -446,11 +445,13 @@ namespace ZipImageViewer
         /// </summary>
         public static BitmapSource GetImageSource(string path, SizeInt decodeSize = default, bool tryCache = true) {
             BitmapSource bs = null;
+            var basePath = Path.GetDirectoryName(path);
+            var subPath = Path.GetFileName(path);
             try {
                 var isThumb = decodeSize == (SizeInt)Setting.ThumbnailSize;
                 if (tryCache && isThumb) {
                     //try load from cache when decodeSize is non-zero
-                    bs = SQLiteHelper.GetFromThumbDB(path, decodeSize);
+                    bs = SQLiteHelper.GetFromThumbDB(basePath, decodeSize, subPath)?.Item1;
                     if (bs != null) return bs;
                 }
 #if DEBUG
@@ -460,7 +461,7 @@ namespace ZipImageViewer
                     bs = GetImageSource(fs, decodeSize);
                 }
                 if (isThumb && bs != null)
-                    SQLiteHelper.AddToThumbDB(bs, path, decodeSize);
+                    SQLiteHelper.AddToThumbDB(bs, basePath, subPath, decodeSize);
             }
             catch { }
             
@@ -634,8 +635,7 @@ namespace ZipImageViewer
                     try {
                         objInfo.SourcePaths = GetSourcePaths(objInfo);
                         if (objInfo.SourcePaths?.Length > 0) {
-                            var p = Path.Combine(objInfo.ContainerPath, objInfo.SourcePaths[0]);
-                            if (!SQLiteHelper.ThumbExistInDB(p, decodeSize)) {
+                            if (!SQLiteHelper.ThumbExistInDB(objInfo.ContainerPath, objInfo.SourcePaths[0], decodeSize)) {
                                 GetImageSource(objInfo, 0, decodeSize, false);
                             }
                         }

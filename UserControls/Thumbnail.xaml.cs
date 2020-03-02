@@ -26,7 +26,8 @@ namespace ZipImageViewer
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private int thumbIndex = -1;
+        private int sourcePathIdx;
+        private string sourcePathName;
 
         private int thumbTransAnimCount;
         private string thumbTransAnimName;
@@ -116,17 +117,17 @@ namespace ZipImageViewer
 
             mainWin = (MainWindow)Window.GetWindow(this);
 
-            thumbIndex = -1;
+            sourcePathIdx = -2;
             cycleImageSource(null, null);
         }
 
         private void TN_Unloaded(object sender, RoutedEventArgs e) {
-            //ThumbImageSource = null;
+            ThumbImageSource = null;
             //if (ObjectInfo != null) {
             //    ObjectInfo.ImageSources = null;
             //    ObjectInfo = null;
             //}
-            //nextSource = null;
+            nextSource = null;
             //if (IM1 != null) {
             //    IM1.Source = null;
             //    IM1.ToolTip = null;
@@ -149,6 +150,21 @@ namespace ZipImageViewer
                 return;
             }
 
+            var thumbSize = (SizeInt)Setting.ThumbnailSize;
+            //load from db if exists (only the first time)
+            if ((tn.ObjectInfo.Flags == FileFlags.Directory || tn.ObjectInfo.Flags == FileFlags.Archive) && tn.sourcePathIdx == -2) {
+                tn.sourcePathIdx = -1;
+                var cached = await SQLiteHelper.GetFromThumbDBAsync(tn.ObjectInfo.ContainerPath, thumbSize);
+                if (cached != null) {
+                    tn.ThumbImageSource = cached.Item1;
+                    tn.sourcePathName = cached.Item2;
+                    tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(mainWin.ThumbChangeDelay);
+                    tn.cycleTimer.Start();
+                    return;
+                }
+            }
+            if (tn.sourcePathIdx == -2) tn.sourcePathIdx = -1;
+
             //wait to get image
             if (tn.ObjectInfo.ImageSource == null && !Setting.ImmersionMode &&
                 (mainWin.tknSrc_LoadThumb != null || Interlocked.CompareExchange(ref workingThreads, 0, 0) >= MaxLoadThreads)) {
@@ -170,14 +186,15 @@ namespace ZipImageViewer
                     objInfo.SourcePaths = await GetSourcePathsAsync(objInfo);
                 }
                 //get the next path index to use
-                var thumbSize = (SizeInt)Setting.ThumbnailSize;
                 if (tn.ObjectInfo.SourcePaths?.Length > 1) {
-                    tn.thumbIndex = tn.thumbIndex == tn.ObjectInfo.SourcePaths.Length - 1 ? 0 : tn.thumbIndex + 1;
+                    do {
+                        tn.sourcePathIdx = tn.sourcePathIdx == tn.ObjectInfo.SourcePaths.Length - 1 ? 0 : tn.sourcePathIdx + 1;
+                    } while (tn.ObjectInfo.SourcePaths[tn.sourcePathIdx] == tn.sourcePathName);
                     cycle = true;
                 }
                 else
-                    tn.thumbIndex = 0;
-                tn.ThumbImageSource = await GetImageSourceAsync(tn.ObjectInfo, sourcePathIdx: tn.thumbIndex, decodeSize: thumbSize);
+                    tn.sourcePathIdx = 0;
+                tn.ThumbImageSource = await GetImageSourceAsync(tn.ObjectInfo, sourcePathIdx: tn.sourcePathIdx, decodeSize: thumbSize);
             }
             catch { }
             finally {
@@ -188,8 +205,7 @@ namespace ZipImageViewer
             if (!tn.IsLoaded || !mainWin.IsLoaded || !cycle) return;
 
             //plan for the next run
-            var delay = mainWin.ThumbChangeDelay;
-            tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(delay);
+            tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(mainWin.ThumbChangeDelay);
             tn.cycleTimer.Start();
         }
     }
