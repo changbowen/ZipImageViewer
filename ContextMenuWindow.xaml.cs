@@ -96,6 +96,8 @@ namespace ZipImageViewer
                 case nameof(B_Slideshow):
                     var sldWin = new SlideshowWindow(ObjectInfo.ContainerPath);
                     sldWin.Show();
+                    if (MainWin != null)
+                        MainWin.WindowState = WindowState.Minimized;
                     break;
             }
 

@@ -88,6 +88,10 @@ namespace ZipImageViewer
         //        Regex.Replace(y, @"\d+", eval),
         //        StringComparison.OrdinalIgnoreCase);
         //}
+
+        public static double NextDouble(this Random ran, double min, double max) {
+            return ran.NextDouble() * (max - min) + min;
+        }
     }
 
     /// <summary>
