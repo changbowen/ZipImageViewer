@@ -150,8 +150,20 @@ namespace ZipImageViewer
                 return;
             }
 
-            var thumbSize = (SizeInt)Setting.ThumbnailSize;
+            //wait to get image
+            if (tn.ObjectInfo.ImageSource == null && !Setting.ImmersionMode &&
+                (mainWin.tknSrc_LoadThumb != null || Interlocked.CompareExchange(ref workingThreads, 0, 0) >= MaxLoadThreads)) {
+                tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(100);
+                tn.cycleTimer.Start();
+                return;
+            }
+
+            //dont do anything before or after the lifecycle, or if not loaded in virtualizing panel
+            if (!tn.IsLoaded) return;
+            if (tn.ObjectInfo == null) return;
+
             //load from db if exists (only the first time)
+            var thumbSize = (SizeInt)Setting.ThumbnailSize;
             if ((tn.ObjectInfo.Flags == FileFlags.Directory || tn.ObjectInfo.Flags == FileFlags.Archive) && tn.sourcePathIdx == -2) {
                 tn.sourcePathIdx = -1;
                 var cached = await SQLiteHelper.GetFromThumbDBAsync(tn.ObjectInfo.ContainerPath, thumbSize);
@@ -165,18 +177,7 @@ namespace ZipImageViewer
             }
             if (tn.sourcePathIdx == -2) tn.sourcePathIdx = -1;
 
-            //wait to get image
-            if (tn.ObjectInfo.ImageSource == null && !Setting.ImmersionMode &&
-                (mainWin.tknSrc_LoadThumb != null || Interlocked.CompareExchange(ref workingThreads, 0, 0) >= MaxLoadThreads)) {
-                tn.cycleTimer.Interval = TimeSpan.FromMilliseconds(100);
-                tn.cycleTimer.Start();
-                return;
-            }
-
-            //dont do anything before or after the lifecycle, or if not loaded in virtualizing panel
-            if (!tn.IsLoaded) return;
-            if (tn.ObjectInfo == null) return;
-
+            //actual read files
             var cycle = false;
             Interlocked.Increment(ref workingThreads);
             try {
@@ -187,9 +188,12 @@ namespace ZipImageViewer
                 }
                 //get the next path index to use
                 if (tn.ObjectInfo.SourcePaths?.Length > 1) {
-                    do {
+                    tn.sourcePathIdx = tn.sourcePathIdx == tn.ObjectInfo.SourcePaths.Length - 1 ? 0 : tn.sourcePathIdx + 1;
+                    //make sure the next image is not the same as the cache
+                    if (tn.sourcePathName != null && tn.ObjectInfo.SourcePaths[tn.sourcePathIdx] == tn.sourcePathName) {
                         tn.sourcePathIdx = tn.sourcePathIdx == tn.ObjectInfo.SourcePaths.Length - 1 ? 0 : tn.sourcePathIdx + 1;
-                    } while (tn.ObjectInfo.SourcePaths[tn.sourcePathIdx] == tn.sourcePathName);
+                        tn.sourcePathName = null;//avoid skipping in the 2nd time
+                    }
                     cycle = true;
                 }
                 else

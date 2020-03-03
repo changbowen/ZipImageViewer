@@ -8,12 +8,18 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
-                    <SolidColorBrush x:Key="BackgroundBrush" Color="#FF333333"/>
-                    <SolidColorBrush x:Key="BackgroundDarkBrush" Color="#FF1F1F1F"/>
-                    <SolidColorBrush x:Key="BackgroundLightBrush" Color="#FF444444"/>
-                    <SolidColorBrush x:Key="BackgroundHighlightBrush" Color="#FF6E6E6E"/>
-                    <SolidColorBrush x:Key="ForegroundBrush" Color="LightGray"/>
-                    <SolidColorBrush x:Key="ForegroundGrayBrush" Color="#FFA6A6A6"/>
+                    <Color x:Key="BackgroundColor">#FF333333</Color>
+                    <Color x:Key="BackgroundDarkColor">#FF1F1F1F</Color>
+                    <Color x:Key="BackgroundLightColor">#FF444444</Color>
+                    <Color x:Key="BackgroundHighlightColor">#FF6E6E6E</Color>
+                    <Color x:Key="ForegroundColor">LightGray</Color>
+                    <Color x:Key="ForegroundGrayColor">#FFA6A6A6</Color>
+                    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}"/>
+                    <SolidColorBrush x:Key="BackgroundDarkBrush" Color="{StaticResource BackgroundDarkColor}"/>
+                    <SolidColorBrush x:Key="BackgroundLightBrush" Color="{StaticResource BackgroundLightColor}"/>
+                    <SolidColorBrush x:Key="BackgroundHighlightBrush" Color="{StaticResource BackgroundHighlightColor}"/>
+                    <SolidColorBrush x:Key="ForegroundBrush" Color="{StaticResource ForegroundColor}"/>
+                    <SolidColorBrush x:Key="ForegroundGrayBrush" Color="{StaticResource ForegroundGrayColor}"/>
                 </ResourceDictionary>
                 <ResourceDictionary Source="UserControls/AppleStyleScrollBar.xaml"/>
                 <ResourceDictionary Source="UserControls/StylesAndAnimations.xaml"/>

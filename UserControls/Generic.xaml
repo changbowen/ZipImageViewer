@@ -1,8 +1,11 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:ZipImageViewer">
+                    xmlns:local="clr-namespace:ZipImageViewer"
+                    xmlns:math="http://hexinnovation.com/math">
     <local:RectConverter x:Key="RectConverter"/>
-    
+    <local:MathMultiplyConverter x:Key="MathMultiplyConverter"/>
+    <math:MathConverter x:Key="MathConverter"/>
+
     <!--rounded content control base-->
     <Style x:Key="RoundContentControlBaseStyle" TargetType="{x:Type ContentControl}">
         <Setter Property="IsTabStop" Value="False"/>
@@ -125,6 +128,137 @@
                 <Setter Property="Foreground" Value="Black" />
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <!--slide switch-->
+    <Style x:Key="SlideSwitchStyle" TargetType="{x:Type CheckBox}">
+        <Setter Property="Foreground" Value="{StaticResource ForegroundGrayBrush}"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type CheckBox}">
+                    <ControlTemplate.Resources>
+                        <Storyboard x:Key="checked">
+                            <DoubleAnimation Storyboard.TargetName="slider" Storyboard.TargetProperty="Tag"
+                                             Duration="0:0:0.2" To="1">
+                                <DoubleAnimation.EasingFunction>
+                                    <ElasticEase EasingMode="EaseOut" Oscillations="1"/>
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                        <Storyboard x:Key="unchecked">
+                            <DoubleAnimation Storyboard.TargetName="slider" Storyboard.TargetProperty="Tag"
+                                             Duration="0:0:0.2" To="-1" >
+                                <DoubleAnimation.EasingFunction>
+                                    <ElasticEase EasingMode="EaseOut" Oscillations="1"/>
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </ControlTemplate.Resources>
+                    
+                    <DockPanel x:Name="dockPanel">
+                        <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                          Content="{TemplateBinding Content}"
+                                          ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          RecognizesAccessKey="True" VerticalAlignment="Center"/>
+                        <Grid x:Name="grid" MinWidth="36" MinHeight="20" Margin="4 0 0 0" UseLayoutRounding="False">
+                            <Grid.Clip>
+                                <RectangleGeometry RadiusX="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter=0.5*x, Mode=OneWay}"
+                                                   RadiusY="{Binding RadiusX, RelativeSource={RelativeSource Self}, Mode=OneWay}">
+                                    <RectangleGeometry.Rect>
+                                        <MultiBinding Converter="{StaticResource MathConverter}" ConverterParameter="0,0,x,y">
+                                            <Binding ElementName="grid" Path="ActualWidth"/>
+                                            <Binding ElementName="grid" Path="ActualHeight"/>
+                                        </MultiBinding>
+                                    </RectangleGeometry.Rect>
+                                </RectangleGeometry>
+                            </Grid.Clip>
+
+                            <Rectangle x:Name="back" Fill="{TemplateBinding Background}"
+                                       RadiusX="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter=0.5*x, Mode=OneWay}"
+                                       RadiusY="{Binding RadiusX, RelativeSource={RelativeSource Self}, Mode=OneWay}">
+                            </Rectangle>
+
+                            <TextBlock x:Name="text_on" Text="ON" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold"
+                                       FontSize="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter='x == 0 ? 8 : x*0.3', Mode=OneWay}">
+                                <TextBlock.RenderTransform>
+                                    <TranslateTransform>
+                                        <TranslateTransform.X>
+                                            <MultiBinding Converter="{StaticResource MathConverter}" ConverterParameter="x*(y-z)/2-(y-z)" Mode="OneWay">
+                                                <Binding ElementName="slider" Path="Tag"/>
+                                                <Binding ElementName="grid" Path="ActualWidth"/>
+                                                <Binding ElementName="grid" Path="ActualHeight"/>
+                                            </MultiBinding>
+                                        </TranslateTransform.X>
+                                    </TranslateTransform>
+                                </TextBlock.RenderTransform>
+                            </TextBlock>
+
+                            <TextBlock x:Name="text_off" Text="OFF" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold"
+                                       FontSize="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter='x == 0 ? 8 : x*0.3', Mode=OneWay}">
+                                <TextBlock.RenderTransform>
+                                    <TranslateTransform>
+                                        <TranslateTransform.X>
+                                            <MultiBinding Converter="{StaticResource MathConverter}" ConverterParameter="x*(y-z)/2+(y-z)" Mode="OneWay">
+                                                <Binding ElementName="slider" Path="Tag"/>
+                                                <Binding ElementName="grid" Path="ActualWidth"/>
+                                                <Binding ElementName="grid" Path="ActualHeight"/>
+                                            </MultiBinding>
+                                        </TranslateTransform.X>
+                                    </TranslateTransform>
+                                </TextBlock.RenderTransform>
+                            </TextBlock>
+                            
+                            <Ellipse x:Name="slider" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                     Height="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter=0.75*x, Mode=OneWay}"
+                                     Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Mode=OneWay}">
+                                <Ellipse.Tag>
+                                    <sys:Double xmlns:sys="clr-namespace:System;assembly=mscorlib">-1</sys:Double>
+                                </Ellipse.Tag>
+                                <Ellipse.RenderTransform>
+                                    <TranslateTransform>
+                                        <TranslateTransform.X>
+                                            <MultiBinding Converter="{StaticResource MathConverter}" ConverterParameter="x*(y-z)/2" Mode="OneWay">
+                                                <Binding ElementName="slider" Path="Tag"/>
+                                                <Binding ElementName="grid" Path="ActualWidth"/>
+                                                <Binding ElementName="grid" Path="ActualHeight"/>
+                                            </MultiBinding>
+                                        </TranslateTransform.X>
+                                    </TranslateTransform>
+                                </Ellipse.RenderTransform>
+                                <Ellipse.Effect>
+                                    <DropShadowEffect ShadowDepth="0"
+                                                      BlurRadius="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter=0.2*x, Mode=OneWay}"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+
+                            <Rectangle x:Name="back_shadow" Stroke="{StaticResource BackgroundLightBrush}"
+                                       StrokeThickness="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter=0.2*x, Mode=OneWay}"
+                                       Margin="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter=-0.2*x, Mode=OneWay}"
+                                       RadiusX="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter=0.5*x, Mode=OneWay}"
+                                       RadiusY="{Binding RadiusX, RelativeSource={RelativeSource Self}, Mode=OneWay}">
+                                <Rectangle.Effect>
+                                    <DropShadowEffect ShadowDepth="0"
+                                                      BlurRadius="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter=0.35*x, Mode=OneWay}"/>
+                                </Rectangle.Effect>
+                            </Rectangle>
+                        </Grid>
+                    </DockPanel>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource checked}"/>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard Storyboard="{StaticResource unchecked}"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
 </ResourceDictionary>

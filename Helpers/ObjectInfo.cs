@@ -120,6 +120,7 @@ namespace ZipImageViewer
             }
         }
 
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         public string DebugInfo {
             get {
                 return $"{nameof(FileName)}: {FileName}\r\n" +

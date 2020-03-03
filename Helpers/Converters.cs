@@ -24,19 +24,6 @@ namespace ZipImageViewer
         }
     }
 
-    //public class RectConverter : IMultiValueConverter
-    //{
-    //    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-    //    {
-    //        return new Rect(0d, 0d, (double)values[0], (double)values[1]);
-    //    }
-
-    //    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-    //    {
-    //        throw new NotSupportedException();
-    //    }
-    //}
-
     public class RectConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
@@ -73,24 +60,6 @@ namespace ZipImageViewer
             throw new NotImplementedException();
         }
     }
-
-    //public class ImageSourceFallbackConverter : IValueConverter
-    //{
-    //    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-    //        switch (value) {
-    //            case List<ImageSource> imgSources:
-    //                if (imgSources.Count > 0) return imgSources[0];
-    //                break;
-    //        }
-    //        return FontAwesome5.ImageAwesome.CreateImageSource(
-    //            FontAwesome5.EFontAwesomeIcon.Solid_Meh,
-    //            new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
-    //    }
-
-    //    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-    //        throw new NotImplementedException();
-    //    }
-    //}
 
     public class MathMultiplyConverter : IValueConverter
     {

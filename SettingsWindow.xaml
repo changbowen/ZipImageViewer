@@ -140,7 +140,7 @@
             <Border Grid.Row="5">
                 <DockPanel LastChildFill="False">
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Lite Mode" Margin="0" VerticalAlignment="Center"/>
-                    <CheckBox Content="Enabled" VerticalAlignment="Center" DockPanel.Dock="Right"
+                    <CheckBox Style="{StaticResource SlideSwitchStyle}" Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
                               Foreground="{Binding Foreground, ElementName=SettingsWin, Mode=OneTime}"
                               IsChecked="{Binding Source={x:Static local:App.Setting}, Path=LiteMode}"/>
                 </DockPanel>
