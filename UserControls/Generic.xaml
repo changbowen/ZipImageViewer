@@ -132,7 +132,7 @@
 
     <!--slide switch-->
     <Style x:Key="SlideSwitchStyle" TargetType="{x:Type CheckBox}">
-        <Setter Property="Foreground" Value="{StaticResource ForegroundGrayBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
         <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
         <Setter Property="Template">
             <Setter.Value>

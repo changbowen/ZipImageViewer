@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Linq;
-using SevenZip;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Media;

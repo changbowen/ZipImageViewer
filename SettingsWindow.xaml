@@ -37,17 +37,24 @@
                 <Style TargetType="TextBox" BasedOn="{StaticResource BorderlessStyle}"/>
                 <Style TargetType="ContentControl" BasedOn="{StaticResource RoundContentControlBaseStyle}"/>
                 <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}"/>
+                <Style TargetType="CheckBox" BasedOn="{StaticResource SlideSwitchStyle}"/>
+
             </local:PaddedGrid.Resources>
 
-            <Border Grid.Row="0" Margin="8 8 8 4">
+            <Border Margin="8 8 8 4">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="7-Zip Dll Path"/>
-                    <ContentControl>
-                        <TextBox Text="{Binding Source={x:Static local:App.Setting}, Path=SevenZipDllPath}"/>
-                    </ContentControl>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Unzip Options"/>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox Content="Multi-thread"
+                                  IsChecked="{Binding Source={x:Static local:App.Setting}, Path=MultiThreadUnzip}"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
-            <TextBlock  Grid.Row="0" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="The path to 7z.dll on the PC."/>
+            <TextBlock Grid.Column="1" Style="{StaticResource TipTextStyle}">
+                <TextBlock.Inlines>
+                    Multi-thread: not recommended if you don't have a monster PC.
+                </TextBlock.Inlines>
+            </TextBlock>
 
             <Border Grid.Row="1">
                 <StackPanel>
@@ -62,17 +69,21 @@
                             <TextBox MinWidth="32" VerticalAlignment="Top"
                                      Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item2}"/>
                         </ContentControl>
-                        <Button DockPanel.Dock="Right" Content="Cache Current Folder" Margin="8 0 0 0" VerticalAlignment="Center" Click="Btn_CacheFolder_Click"/>
+                        <Button DockPanel.Dock="Right" Content="Cache Current View" Margin="8 0 0 0" VerticalAlignment="Center" Click="Btn_CacheFolder_Click"/>
                         <Button DockPanel.Dock="Right" Content="Reload View" VerticalAlignment="Center" Click="Btn_Reload_Click"/>
                     </DockPanel>
                 </StackPanel>
             </Border>
             <TextBlock  Grid.Row="1" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <TextBlock.Inlines>
-                    <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.<LineBreak/>
-                    The size ensures a minimum width or height (depending on the aspect ratio of the image) for decoding images to provide a higher thumbnail quality.<LineBreak/>
-                    <Bold>Changing this value invalidates the entire thumbnail cache.</Bold><LineBreak/>
-                    The Cache button will start a foreground task to cache the current folder for faster loading.
+                    <Bold>Width</Bold> x
+                    <Bold>Height</Bold> in pixels.
+                    <LineBreak/>
+                    The size ensures a minimum width or height (depending on the aspect ratio of the image) for decoding images to provide a higher thumbnail quality.
+                    <LineBreak/>
+                    <Bold>Changing this value invalidates the entire thumbnail cache.</Bold>
+                    <LineBreak/>
+                    The Cache option will start a foreground task to ensure data needed to display the current view is cached in Thumbnail database.
                 </TextBlock.Inlines>
             </TextBlock>
 
@@ -140,7 +151,7 @@
             <Border Grid.Row="5">
                 <DockPanel LastChildFill="False">
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Lite Mode" Margin="0" VerticalAlignment="Center"/>
-                    <CheckBox Style="{StaticResource SlideSwitchStyle}" Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
+                    <CheckBox Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
                               Foreground="{Binding Foreground, ElementName=SettingsWin, Mode=OneTime}"
                               IsChecked="{Binding Source={x:Static local:App.Setting}, Path=LiteMode}"/>
                 </DockPanel>
@@ -240,7 +251,8 @@
             </Border>
             <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <TextBlock.Inlines>
-                    Commands used in right-click menu. One in each line.<LineBreak/>
+                    Commands used in right-click menu. One in each line.
+                    <LineBreak/>
                     <Bold>%FileSystemPath%</Bold> - Path to the current file or folder.
                 </TextBlock.Inlines>
             </TextBlock>

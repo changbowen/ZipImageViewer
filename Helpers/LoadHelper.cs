@@ -277,6 +277,7 @@ namespace ZipImageViewer
                 new SevenZipExtractor(path);
                 using (var ms = new MemoryStream()) {
                     ext.ExtractFile(fileName, ms);
+                    if (ms.Length == 0) return false;
                     callback.Invoke(ext.ArchiveFileData.First(f => f.FileName == fileName), ms);
                 }
                 return true;
@@ -615,37 +616,53 @@ namespace ZipImageViewer
             tknSrc?.Dispose();
             Monitor.Enter(tknLock);
             tknSrc = new CancellationTokenSource();
+            var count = 0;
 
             var decodeSize = (SizeInt)Setting.ThumbnailSize;
-            var threadCount = MaxLoadThreads / 2;
-            if (threadCount < 1) threadCount = 1;
-            else if (threadCount > 6) threadCount = 6;
-            var paraOptions = new ParallelOptions() {
-                CancellationToken = tknSrc.Token,
-                MaxDegreeOfParallelism = threadCount,
-            };
-            var count = 0;
+            var pathType = GetPathType(path);
             try {
-                var infos = new DirectoryInfo(path).EnumerateFileSystemInfos();
-                var total = infos.Count();
-                Parallel.ForEach(infos, paraOptions, (info, state) => {
-                    if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
-                    var flag = GetPathType(info);
-                    var objInfo = new ObjectInfo(info.FullName, flag, info.Name);
-                    try {
-                        objInfo.SourcePaths = GetSourcePaths(objInfo);
-                        if (objInfo.SourcePaths?.Length > 0) {
-                            if (!SQLiteHelper.ThumbExistInDB(objInfo.ContainerPath, objInfo.SourcePaths[0], decodeSize)) {
-                                GetImageSource(objInfo, 0, decodeSize, false);
+                if (pathType == FileFlags.Archive) {
+                    var all = GetSourcePaths(new ObjectInfo(path, pathType));
+                    LoadFile(new LoadOptions(path) {
+                        Flags = FileFlags.Archive,
+                        LoadImage = true,
+                        DecodeSize = decodeSize,
+                        CldInfoCallback = oi => {
+                            oi.ImageSource = null;
+                            callback?.Invoke(oi.SourcePaths[0] ?? "", Interlocked.Increment(ref count), all.Length);
+                        },
+                    }, tknSrc);
+                }
+                else if (pathType == FileFlags.Directory) {
+                    var threadCount = MaxLoadThreads / 2;
+                    if (threadCount < 1) threadCount = 1;
+                    else if (threadCount > 6) threadCount = 6;
+                    var paraOptions = new ParallelOptions() {
+                        CancellationToken = tknSrc.Token,
+                        MaxDegreeOfParallelism = threadCount,
+                    };
+
+                    var infos = new DirectoryInfo(path).EnumerateFileSystemInfos();
+                    var total = infos.Count();
+                    Parallel.ForEach(infos, paraOptions, (info, state) => {
+                        if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
+                        var flag = GetPathType(info);
+                        var objInfo = new ObjectInfo(info.FullName, flag, info.Name);
+                        try {
+                            objInfo.SourcePaths = GetSourcePaths(objInfo);
+                            if (objInfo.SourcePaths?.Length > 0) {
+                                if (!SQLiteHelper.ThumbExistInDB(objInfo.ContainerPath, objInfo.SourcePaths[0], decodeSize)) {
+                                    GetImageSource(objInfo, 0, decodeSize, false);
+                                }
                             }
                         }
-                    }
-                    catch { }
-                    finally {
-                        callback?.Invoke(info.FullName, Interlocked.Increment(ref count), total);
-                    }
-                    if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
-                });
+                        catch { }
+                        finally {
+                            callback?.Invoke(info.FullName, Interlocked.Increment(ref count), total);
+                        }
+                        if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
+                    });
+                }
             }
             catch (OperationCanceledException) { }
             finally {

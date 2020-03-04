@@ -9,7 +9,7 @@
         xmlns:vir="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
         Icon="Resources/ZipImageViewer.ico"
         mc:Ignorable="d" UseLayoutRounding="True" Background="{StaticResource BackgroundDarkBrush}" Foreground="{StaticResource ForegroundBrush}"
-        Title="{Binding ElementName=MainWin, Path=CurrentPath, Mode=OneWay}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
+        Title="{Binding ElementName=MainWin, Path=CurrentPath, Mode=OneWay}" Height="730" Width="1140" Drop="MainWin_Drop" AllowDrop="True"
         Loaded="MainWin_Loaded" Closing="MainWin_Closing" Closed="MainWin_Closed" DpiChanged="MainWin_DpiChanged">
     <Window.Resources>
         <local:FlagToImageConverter x:Key="FlagToImageConverter"/>

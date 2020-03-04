@@ -58,6 +58,13 @@ namespace ZipImageViewer
             if (GetTemplateChild("minimizeButton") is Button minimizeButton) minimizeButton.Click += MinimizeClick;
             if (GetTemplateChild("restoreButton") is Button restoreButton) restoreButton.Click += RestoreClick;
             if (GetTemplateChild("closeButton") is Button closeButton) closeButton.Click += CloseClick;
+            if (GetTemplateChild("titleBar") is DockPanel titleBar) titleBar.PreviewMouseDown += TitleBar_PreviewMouseDown;
+        }
+
+        private void TitleBar_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
+            if (e.ClickCount != 2) return;
+            RestoreClick(null, null);
+            e.Handled = true;
         }
 
         protected override void OnMouseDown(MouseButtonEventArgs e) {
