@@ -156,10 +156,10 @@ namespace ZipImageViewer
             OpenFolderDialog(this, path => Task.Run(() => LoadPath(path)));
         }
 
-        private void callback_AddToImageList(ObjectInfo objInfo) {
+        private async void callback_AddToImageList(ObjectInfo objInfo) {
             //exclude non-image items in immersion mode
             if (Setting.ImmersionMode && objInfo.SourcePaths == null) {
-                objInfo.SourcePaths = GetSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
+                objInfo.SourcePaths = await GetSourcePathsAsync(objInfo);//update needed to exclude items that do not have thumbs
                 if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0)
                     return;
             }
@@ -258,7 +258,7 @@ namespace ZipImageViewer
                     tknSrc_LoadThumb = new CancellationTokenSource();
                     preRefreshActions();
                     CurrentPath = objInfo.FileSystemPath;
-                    LoadFile(new LoadOptions(objInfo.FileSystemPath) {
+                    ExtractZip(new LoadOptions(objInfo.FileSystemPath) {
                         Flags = objInfo.Flags,
                         LoadImage = true,
                         DecodeSize = (SizeInt)Setting.ThumbnailSize,

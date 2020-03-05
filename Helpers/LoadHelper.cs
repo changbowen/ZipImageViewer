@@ -47,10 +47,32 @@ namespace ZipImageViewer
         public static readonly int MaxLoadThreads = Environment.ProcessorCount;
         public static SemaphoreSlim LoadThrottle = new SemaphoreSlim(MaxLoadThreads);
 
+        //public static void Extract(LoadOptions options, CancellationTokenSource tknSrc = null) {
+        //    if (tknSrc?.IsCancellationRequested == true) return;
+            
+        //    //objInfo to be returned
+        //    var objInfo = new ObjectInfo(options.FilePath, options.Flags) {
+        //        FileName = Path.GetFileName(options.FilePath)
+        //    };
+
+        //    var done = new HashSet<string>();
+        //    var trials = 0;
+        //    bool trial1() {
+        //        if (!(Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow row)) return false;
+        //        options.Password = (string)row[nameof(Column.Password)];
+        //        return extractZip(options, objInfo, done, tknSrc);
+        //    }
+
+        //    while (trials < 5) {
+        //        if (tknSrc?.IsCancellationRequested == true) break;
+
+        //    }
+        //}
+
+
         /// <summary>
-        /// Load image based on the type of file and try passwords when possible.
         /// <para>
-        /// If filePath points to an archive, ObjectInfo.Flags in ObjInfoCallback will contain FileFlag.Error when extraction fails.
+        /// ObjectInfo.Flags in ObjInfoCallback will contain FileFlag.Error when extraction fails.
         /// ObjectInfo.SourcePaths in ObjInfoCallback contains the file list inside archive.
         /// ObjectInfo in CldInfoCallback contains information for files inside archive.
         /// </para>
@@ -58,9 +80,8 @@ namespace ZipImageViewer
         /// Callback can be used to manipulate the loaded images. For e.g. display it in the ViewWindow, or add to ObjectList as thumbnails.
         /// Callback is called for each image loaded.
         /// Use Dispatcher if callback needs to access the UI thread.
-        /// <param name="flags">Only checks for Image and Archive.</param>
         /// </summary>
-        internal static void LoadFile(LoadOptions options, CancellationTokenSource tknSrc = null) {
+        public static void ExtractZip(LoadOptions options, CancellationTokenSource tknSrc = null) {
             if (tknSrc?.IsCancellationRequested == true) return;
 
             //objInfo to be returned
@@ -68,85 +89,81 @@ namespace ZipImageViewer
                 FileName = Path.GetFileName(options.FilePath)
             };
 
-            //when file is an image
-            if (options.Flags.HasFlag(FileFlags.Image) && !options.Flags.HasFlag(FileFlags.Archive)) {
-                //objInfo.SourcePaths = new[] { options.FilePath };
-                if (options.LoadImage)
-                    objInfo.ImageSource = GetImageSource(options.FilePath, options.DecodeSize);
-            }
-            //when file is an archive
-            else if (options.Flags.HasFlag(FileFlags.Archive)) {
-                //some files may get loaded from cache therefore unaware of whether password is correct
-                //the HashSet records processed files through retries
-                var done = new HashSet<string>();
-                for (int caseIdx = 0; caseIdx < 4; caseIdx++) {
-                    if (tknSrc?.IsCancellationRequested == true) break;
+            //some files may get loaded from cache therefore unaware of whether password is correct
+            //the HashSet records processed files through retries
+            var done = new HashSet<string>();
+            for (int caseIdx = 0; caseIdx < 4; caseIdx++) {
+                if (tknSrc?.IsCancellationRequested == true) break;
 
-                    var success = false;
-                    switch (caseIdx) {
-                        //first check if there is a match in saved passwords
-                        case 0 when Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow row:
-                            options.Password = (string)row[nameof(Column.Password)];
-                            success = extractZip(options, objInfo, done, tknSrc);
-                            break;
-                        //then try no password
-                        case 1:
-                            options.Password = null;
-                            success = extractZip(options, objInfo, done, tknSrc);
-                            break;
-                        //then try all saved passwords with no filename
-                        case 2:
-                            foreach (var fp in Setting.FallbackPasswords) {
-                                options.Password = fp;
-                                success = extractZip(options, objInfo, done, tknSrc);
-                                if (success) break;
-                            }
-                            break;
-                        case 3:
-                            //if all fails, prompt for password then extract with it
-                            if (options.LoadImage &&
-                                (options.FileNames == null || options.DecodeSize == default)) {
-                                //ask for password when opening explicitly the archive or opening viewer for images inside archive
-                                while (!success) {
-                                    string pwd = null;
-                                    bool isFb = true;
-                                    Application.Current.Dispatcher.Invoke(() => {
-                                        var win = new InputWindow();
-                                        if (win.ShowDialog() == true) {
-                                            pwd = win.TB_Password.Text;
-                                            isFb = win.CB_Fallback.IsChecked == true;
-                                        }
-                                        win.Close();
-                                    });
-
-                                    if (!string.IsNullOrEmpty(pwd)) {
-                                        options.Password = pwd;
-                                        success = extractZip(options, objInfo, done, tknSrc);
-                                        if (success) {
-                                            //make sure the password is saved when task is cancelled
-                                            Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), pwd);
-                                            if (isFb) {
-                                                Setting.FallbackPasswords[pwd] = new Observable<string>(pwd);
-                                            }
-                                            break;
-                                        }
-                                    }
-                                    else break;
-                                }
-                            }
-                            if (!success) {
-                                objInfo.Flags |= FileFlags.Error;
-                                objInfo.Comments = $"Extraction failed. Bad password or not supported image formats.";
-                            }
-                            break;
-                    }
-
-                    if (success) break;
-                }
+                var success = tryExtract(caseIdx, options, objInfo, done, tknSrc);
+                if (success) break;
             }
 
             if (tknSrc?.IsCancellationRequested == true) return;
             options.ObjInfoCallback?.Invoke(objInfo);
+        }
+
+
+        private static bool tryExtract(int trial, LoadOptions options, ObjectInfo objInfo, HashSet<string> done, CancellationTokenSource tknSrc = null) {
+            var success = false;
+            switch (trial) {
+                //first check if there is a match in saved passwords
+                case 0 when Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow row:
+                    options.Password = (string)row[nameof(Column.Password)];
+                    success = extractZip(options, objInfo, done, tknSrc);
+                    break;
+                //then try no password
+                case 1:
+                    options.Password = null;
+                    success = extractZip(options, objInfo, done, tknSrc);
+                    break;
+                //then try all saved passwords with no filename
+                case 2:
+                    foreach (var fp in Setting.FallbackPasswords) {
+                        options.Password = fp;
+                        success = extractZip(options, objInfo, done, tknSrc);
+                        if (success) break;
+                    }
+                    break;
+                case 3:
+                    //if all fails, prompt for password then extract with it
+                    if (options.LoadImage &&
+                        (options.FileNames == null || options.DecodeSize == default)) {
+                        //ask for password when opening explicitly the archive or opening viewer for images inside archive
+                        while (!success) {
+                            string pwd = null;
+                            bool isFb = true;
+                            Application.Current.Dispatcher.Invoke(() => {
+                                var win = new InputWindow();
+                                if (win.ShowDialog() == true) {
+                                    pwd = win.TB_Password.Text;
+                                    isFb = win.CB_Fallback.IsChecked == true;
+                                }
+                                win.Close();
+                            });
+
+                            if (!string.IsNullOrEmpty(pwd)) {
+                                options.Password = pwd;
+                                success = extractZip(options, objInfo, done, tknSrc);
+                                if (success) {
+                                    //make sure the password is saved when task is cancelled
+                                    Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), pwd);
+                                    if (isFb) {
+                                        Setting.FallbackPasswords[pwd] = new Observable<string>(pwd);
+                                    }
+                                    break;
+                                }
+                            }
+                            else break;
+                        }
+                    }
+                    if (!success) {
+                        objInfo.Flags |= FileFlags.Error;
+                        objInfo.Comments = $"Extraction failed. Bad password or not supported image formats.";
+                    }
+                    break;
+            }
+            return success;
         }
 
         /// <summary>
@@ -322,7 +339,7 @@ namespace ZipImageViewer
                     }
                     break;
                 case FileFlags.Archive:
-                    LoadFile(new LoadOptions(objInfo.FileSystemPath) {
+                    ExtractZip(new LoadOptions(objInfo.FileSystemPath) {
                         Flags = FileFlags.Archive,
                         LoadImage = false,
                         ObjInfoCallback = oi => {
@@ -399,7 +416,7 @@ namespace ZipImageViewer
                         break;
                     case FileFlags.Archive:
                         if (sourcePath != null) {
-                            LoadFile(new LoadOptions(objInfo.FileSystemPath) {
+                            ExtractZip(new LoadOptions(objInfo.FileSystemPath) {
                                 DecodeSize = decodeSize,
                                 LoadImage = true,
                                 TryCache = tryCache,
@@ -623,7 +640,7 @@ namespace ZipImageViewer
             try {
                 if (pathType == FileFlags.Archive) {
                     var all = GetSourcePaths(new ObjectInfo(path, pathType));
-                    LoadFile(new LoadOptions(path) {
+                    ExtractZip(new LoadOptions(path) {
                         Flags = FileFlags.Archive,
                         LoadImage = true,
                         DecodeSize = decodeSize,

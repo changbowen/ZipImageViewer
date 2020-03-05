@@ -35,19 +35,7 @@ namespace ZipImageViewer
         public enum Transition { None, Random, ZoomFadeBlur, Fade, HorizontalSwipe }
         public enum TransitionSpeed { Fast, Medium, Slow }
 
-
         private static string sevenZipDllPath = Path.Combine(App.ExeDir, @"7z.dll");
-
-        private static bool multiThreadUnzip = false;
-        [SavedSetting]
-        public static bool MultiThreadUnzip {
-            get => multiThreadUnzip;
-            set {
-                if (multiThreadUnzip == value) return;
-                multiThreadUnzip = value;
-                OnStaticPropertyChanged(nameof(MultiThreadUnzip));
-            }
-        }
 
         private static string databaseDir = App.ExeDir;
         [SavedSetting]

@@ -41,21 +41,6 @@
 
             </local:PaddedGrid.Resources>
 
-            <Border Margin="8 8 8 4">
-                <StackPanel>
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Unzip Options"/>
-                    <StackPanel Orientation="Horizontal">
-                        <CheckBox Content="Multi-thread"
-                                  IsChecked="{Binding Source={x:Static local:App.Setting}, Path=MultiThreadUnzip}"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-            <TextBlock Grid.Column="1" Style="{StaticResource TipTextStyle}">
-                <TextBlock.Inlines>
-                    Multi-thread: not recommended if you don't have a monster PC.
-                </TextBlock.Inlines>
-            </TextBlock>
-
             <Border Grid.Row="1">
                 <StackPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Size"/>
