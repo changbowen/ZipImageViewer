@@ -5,11 +5,20 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d" IsHitTestVisible="False"
              d:DesignHeight="50" d:DesignWidth="150" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <UserControl.Resources>
+        <Storyboard x:Key="SB_FadeInThenOut" Storyboard.TargetProperty="Opacity" FillBehavior="Stop">
+            <DoubleAnimationUsingKeyFrames>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1" EasingFunction="{StaticResource CE_EaseInOut}"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:2.3" Value="1"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:2.6" Value="0" EasingFunction="{StaticResource CE_EaseInOut}"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
     <Grid>
         <Rectangle RadiusY="10" RadiusX="10" Fill="{StaticResource BackgroundLightBrush}">
         </Rectangle>
         <TextBlock x:Name="TB" Margin="15" HorizontalAlignment="Center" VerticalAlignment="Center"
                    FontSize="14" FontWeight="Bold"
-                   Text="{Binding ElementName=BM, Path=Message}" Foreground="{StaticResource ForegroundBrush}" />
+                   Text="{Binding ElementName=BM, Path=Message, Mode=OneWay}" Foreground="{StaticResource ForegroundBrush}" />
     </Grid>
 </UserControl>

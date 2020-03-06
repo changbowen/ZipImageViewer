@@ -404,6 +404,15 @@ namespace ZipImageViewer
                 return Compare(oX, oY);
             }
         }
+
+        public static string GetRes(string key) {
+            return (string)Application.Current.Resources[key];
+        }
+
+        public static T GetRes<T>(string key) {
+            return (T)Application.Current.Resources[key];
+        }
+
     }
 
 

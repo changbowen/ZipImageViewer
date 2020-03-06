@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using static ZipImageViewer.LoadHelper;
+using static ZipImageViewer.Helpers;
 
 namespace ZipImageViewer
 {

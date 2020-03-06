@@ -1,0 +1,54 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:local="clr-namespace:ZipImageViewer">
+    <sys:String x:Key="ttl_Settings">Settings</sys:String>
+    <sys:String x:Key="ttl_ThumbSize">Thumbnail Size</sys:String>
+    <Span x:Key="spn_ThumbSizeTip">
+        <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.<LineBreak/>
+        <Bold>Changing this value invalidates the entire thumbnail cache.</Bold><LineBreak/>
+        The Cache option will start a foreground task to ensure data needed to display the current view is cached in Thumbnail database.
+    </Span>
+    <sys:String x:Key="ttl_ThumbSwapDelayMulti">Thumbnail Swap Delay Multiplier</sys:String>
+    <sys:String x:Key="msg_ThumbSwapDelayMultiTip">The delay of thumbnail change on folders and archives. Higher value results in longer delay.</sys:String>
+    <sys:String x:Key="ttl_DatabaseDir">Database Directory</sys:String>
+    <sys:String x:Key="msg_DatabaseDirTip">The folder to save the all database files (thumbnail cache etc.).</sys:String>
+    <sys:String x:Key="ttl_ThumbDbSize">Thumbnail Cache Size (Current: {0})</sys:String>
+    <sys:String x:Key="ttl_Unlimited">Unlimited</sys:String>
+    <Span x:Key="spn_ThumbDbSizeTip">
+        Maximum size limit of the thumbnail database.<LineBreak/>
+        Setting it to Unlimited removes the limit on the application level.
+    </Span>
+    <sys:String x:Key="ttl_LiteMode">Lite Mode</sys:String>
+    <sys:String x:Key="msg_LiteModeTip">Disables most effects that affect UI performance.</sys:String>
+    <sys:String x:Key="ttl_ViewerTransition">Viewer Transition</sys:String>
+    <sys:String x:Key="ttl_TransitionSpeed">Transition Speed</sys:String>
+    <sys:String x:Key="msg_ViewerTransitionTip">The transition animation used in the viewer.</sys:String>
+    <sys:String x:Key="ttl_SavedPasswords">Saved Passwords</sys:String>
+    <sys:String x:Key="ttl_FallbackPasswords">Fallback Passwords</sys:String>
+    <sys:String x:Key="ttl_MappedPasswords">Mapped Passwords</sys:String>
+    <Span x:Key="spn_SavedPasswordsTip">
+        Saved passwords for zipped files.<LineBreak/>
+        In the configuration file, fallback passwords are saved one on each line, with the below formats:<LineBreak/>
+        <Bold>password</Bold> =
+    </Span>
+    <sys:String x:Key="ttl_CustomCommands">Custom Commands (Comming Soon...)</sys:String>
+    <sys:String x:Key="ttl_Name">Name</sys:String>
+    <sys:String x:Key="ttl_ProgramPath">Program Path</sys:String>
+    <sys:String x:Key="ttl_Arguments">Arguments</sys:String>
+    <sys:String x:Key="txt_TargetNullValue">(Enter value)</sys:String>
+    <sys:String x:Key="ttl_Password">Password</sys:String>
+    <Span x:Key="spn_CustomCommandsTip">
+        Commands used in right-click menu. One in each line.<LineBreak/>
+        <Bold>%FileSystemPath%</Bold> - Path to the current file or folder.
+    </Span>
+    <sys:String x:Key="msg_DbMovedSucc">Database files moved successfully.</sys:String>
+    <sys:String x:Key="ttl_OperationComplete">Operation Complete</sys:String>
+    <sys:String x:Key="ttl_OperationFailed">Operation Failed</sys:String>
+    <sys:String x:Key="msg_PleaseWait">Please wait...</sys:String>
+    <sys:String x:Key="msg_Processing">Processing...</sys:String>
+    <sys:String x:Key="ttl_OpenFolder">Open Folder</sys:String>
+    <sys:String x:Key="ttl_Options">Options</sys:String>
+    <sys:String x:Key="ttl_ImmsersionMode">Immsersion Mode</sys:String>
+    <sys:String x:Key="ttl_CloseWindow">Close Window</sys:String>
+</ResourceDictionary>

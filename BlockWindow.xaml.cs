@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using static ZipImageViewer.Helpers;
 
 namespace ZipImageViewer
 {
@@ -28,7 +29,7 @@ namespace ZipImageViewer
             set { SetValue(MessageBodyProperty, value); }
         }
         public static readonly DependencyProperty MessageBodyProperty =
-            DependencyProperty.Register("MessageBody", typeof(string), typeof(BlockWindow), new PropertyMetadata("Please wait..."));
+            DependencyProperty.Register("MessageBody", typeof(string), typeof(BlockWindow), new PropertyMetadata(GetRes("msg_PleaseWait")));
 
 
         /// <summary>

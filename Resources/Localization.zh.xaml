@@ -1,0 +1,54 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:local="clr-namespace:ZipImageViewer">
+    <sys:String x:Key="ttl_Settings">设置</sys:String>
+    <sys:String x:Key="ttl_ThumbSize">缩略图尺寸</sys:String>
+    <Span x:Key="spn_ThumbSizeTip">
+        <Bold>宽</Bold> x <Bold>高</Bold> （像素）。<LineBreak/>
+        <Bold>更改此值会使所有当前尺寸的缩略图失效。</Bold><LineBreak/>
+        使用缓存目录选项会开始缓存当前视图下的图像到缩略图数据库。
+    </Span>
+    <sys:String x:Key="ttl_ThumbSwapDelayMulti">缩略图切换延迟速率</sys:String>
+    <sys:String x:Key="msg_ThumbSwapDelayMultiTip">目录和压缩文件缩略图的切换延迟。数值越高延迟越高。</sys:String>
+    <sys:String x:Key="ttl_DatabaseDir">数据库目录</sys:String>
+    <sys:String x:Key="msg_DatabaseDirTip">存放数据库文件（缩略图缓存数据库等）的目录</sys:String>
+    <sys:String x:Key="ttl_ThumbDbSize">缩略图缓存大小 （当前: {0}）</sys:String>
+    <sys:String x:Key="ttl_Unlimited">无限制</sys:String>
+    <Span x:Key="spn_ThumbDbSizeTip">
+        缩略图缓存的最大文件尺寸。<LineBreak/>
+        设置为无限制会解除软件层面的限制。
+    </Span>
+    <sys:String x:Key="ttl_LiteMode">简洁模式</sys:String>
+    <sys:String x:Key="msg_LiteModeTip">禁用多数影响界面性能的特效。</sys:String>
+    <sys:String x:Key="ttl_ViewerTransition">查看器过渡效果</sys:String>
+    <sys:String x:Key="ttl_TransitionSpeed">过渡效果速度</sys:String>
+    <sys:String x:Key="msg_ViewerTransitionTip">查看器中使用的过渡效果。</sys:String>
+    <sys:String x:Key="ttl_SavedPasswords">保存的密码</sys:String>
+    <sys:String x:Key="ttl_FallbackPasswords">备用密码</sys:String>
+    <sys:String x:Key="ttl_MappedPasswords">密码字典</sys:String>
+    <Span x:Key="spn_SavedPasswordsTip">
+        压缩文件使用的密码。<LineBreak/>
+        在配置文件中，备用密码每行一个，采用如下格式存储：<LineBreak/>
+        <Bold>密码</Bold> =
+    </Span>
+    <sys:String x:Key="ttl_CustomCommands">自定义命令（敬请期待...）</sys:String>
+    <sys:String x:Key="ttl_Name">名称</sys:String>
+    <sys:String x:Key="ttl_ProgramPath">程序路径</sys:String>
+    <sys:String x:Key="ttl_Arguments">参数</sys:String>
+    <sys:String x:Key="txt_TargetNullValue">(输入数据)</sys:String>
+    <sys:String x:Key="ttl_Password">密码</sys:String>
+    <Span x:Key="spn_CustomCommandsTip">
+        右键菜单中使用的自定义命令，每行一个。<LineBreak/>
+        <Bold>%FileSystemPath%</Bold> - 当前文件或目录的路径
+    </Span>
+    <sys:String x:Key="msg_DbMovedSucc">数据库文件移动完成。</sys:String>
+    <sys:String x:Key="ttl_OperationComplete">操作完成</sys:String>
+    <sys:String x:Key="ttl_OperationFailed">操作失败</sys:String>
+    <sys:String x:Key="msg_PleaseWait">请稍后...</sys:String>
+    <sys:String x:Key="msg_Processing">处理中...</sys:String>
+    <sys:String x:Key="ttl_OpenFolder">打开文件夹</sys:String>
+    <sys:String x:Key="ttl_Options">选项</sys:String>
+    <sys:String x:Key="ttl_ImmsersionMode">沉浸模式</sys:String>
+    <sys:String x:Key="ttl_CloseWindow">关闭窗口</sys:String>
+</ResourceDictionary>

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
         Width="800" Height="600" Icon="Resources/ZipImageViewer.ico"
         Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource ForegroundBrush}" WindowStartupLocation="CenterOwner"
-        Title="Settings" UseLayoutRounding="True" Loaded="SettingsWin_Loaded" Closing="SettingsWin_Closing" PreviewKeyDown="SettingsWin_PreviewKeyDown">
+        Title="{StaticResource ttl_Settings}" UseLayoutRounding="True" Loaded="SettingsWin_Loaded" Closing="SettingsWin_Closing" PreviewKeyDown="SettingsWin_PreviewKeyDown">
     <ScrollViewer>
         <ScrollViewer.Resources>
             <Style TargetType="ScrollBar" BasedOn="{StaticResource AppleStyleScrollBar}"/>
@@ -38,12 +38,11 @@
                 <Style TargetType="ContentControl" BasedOn="{StaticResource RoundContentControlBaseStyle}"/>
                 <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}"/>
                 <Style TargetType="CheckBox" BasedOn="{StaticResource SlideSwitchStyle}"/>
-
             </local:PaddedGrid.Resources>
 
             <Border Grid.Row="1">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Size"/>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbSize}"/>
                     <DockPanel LastChildFill="False">
                         <ContentControl>
                             <TextBox MinWidth="32" VerticalAlignment="Top"
@@ -60,33 +59,23 @@
                 </StackPanel>
             </Border>
             <TextBlock  Grid.Row="1" Grid.Column="1" Style="{StaticResource TipTextStyle}">
-                <TextBlock.Inlines>
-                    <Bold>Width</Bold> x
-                    <Bold>Height</Bold> in pixels.
-                    <LineBreak/>
-                    The size ensures a minimum width or height (depending on the aspect ratio of the image) for decoding images to provide a higher thumbnail quality.
-                    <LineBreak/>
-                    <Bold>Changing this value invalidates the entire thumbnail cache.</Bold>
-                    <LineBreak/>
-                    The Cache option will start a foreground task to ensure data needed to display the current view is cached in Thumbnail database.
-                </TextBlock.Inlines>
+                <StaticResource ResourceKey="spn_ThumbSizeTip"/>
             </TextBlock>
 
             <Border Grid.Row="2">
                 <DockPanel LastChildFill="False">
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thumbnail Swap Delay Multiplier" Margin="0" VerticalAlignment="Center"/>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbSwapDelayMulti}" Margin="0" VerticalAlignment="Center"/>
                     <ContentControl DockPanel.Dock="Right">
                         <TextBox Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbSwapDelayMultiplier}"
                                  Width="40"/>
                     </ContentControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource TipTextStyle}"
-                       Text="The delay of thumbnail change on folders and archives. Higher value results in longer delay."/>
+            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ThumbSwapDelayMultiTip}"/>
 
             <Border Grid.Row="3">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Database Directory"/>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_DatabaseDir}"/>
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Margin="8 0 0 0" Content="Move" VerticalAlignment="Center" Click="Btn_Move_Click"/>
                         <ContentControl>
@@ -95,14 +84,13 @@
                     </DockPanel>
                 </StackPanel>
             </Border>
-            <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource TipTextStyle}"
-                       Text="The folder to save the all database files."/>
+            <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_DatabaseDirTip}"/>
 
             <Border Grid.Row="4">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
                         <TextBlock Style="{StaticResource HeaderTextStyle}" 
-                                   Text="{Binding CurrentThumbDbSize, ElementName=SettingsWin, Mode=OneWay, StringFormat='Thumbnail Database Size (Current: {0})'}"/>
+                                   Text="{Binding CurrentThumbDbSize, ElementName=SettingsWin, Mode=OneWay, StringFormat={StaticResource ttl_ThumbDbSize}}"/>
                         <Button Content="Clean" VerticalAlignment="Center" DockPanel.Dock="Right" Click="Btn_Clean_Click"/>
                     </DockPanel>
                     <DockPanel>
@@ -114,7 +102,7 @@
                                     <Setter Property="Text" Value="{Binding ElementName=SL_ThumbDbSize, Path=Value, Mode=OneWay, StringFormat='\{0:#,0.0} GB'}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding ElementName=SL_ThumbDbSize, Path=Value, Mode=OneWay}" Value="10">
-                                            <Setter Property="Text" Value="Unlimited"/>
+                                            <Setter Property="Text" Value="{StaticResource ttl_Unlimited}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -124,28 +112,18 @@
                 </StackPanel>
             </Border>
             <TextBlock  Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}">
-                <TextBlock.Inlines>
-                    Maximum size limit of the thumbnail database.
-                    <LineBreak/>
-                    Setting it to Unlimited removes the limit on the application level.
-                    <LineBreak/>
-                    The database file is located at the same folder as the application executable.
-                </TextBlock.Inlines>
+                <StaticResource ResourceKey="spn_ThumbDbSizeTip"/>
             </TextBlock>
 
             <Border Grid.Row="5">
                 <DockPanel LastChildFill="False">
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Lite Mode" Margin="0" VerticalAlignment="Center"/>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_LiteMode}" Margin="0" VerticalAlignment="Center"/>
                     <CheckBox Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
                               Foreground="{Binding Foreground, ElementName=SettingsWin, Mode=OneTime}"
                               IsChecked="{Binding Source={x:Static local:App.Setting}, Path=LiteMode}"/>
                 </DockPanel>
             </Border>
-            <TextBlock  Grid.Row="5" Grid.Column="1" Style="{StaticResource TipTextStyle}">
-                <TextBlock.Inlines>
-                    Disables most effects that affect performance.
-                </TextBlock.Inlines>
-            </TextBlock>
+            <TextBlock  Grid.Row="5" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_LiteModeTip}"/>
 
             <Border Grid.Row="6">
                 <Grid>
@@ -155,43 +133,37 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Viewer Transition"/>
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ViewerTransition}"/>
                         <ContentControl>
                             <ComboBox x:Name="CB_ViewerTransition" SelectionChanged="CB_SelectionChanged"/>
                         </ContentControl>
                     </StackPanel>
                     <StackPanel Grid.Column="2">
-                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Transition Speed"/>
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_TransitionSpeed}"/>
                         <ContentControl>
                             <ComboBox x:Name="CB_AnimSpeed" SelectionChanged="CB_SelectionChanged"/>
                         </ContentControl>
                     </StackPanel>
                 </Grid>
             </Border>
-            <TextBlock  Grid.Row="6" Grid.Column="1" Style="{StaticResource TipTextStyle}">
-                <TextBlock.Inlines>
-                    The transition animation used in the viewer.
-                    <LineBreak/>
-                    Speed affects the length of time the animations are played.
-                </TextBlock.Inlines>
-            </TextBlock>
+            <TextBlock Grid.Row="6" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ViewerTransitionTip}"/>
 
             <Border Grid.Row="7">
                 <DockPanel>
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="Saved Passwords"/>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_SavedPasswords}"/>
                     <TabControl>
-                        <TabItem Header="Fallback Passwords">
+                        <TabItem Header="{StaticResource ttl_FallbackPasswords}">
                             <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                                 <DataGrid AutoGenerateColumns="False" RowEditEnding="DataGrid_RowEditEnding"
                                           EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                           ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=FallbackPasswords}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Password" Binding="{Binding Item, TargetNullValue=(Enter value)}"/>
+                                        <DataGridTextColumn Header="{StaticResource ttl_Password}" Binding="{Binding Item, TargetNullValue={StaticResource txt_TargetNullValue}}"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </ContentControl>
                         </TabItem>
-                        <TabItem Header="Mapped Passwords">
+                        <TabItem Header="{StaticResource ttl_MappedPasswords}">
                             <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                                 <DataGrid AutoGenerateColumns="True" EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                           ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=MappedPasswords}">
@@ -202,44 +174,27 @@
                 </DockPanel>
             </Border>
             <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource TipTextStyle}">
-                <TextBlock.Inlines>
-                    Saved passwords for zipped files.
-                    <LineBreak/>
-                    In the configuration file passwords are saved one on each line, with the below formats:
-                    <LineBreak/>
-                    <Bold>password</Bold> =
-                    <LineBreak/>
-                    <Bold>file_full_path</Bold> =
-                    <Bold>password</Bold>
-                    <LineBreak/>
-                    <LineBreak/>
-                    Using the format without
-                    <Bold>file_full_path</Bold> indicates a fallback password to try on any files not included in this section."
-                </TextBlock.Inlines>
+                <StaticResource ResourceKey="spn_SavedPasswordsTip"/>
             </TextBlock>
 
             <Border Grid.Row="8" Grid.RowSpan="2" Margin="8 4 8 8">
                 <DockPanel>
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="Custom Commands (Comming Soon...)"/>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_CustomCommands}"/>
                     <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                         <DataGrid RowEditEnding="DataGrid_RowEditEnding" IsEnabled="False"
                                   AutoGenerateColumns="False" EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                   ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=CustomCommands}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Name" Binding="{Binding Str1, TargetNullValue=(Enter value)}"/>
-                                <DataGridTextColumn Header="Program Path" Binding="{Binding Str2, TargetNullValue=(Enter value)}"/>
-                                <DataGridTextColumn Header="Arguments" Binding="{Binding Str3, TargetNullValue=(Enter value)}"/>
+                                <DataGridTextColumn Header="{StaticResource ttl_Name}" Binding="{Binding Str1, TargetNullValue={StaticResource txt_TargetNullValue}}"/>
+                                <DataGridTextColumn Header="{StaticResource ttl_ProgramPath}" Binding="{Binding Str2, TargetNullValue={StaticResource txt_TargetNullValue}}"/>
+                                <DataGridTextColumn Header="{StaticResource ttl_Arguments}" Binding="{Binding Str3, TargetNullValue={StaticResource txt_TargetNullValue}}"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </ContentControl>
                 </DockPanel>
             </Border>
             <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
-                <TextBlock.Inlines>
-                    Commands used in right-click menu. One in each line.
-                    <LineBreak/>
-                    <Bold>%FileSystemPath%</Bold> - Path to the current file or folder.
-                </TextBlock.Inlines>
+                <StaticResource ResourceKey="spn_CustomCommandsTip"/>
             </TextBlock>
         </local:PaddedGrid>
     </ScrollViewer>

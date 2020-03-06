@@ -54,6 +54,26 @@ namespace ZipImageViewer
 
         private void App_Startup(object sender, StartupEventArgs e) {
             try {
+                //localization
+                var culture = System.Globalization.CultureInfo.CurrentCulture;
+                if (culture.TwoLetterISOLanguageName != @"en") {
+                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    var resourceName = assembly.GetName().Name + ".g";
+                    var resourceManager = new System.Resources.ResourceManager(resourceName, assembly);
+                    try {
+                        var resourceSet = resourceManager.GetResourceSet(culture, true, true);
+                        if (resourceSet.Cast<System.Collections.DictionaryEntry>()
+                            .Any(entry => (string)entry.Key == $@"resources/localization.{culture.TwoLetterISOLanguageName}.baml")) {
+                            Resources.MergedDictionaries.Add(new ResourceDictionary {
+                                Source = new Uri($@"Resources\Localization.{culture.TwoLetterISOLanguageName}.xaml", UriKind.Relative)
+                            });
+                        }
+                    }
+                    finally {
+                        resourceManager.ReleaseAllResources();
+                    }
+                }
+
                 //handle immersion mode change
                 Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
 

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using static ZipImageViewer.Helpers;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
 using System.Threading;
@@ -87,10 +88,10 @@ namespace ZipImageViewer
                     }
                 });
                 Setting.DatabaseDir = targetDir;
-                MessageBox.Show("Database files moved successfully.", "Move Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(GetRes("msg_DbMovedSucc"), GetRes("ttl_OperationComplete"), MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Move Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, GetRes("ttl_OperationFailed"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
             btn.IsEnabled = true;
         }
@@ -140,7 +141,7 @@ namespace ZipImageViewer
         private void Btn_CacheFolder_Click(object sender, RoutedEventArgs e) {
             var mainWin = (MainWindow)Owner;
             var bw = new BlockWindow(Owner) {
-                MessageTitle = "Processing..."
+                MessageTitle = GetRes("msg_Processing")
             };
             //callback used to update progress
             Action<string, int, int> cb = (path, i, count) => {
@@ -148,7 +149,7 @@ namespace ZipImageViewer
                 Dispatcher.Invoke(() => {
                     bw.Percentage = p;
                     bw.MessageBody = path;
-                    if (bw.Percentage == 100) bw.MessageTitle = "All Done";
+                    if (bw.Percentage == 100) bw.MessageTitle = GetRes("ttl_OperationComplete");
                 });
             };
             //work thread
