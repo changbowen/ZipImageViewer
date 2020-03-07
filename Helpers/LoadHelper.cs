@@ -159,7 +159,7 @@ namespace ZipImageViewer
                     }
                     if (!success) {
                         objInfo.Flags |= FileFlags.Error;
-                        objInfo.Comments = $"Extraction failed. Bad password or not supported image formats.";
+                        objInfo.Comments = GetRes("msg_ExtractFailed");
                     }
                     break;
             }
@@ -187,6 +187,9 @@ namespace ZipImageViewer
                     toDo = ext.ArchiveFileData
                         .Where(d => !d.IsDirectory && GetFileType(d.FileName) == FileFlags.Image)
                         .Select(d => d.FileName).ToArray();
+                
+                //for archives with encrypted file names, ext.ArchiveFileData will be empty.
+                if (toDo == null || toDo.Length == 0) return false;
 
                 foreach (var fileName in toDo) {
                     if (tknSrc?.IsCancellationRequested == true) break;
@@ -208,7 +211,7 @@ namespace ZipImageViewer
                             //load from disk
                             using (var ms = new MemoryStream()) {
                                 ext.ExtractFile(fileName, ms);
-                                if (ms.Length == 0) throw new ExtractionFailedException();
+                                if (ms.Length == 0) return false;
                                 success = true; //if the task is cancelled, success info is still returned correctly.
                                 source = GetImageSource(ms, options.DecodeSize);
                             }
@@ -319,7 +322,7 @@ namespace ZipImageViewer
         public static string[] GetSourcePaths(ObjectInfo objInfo) {
             if (objInfo.SourcePaths != null) return objInfo.SourcePaths;
 
-            string[] paths = null;
+            var paths = new string[0];
             switch (objInfo.Flags) {
                 case FileFlags.Directory:
                     IEnumerable<FileSystemInfo> fsInfos = null;
@@ -343,6 +346,7 @@ namespace ZipImageViewer
                         Flags = FileFlags.Archive,
                         LoadImage = false,
                         ObjInfoCallback = oi => {
+                            if (oi.SourcePaths == null || oi.SourcePaths.Length == 0) return;
                             Array.Sort(oi.SourcePaths, new NativeHelpers.NaturalStringComparer());
                             paths = oi.SourcePaths;
                         }
@@ -353,9 +357,6 @@ namespace ZipImageViewer
                 //this is only included for completeness and should never be reached unless something's wrong with the code.
                 case FileFlags.Archive | FileFlags.Image:
                     paths = new[] { objInfo.FileName };
-                    break;
-                default:
-                    paths = new string[0];
                     break;
             }
 
@@ -497,9 +498,9 @@ namespace ZipImageViewer
             ushort orien = 0;
             if (frame.Metadata is BitmapMetadata meta) {
                 if (meta.GetQuery("/app1/ifd/{ushort=274}") is ushort u) orien = u;
-                imgInfo.Meta_DateTaken = meta.DateTaken;
-                imgInfo.Meta_ApplicationName = meta.ApplicationName;
-                imgInfo.Meta_Camera = $@"{meta.CameraManufacturer} {meta.CameraModel}";
+                try { imgInfo.Meta_DateTaken = meta.DateTaken; } catch { }
+                try { imgInfo.Meta_ApplicationName = meta.ApplicationName; } catch { }
+                try { imgInfo.Meta_Camera = $@"{meta.CameraManufacturer} {meta.CameraModel}"; } catch { }
             }
             if (imgInfo.FileSize == default)
                 imgInfo.FileSize = stream.Length;
@@ -646,7 +647,7 @@ namespace ZipImageViewer
                         DecodeSize = decodeSize,
                         CldInfoCallback = oi => {
                             oi.ImageSource = null;
-                            callback?.Invoke(oi.SourcePaths[0] ?? "", Interlocked.Increment(ref count), all.Length);
+                            callback?.Invoke(oi.SourcePaths?.Length > 0 ? oi.SourcePaths[0] : "", Interlocked.Increment(ref count), all.Length);
                         },
                     }, tknSrc);
                 }

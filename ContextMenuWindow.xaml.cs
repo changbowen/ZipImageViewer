@@ -80,7 +80,7 @@ namespace ZipImageViewer
             var border = (Border)sender;
             switch (border.Name) {
                 case nameof(B_OpenInExplorer):
-                    Helpers.Run("explorer", $"/select, \"{ObjectInfo.FileSystemPath}\"");
+                    Run("explorer", $"/select, \"{ObjectInfo.FileSystemPath}\"");
                     break;
                 case nameof(B_OpenInNewWindow):
                     if (ObjectInfo.Flags.HasFlag(FileFlags.Image)) {

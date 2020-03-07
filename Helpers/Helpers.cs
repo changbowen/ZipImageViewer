@@ -13,6 +13,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Windows.Markup;
 
 namespace ZipImageViewer
 {
@@ -405,14 +406,80 @@ namespace ZipImageViewer
             }
         }
 
-        public static string GetRes(string key) {
-            return (string)Application.Current.Resources[key];
+        public static string GetRes(string key, params string[] args) {
+            var result = (string)Application.Current.Resources[key];
+            if (result == null) return key;
+            if (args.Length == 0)
+                return result;
+            return string.Format(result, args);
         }
 
         public static T GetRes<T>(string key) {
             return (T)Application.Current.Resources[key];
         }
 
+    }
+
+    [AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = false)]
+    sealed class DescriptionAttribute : Attribute
+    {
+        public DescriptionAttribute(string text, bool isKey = false) {
+            Text = isKey ? Helpers.GetRes(text) : text;
+        }
+
+        public string Text { get; }
+    }
+
+
+    public class EnumerationExtension : MarkupExtension
+    {
+        private Type _enumType;
+
+        public EnumerationExtension(Type enumType) {
+            if (enumType == null)
+                throw new ArgumentNullException("enumType");
+
+            EnumType = enumType;
+        }
+
+        public Type EnumType {
+            get { return _enumType; }
+            private set {
+                if (_enumType == value) return;
+
+                var enumType = Nullable.GetUnderlyingType(value) ?? value;
+                if (enumType.IsEnum == false)
+                    throw new ArgumentException("Type must be an Enum.");
+
+                _enumType = value;
+            }
+        }
+
+        public override object ProvideValue(IServiceProvider serviceProvider) {
+            var enumValues = Enum.GetValues(EnumType);
+
+            return (
+              from object enumValue in enumValues
+              select new EnumerationMember {
+                  Value = enumValue,
+                  Description = GetDescription(enumValue)
+              }).ToArray();
+        }
+
+        private string GetDescription(object enumValue) {
+            var descriptionAttribute = EnumType
+              .GetField(enumValue.ToString())
+              .GetCustomAttributes(typeof(DescriptionAttribute), false)
+              .FirstOrDefault() as DescriptionAttribute;
+
+            return descriptionAttribute != null ? descriptionAttribute.Text : enumValue.ToString();
+        }
+
+        public class EnumerationMember
+        {
+            public string Description { get; set; }
+            public object Value { get; set; }
+        }
     }
 
 

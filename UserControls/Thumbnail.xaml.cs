@@ -50,14 +50,6 @@ namespace ZipImageViewer
 
                 Dispatcher.Invoke(() => {
                     if (IsLoaded) GR1.BeginStoryboard(thumbTransAnimOut);
-                    //fade out
-                    //IM1.AnimateDoubleCubicEase(OpacityProperty, 0d, 500, EasingMode.EaseIn,
-                    //    completed: (o1, e1) => {
-                    //        thumbImageSource = value;
-                    //        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbImageSource)));
-                    //    });
-                    //fade in
-                    //IM1.AnimateDoubleCubicEase(OpacityProperty, 1d, 500, EasingMode.EaseOut, begin: 520);
                 });
             }
         }
@@ -123,17 +115,7 @@ namespace ZipImageViewer
 
         private void TN_Unloaded(object sender, RoutedEventArgs e) {
             ThumbImageSource = null;
-            //if (ObjectInfo != null) {
-            //    ObjectInfo.ImageSources = null;
-            //    ObjectInfo = null;
-            //}
             nextSource = null;
-            //if (IM1 != null) {
-            //    IM1.Source = null;
-            //    IM1.ToolTip = null;
-            //    IM1 = null;
-            //}
-            //mask = null;
             cycleTimer.Stop();
             cycleTimer.Tick -= cycleImageSource;
         }

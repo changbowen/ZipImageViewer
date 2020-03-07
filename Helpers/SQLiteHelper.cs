@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using SizeInt = System.Drawing.Size;
+using static ZipImageViewer.Helpers;
 using static ZipImageViewer.TableHelper;
 using System.Threading.Tasks;
 
@@ -41,7 +42,7 @@ namespace ZipImageViewer
                 }
             }
             catch (Exception ex) {
-                MessageBox.Show($"Error opening database file {table.FullPath}.\r\n{ex.Message}", null, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(GetRes("msg_ErrorOpenDbFile", table.FullPath) + $"\r\n{ex.Message}", null, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally {
                 if (con != null) {

@@ -219,7 +219,7 @@
                                      Height="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter='0.75*x', Mode=OneWay}"
                                      Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Mode=OneWay}">
                                 <Ellipse.Tag>
-                                    <sys:Double>0</sys:Double>
+                                    <sys:Double>-1</sys:Double>
                                 </Ellipse.Tag>
                                 <Ellipse.RenderTransform>
                                     <TranslateTransform>

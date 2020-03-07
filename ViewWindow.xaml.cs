@@ -30,7 +30,7 @@ namespace ZipImageViewer
                 if (viewPath == value) return;
                 //update ObjectInfo
                 if (value.BasePath == null) value.BasePath = viewPath.BasePath;
-                var newInfo = new ObjectInfo(value.BasePath, Helpers.GetPathType(value.BasePath), value.SubPath);
+                var newInfo = new ObjectInfo(value.BasePath, GetPathType(value.BasePath), value.SubPath);
                 //carry over SourcePaths when BasePath is the same
                 if (value.BasePath == viewPath.BasePath)
                     newInfo.SourcePaths = ObjectInfo.SourcePaths;
@@ -142,7 +142,7 @@ namespace ZipImageViewer
                     }
                 }
                 if (Setting.ImmersionMode)
-                    Helpers.SwitchFullScreen(this, ref mainWin.lastViewWindowRect, true);
+                    SwitchFullScreen(this, ref mainWin.lastViewWindowRect, true);
             }
 
             //fade in window content
@@ -150,13 +150,13 @@ namespace ZipImageViewer
         }
 
         private void ViewWin_Closed(object sender, EventArgs e) {
-            Helpers.ShutdownCheck();
+            ShutdownCheck();
         }
 
         private void ViewWin_Closing(object sender, CancelEventArgs e) {
             //save window state
             if (mainWin != null) {
-                if (WindowState == WindowState.Maximized || Helpers.IsFullScreen(this))
+                if (WindowState == WindowState.Maximized || IsFullScreen(this))
                     mainWin.lastViewWindowRect = new Rect(Left, Top, 0d, 0d);
                 else
                     mainWin.lastViewWindowRect = new Rect(Left, Top, ActualWidth, ActualHeight);
@@ -272,7 +272,7 @@ namespace ZipImageViewer
         }
 
         private void scaleToCanvas(int ms = 400) {
-            var uniSize = Helpers.UniformScaleDown(IM.RealSize, new Size(CA.ActualWidth, CA.ActualHeight));
+            var uniSize = UniformScaleDown(IM.RealSize, new Size(CA.ActualWidth, CA.ActualHeight));
             transform(ms, uniSize, new Point(0d, 0d));
         }
 
@@ -400,7 +400,7 @@ namespace ZipImageViewer
                 return;
             }
 
-            BM.Show("No more!");
+            BM.Show(GetRes("msg_NoMore"));
         }
 
 

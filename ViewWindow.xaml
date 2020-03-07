@@ -7,14 +7,27 @@
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
         Icon="Resources/ZipImageViewer.ico" Padding="0"
         Title="{Binding ElementName=ViewWin, Path=ObjectInfo.VirtualPath, Mode=OneWay}"
-        Width="1280" Height="960" Foreground="{StaticResource ForegroundBrush}" Background="{StaticResource BackgroundBrush}"
+        Width="1280" Height="960" Foreground="{StaticResource ForegroundBrush}"
         UseLayoutRounding="True" SizeChanged="ViewWin_SizeChanged"
-        Loaded="ViewWindow_Loaded" Closing="ViewWin_Closing" Closed="ViewWin_Closed"
-        PreviewKeyUp="ViewWin_PreviewKeyUp">
+        Loaded="ViewWindow_Loaded" Closing="ViewWin_Closing" Closed="ViewWin_Closed" PreviewKeyUp="ViewWin_PreviewKeyUp">
     <Window.Resources>
         <local:CenterConverter x:Key="CenterConverter"/>
         <local:MathMultiplyConverter x:Key="MathMultiplyConverter"/>
-        
+        <local:ResourceConverter x:Key="ResourceConverter"/>
+
+        <DrawingBrush x:Key="BR_DarkCheckerboard" TileMode="Tile" Viewport="0,0,16,16" ViewportUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <GeometryDrawing Geometry="M0,0 H1 V1 H2 V2 H1 V1 H0Z" Brush="#FF080808"/>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+        <LinearGradientBrush x:Key="BR_DarkLinear" EndPoint="0.5,1" StartPoint="0.5,0">
+            <GradientStop Color="Black" Offset="0"/>
+            <GradientStop Color="#FF222222" Offset="1"/>
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="BR_Black" Color="Black"/>
+        <SolidColorBrush x:Key="BR_Grey" Color="#FF333333"/>
+        <SolidColorBrush x:Key="BR_White" Color="White"/>
+
         <Style x:Key="NavPanelStyle" TargetType="Panel">
             <EventSetter Event="PreviewMouseDown" Handler="DockPanel_PreviewMouseDown"/>
             <Setter Property="Cursor" Value="Hand" />
@@ -33,6 +46,13 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
+
+    <Window.Background>
+        <MultiBinding Converter="{StaticResource ResourceConverter}" ConverterParameter="BR_{0}" FallbackValue="{StaticResource BackgroundDarkBrush}">
+            <Binding Source="{x:Static local:App.Setting}" Path="ViewerBackground" FallbackValue="{StaticResource BackgroundDarkBrush}" Mode="OneWay"/>
+            <Binding RelativeSource="{RelativeSource Self}" Mode="OneTime"/>
+        </MultiBinding>
+    </Window.Background>
 
     <Canvas x:Name="CA" Background="Transparent"
             PreviewMouseWheel="CA_PreviewMouseWheel"
@@ -156,7 +176,7 @@
                 </Storyboard>
             </local:DpiImage.Resources>
         </local:DpiImage>
-        
+
         <local:BubbleMessage x:Name="BM">
             <Canvas.Left>
                 <MultiBinding Converter="{StaticResource CenterConverter}" Mode="OneWay">

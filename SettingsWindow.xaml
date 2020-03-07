@@ -24,6 +24,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="3*"/>
                 <RowDefinition Height="2*"/>
             </local:PaddedGrid.RowDefinitions>
@@ -53,12 +54,12 @@
                             <TextBox MinWidth="32" VerticalAlignment="Top"
                                      Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item2}"/>
                         </ContentControl>
-                        <Button DockPanel.Dock="Right" Content="Cache Current View" Margin="8 0 0 0" VerticalAlignment="Center" Click="Btn_CacheFolder_Click"/>
-                        <Button DockPanel.Dock="Right" Content="Reload View" VerticalAlignment="Center" Click="Btn_Reload_Click"/>
+                        <Button DockPanel.Dock="Right" Content="{StaticResource ttl_CacheCurrentView}" Margin="8 0 0 0" VerticalAlignment="Center" Click="Btn_CacheFolder_Click"/>
+                        <Button DockPanel.Dock="Right" Content="{StaticResource ttl_ReloadView}" VerticalAlignment="Center" Click="Btn_Reload_Click"/>
                     </DockPanel>
                 </StackPanel>
             </Border>
-            <TextBlock  Grid.Row="1" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_ThumbSizeTip"/>
             </TextBlock>
 
@@ -77,7 +78,7 @@
                 <StackPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_DatabaseDir}"/>
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Margin="8 0 0 0" Content="Move" VerticalAlignment="Center" Click="Btn_Move_Click"/>
+                        <Button DockPanel.Dock="Right" Margin="8 0 0 0" Content="{StaticResource ttl_Move}" VerticalAlignment="Center" Click="Btn_Move_Click"/>
                         <ContentControl>
                             <TextBox x:Name="TB_DatabaseDir" Text="{Binding Source={x:Static local:App.Setting}, Path=DatabaseDir, Mode=OneWay}"/>
                         </ContentControl>
@@ -91,7 +92,7 @@
                     <DockPanel LastChildFill="False">
                         <TextBlock Style="{StaticResource HeaderTextStyle}" 
                                    Text="{Binding CurrentThumbDbSize, ElementName=SettingsWin, Mode=OneWay, StringFormat={StaticResource ttl_ThumbDbSize}}"/>
-                        <Button Content="Clean" VerticalAlignment="Center" DockPanel.Dock="Right" Click="Btn_Clean_Click"/>
+                        <Button Content="{StaticResource ttl_Clean}" VerticalAlignment="Center" DockPanel.Dock="Right" Click="Btn_Clean_Click"/>
                     </DockPanel>
                     <DockPanel>
                         <Slider x:Name="SL_ThumbDbSize" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"
@@ -111,7 +112,7 @@
                     </DockPanel>
                 </StackPanel>
             </Border>
-            <TextBlock  Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_ThumbDbSizeTip"/>
             </TextBlock>
 
@@ -123,9 +124,20 @@
                               IsChecked="{Binding Source={x:Static local:App.Setting}, Path=LiteMode}"/>
                 </DockPanel>
             </Border>
-            <TextBlock  Grid.Row="5" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_LiteModeTip}"/>
+            <TextBlock Grid.Row="5" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_LiteModeTip}"/>
 
             <Border Grid.Row="6">
+                <DockPanel LastChildFill="False">
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ViewerBackground}" Margin="0" VerticalAlignment="Center"/>
+                    <ContentControl DockPanel.Dock="Right">
+                        <ComboBox ItemsSource="{Binding Source={local:Enumeration {x:Type local:Setting+Background}}}"
+                                  SelectedValue="{Binding Source={x:Static local:App.Setting}, Path=ViewerBackground}"
+                                  DisplayMemberPath="Description" SelectedValuePath="Value"/>
+                    </ContentControl>
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Row="7">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
@@ -135,20 +147,24 @@
                     <StackPanel Grid.Column="0">
                         <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ViewerTransition}"/>
                         <ContentControl>
-                            <ComboBox x:Name="CB_ViewerTransition" SelectionChanged="CB_SelectionChanged"/>
+                            <ComboBox ItemsSource="{Binding Source={local:Enumeration {x:Type local:Setting+Transition}}}"
+                                      SelectedValue="{Binding Source={x:Static local:App.Setting}, Path=ViewerTransition}"
+                                      DisplayMemberPath="Description" SelectedValuePath="Value"/>
                         </ContentControl>
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_TransitionSpeed}"/>
                         <ContentControl>
-                            <ComboBox x:Name="CB_AnimSpeed" SelectionChanged="CB_SelectionChanged"/>
+                            <ComboBox ItemsSource="{Binding Source={local:Enumeration {x:Type local:Setting+TransitionSpeed}}}"
+                                      SelectedValue="{Binding Source={x:Static local:App.Setting}, Path=ViewerTransitionSpeed}"
+                                      DisplayMemberPath="Description" SelectedValuePath="Value"/>
                         </ContentControl>
                     </StackPanel>
                 </Grid>
             </Border>
-            <TextBlock Grid.Row="6" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ViewerTransitionTip}"/>
+            <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ViewerTransitionTip}"/>
 
-            <Border Grid.Row="7">
+            <Border Grid.Row="8">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_SavedPasswords}"/>
                     <TabControl>
@@ -173,11 +189,11 @@
                     </TabControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_SavedPasswordsTip"/>
             </TextBlock>
 
-            <Border Grid.Row="8" Grid.RowSpan="2" Margin="8 4 8 8">
+            <Border Grid.Row="9" Grid.RowSpan="2" Margin="8 4 8 8">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_CustomCommands}"/>
                     <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
@@ -193,7 +209,7 @@
                     </ContentControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="9" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_CustomCommandsTip"/>
             </TextBlock>
         </local:PaddedGrid>

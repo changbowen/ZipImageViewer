@@ -6,9 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using IniParser;
-using IniParser.Model;
 using SevenZip;
 using SizeInt = System.Drawing.Size;
+using static ZipImageViewer.Helpers;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
 using static ZipImageViewer.SlideshowHelper;
@@ -21,21 +21,55 @@ namespace ZipImageViewer
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public static event EventHandler<PropertyChangedEventArgs> StaticPropertyChanged;
-
-        [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
-        sealed class SavedSettingAttribute : Attribute { }
-
-
-        public static string FilePath => Path.Combine(App.ExeDir, @"config.ini");
-
         private static void OnStaticPropertyChanged(string propName) {
             StaticPropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propName));
         }
 
-        public enum Transition { None, Random, ZoomFadeBlur, Fade, HorizontalSwipe }
-        public enum TransitionSpeed { Fast, Medium, Slow }
+        [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+        sealed class SavedSettingAttribute : Attribute { }
 
-        private static string sevenZipDllPath = Path.Combine(App.ExeDir, @"7z.dll");
+        public enum Transition
+        {
+            [Description("ttl_" + nameof(None), true)]
+            None,
+            [Description("ttl_" + nameof(Random), true)]
+            Random,
+            [Description("ttl_" + nameof(ZoomFadeBlur), true)]
+            ZoomFadeBlur,
+            [Description("ttl_" + nameof(Fade), true)]
+            Fade,
+            [Description("ttl_" + nameof(HorizontalSwipe), true)]
+            HorizontalSwipe
+        }
+        public enum TransitionSpeed
+        {
+            [Description("ttl_" + nameof(Fast), true)]
+            Fast,
+            [Description("ttl_" + nameof(Medium), true)]
+            Medium,
+            [Description("ttl_" + nameof(Slow), true)]
+            Slow
+        }
+        public enum Background
+        {
+            [Description("ttl_" + nameof(DarkCheckerboard), true)]
+            DarkCheckerboard,
+            [Description("ttl_" + nameof(DarkLinear), true)]
+            DarkLinear,
+            [Description("ttl_" + nameof(Black), true)]
+            Black,
+            [Description("ttl_" + nameof(Grey), true)]
+            Grey,
+            [Description("ttl_" + nameof(White), true)]
+            White
+        }
+
+        private enum ConfigSection
+        { AppConfig, CustomCommands, FallbackPasswords }
+
+        public static string FilePath => Path.Combine(App.ExeDir, @"config.ini");
+
+        private static string sevenZipDllPath => Path.Combine(App.ExeDir, @"7z.dll");
 
         private static string databaseDir = App.ExeDir;
         [SavedSetting]
@@ -78,6 +112,17 @@ namespace ZipImageViewer
                 if (viewerTransitionSpeed == value) return;
                 viewerTransitionSpeed = value;
                 OnStaticPropertyChanged(nameof(ViewerTransitionSpeed));
+            }
+        }
+
+        private static Background viewerBackground = Background.DarkCheckerboard;
+        [SavedSetting]
+        public static Background ViewerBackground {
+            get => viewerBackground;
+            set {
+                if (viewerBackground == value) return;
+                viewerBackground = value;
+                OnStaticPropertyChanged(nameof(ViewerBackground));
             }
         }
 
@@ -178,9 +223,16 @@ namespace ZipImageViewer
             }
         }
 
-        //this one is not used for binding
+        private static SlideAnimConfig slideAnimConfig = new SlideAnimConfig();
         [SavedSetting]
-        public static SlideAnimConfig SlideAnimConfig { get; set; } = new SlideAnimConfig();
+        public static SlideAnimConfig SlideAnimConfig {
+            get => slideAnimConfig;
+            set {
+                if (slideAnimConfig == value) return;
+                slideAnimConfig = value;
+                OnStaticPropertyChanged(nameof(SlideAnimConfig));
+            }
+        }
 
         private static IEnumerable<PropertyInfo> savedSettings => typeof(Setting).GetProperties(BindingFlags.Public | BindingFlags.Static)
                 .Where(p => p.GetCustomAttributes(typeof(SavedSettingAttribute), false).Length > 0);
@@ -200,14 +252,14 @@ namespace ZipImageViewer
             //parse config file
             var iniData = new FileIniDataParser().ReadFile(path, System.Text.Encoding.UTF8);
             foreach (var prop in savedSettings) {
-                var saved = iniData["App Config"][prop.Name];
+                var saved = iniData[nameof(ConfigSection.AppConfig)][prop.Name];
                 if (saved == null) continue;
                 prop.SetValue(null, JsonConvert.DeserializeObject(saved, prop.PropertyType));
             }
 
             //parse custom commands
             CustomCommands = new ObservableCollection<ObservableObj>();
-            var iniCmd = iniData["Custom Commands"];
+            var iniCmd = iniData[nameof(ConfigSection.CustomCommands)];
             if (iniCmd?.Count > 0) {
                 foreach (var row in iniCmd) {
                     var cells = row.Value.Split('\t');
@@ -218,7 +270,7 @@ namespace ZipImageViewer
 
             //parse saved passwords at last
             FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
-                iniData["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
+                iniData[nameof(ConfigSection.FallbackPasswords)].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
             //MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1, "Item1",
             //iniData["Saved Passwords"].Where(d => d.Value.Length > 0).Select(d => new ObservablePair<string, string>(d.KeyName, d.Value)));
 
@@ -230,8 +282,7 @@ namespace ZipImageViewer
             if (File.Exists(mp.FullPath)) {
                 try { MappedPasswords.ReadXml(mp.FullPath); }
                 catch (Exception ex) {
-                    MessageBox.Show("There was an error loading mapped passwords. Loading will be skipped.\r\n" + ex.Message,
-                        null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(GetRes("msg_ErrorLoadMapPwds") + "\r\n" + ex.Message, null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
         }
@@ -239,34 +290,29 @@ namespace ZipImageViewer
         public static void SaveConfigToFile(string path = null) {
             if (path == null) path = FilePath;
 
-            var appConfigs = "[App Config]\r\n";
-            foreach (var prop in savedSettings) {
-                var value = prop.GetValue(null);
-                appConfigs += $"{prop.Name}={JsonConvert.SerializeObject(value)}\r\n";
-            }
-
-            var savedPwds = "";
+            var fallbackPwds = "";
             if (FallbackPasswords != null && FallbackPasswords.Count > 0) {
                 foreach (var s in FallbackPasswords) {
                     if (string.IsNullOrWhiteSpace(s.Item)) continue;
-                    savedPwds += s.Item + "=\r\n";
+                    fallbackPwds += s.Item + "=\r\n";
                 }
             }
 
             MappedPasswords?.WriteXml(Tables[Table.MappedPasswords].FullPath, XmlWriteMode.WriteSchema);
 
             File.WriteAllText(path, 
-$@"{appConfigs}
-[Custom Commands]
+$@"[{nameof(ConfigSection.AppConfig)}]
+{string.Join("\r\n", savedSettings.Select(p => $"{p.Name}={JsonConvert.SerializeObject(p.GetValue(null))}"))}
+
+[{nameof(ConfigSection.CustomCommands)}]
 {(CustomCommands?.Count > 0 ?
     string.Join("\r\n", CustomCommands.Select(oo => $"{nameof(CustomCommands)}.{CustomCommands.IndexOf(oo)}={oo.Str1}\t{oo.Str2}\t{oo.Str3}")) :
     null)}
 
-;Saved passwords for zipped files. Supported formats:
+;Fallback passwords for zipped files in the format:
 ;password=
-;file_full_path=password
-[Saved Passwords]
-{savedPwds.Trim()}
+[{nameof(ConfigSection.FallbackPasswords)}]
+{fallbackPwds.Trim()}
 ");
         }
     }

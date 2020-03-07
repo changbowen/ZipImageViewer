@@ -21,9 +21,32 @@
     </Span>
     <sys:String x:Key="ttl_LiteMode">简洁模式</sys:String>
     <sys:String x:Key="msg_LiteModeTip">禁用多数影响界面性能的特效。</sys:String>
+    <sys:String x:Key="ttl_ViewerBackground">查看器背景</sys:String>
     <sys:String x:Key="ttl_ViewerTransition">查看器过渡效果</sys:String>
     <sys:String x:Key="ttl_TransitionSpeed">过渡效果速度</sys:String>
     <sys:String x:Key="msg_ViewerTransitionTip">查看器中使用的过渡效果。</sys:String>
+    <sys:String x:Key="ttl_CacheCurrentView">缓存当前视图</sys:String>
+    <sys:String x:Key="ttl_ReloadView">重新载入视图</sys:String>
+    <sys:String x:Key="ttl_Move">移动</sys:String>
+    <sys:String x:Key="ttl_Clean">清空</sys:String>
+
+    <sys:String x:Key="ttl_None">无</sys:String>
+    <sys:String x:Key="ttl_Random">随机</sys:String>
+    <sys:String x:Key="ttl_ZoomFadeBlur">缩放 + 淡入淡出 + 模糊</sys:String>
+    <sys:String x:Key="ttl_Fade">淡入淡出</sys:String>
+    <sys:String x:Key="ttl_HorizontalSwipe">水平滑动</sys:String>
+    <sys:String x:Key="ttl_Fast">快</sys:String>
+    <sys:String x:Key="ttl_Medium">中</sys:String>
+    <sys:String x:Key="ttl_Slow">慢</sys:String>
+    <sys:String x:Key="ttl_DarkCheckerboard">暗色棋盘</sys:String>
+    <sys:String x:Key="ttl_DarkLinear">暗色线性渐变</sys:String>
+    <sys:String x:Key="ttl_Black">黑色</sys:String>
+    <sys:String x:Key="ttl_Grey">灰色</sys:String>
+    <sys:String x:Key="ttl_White">白色</sys:String>
+    <sys:String x:Key="ttl_KenBurns">Ken Burns</sys:String>
+    <sys:String x:Key="ttl_Breath">呼吸</sys:String>
+    <sys:String x:Key="ttl_Emerge">浮现</sys:String>
+    
     <sys:String x:Key="ttl_SavedPasswords">保存的密码</sys:String>
     <sys:String x:Key="ttl_FallbackPasswords">备用密码</sys:String>
     <sys:String x:Key="ttl_MappedPasswords">密码字典</sys:String>
@@ -51,4 +74,32 @@
     <sys:String x:Key="ttl_Options">选项</sys:String>
     <sys:String x:Key="ttl_ImmsersionMode">沉浸模式</sys:String>
     <sys:String x:Key="ttl_CloseWindow">关闭窗口</sys:String>
+    <sys:String x:Key="txt_CreatedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (创建)</sys:String>
+    <sys:String x:Key="txt_ModifiedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (修改)</sys:String>
+    <sys:String x:Key="txt_DateTakenStrFmt">{0} (拍摄)</sys:String>
+    <sys:String x:Key="ttl_OpenInExplorer">在资源管理器中打开</sys:String>
+    <sys:String x:Key="ttl_OpenInNewWindow">在新窗口中打开</sys:String>
+    <sys:String x:Key="ttl_StartSlideshow">开始放映幻灯片</sys:String>
+    <sys:String x:Key="txt_PasswordForArchive">压缩文件密码</sys:String>
+    <sys:String x:Key="txt_AddToFallbackPwdLst">添加到备用密码</sys:String>
+    <sys:String x:Key="msg_FallbackPwdTip">对陌生加密压缩文件会尝试备用密码用来解压。</sys:String>
+    <sys:String x:Key="ttl_OK">确定</sys:String>
+    <sys:String x:Key="ttl_Cancel">取消</sys:String>
+    <sys:String x:Key="ttl_Transition">过渡效果</sys:String>
+    <sys:String x:Key="ttl_ResolutionScale">分辨率比例</sys:String>
+    <sys:String x:Key="ttl_ImageDuration">图像时长</sys:String>
+    <sys:String x:Key="ttl_FadeInDuration">渐入时长</sys:String>
+    <sys:String x:Key="ttl_FadeOutDuration">渐出时长</sys:String>
+    <sys:String x:Key="ttl_Blur">模糊效果</sys:String>
+    <sys:String x:Key="ttl_XAxisPanReduction">水平平移缩减</sys:String>
+    <sys:String x:Key="ttl_YAxisPanReduction">垂直平移缩减</sys:String>
+    <sys:String x:Key="ttl_YAxisPanDownOnly">垂直平移仅向下</sys:String>
+    <sys:String x:Key="ttl_ResetTransDefault">重置效果默认值</sys:String>
+    <sys:String x:Key="msg_NoImageFound">在{0}下没有找到可用图像。</sys:String>
+    <sys:String x:Key="msg_NoMore">没有了！</sys:String>
+    <sys:String x:Key="ttl_ParamStartError">参数启动错误</sys:String>
+    <sys:String x:Key="ttl_AppStartError">程序启动错误</sys:String>
+    <sys:String x:Key="msg_ErrorOpenDbFile">打开数据库文件{0}时发生错误。</sys:String>
+    <sys:String x:Key="msg_ErrorLoadMapPwds">载入密码字典时发生错误。已跳过字典加载。</sys:String>
+    <sys:String x:Key="msg_ExtractFailed">解压失败。密码错误或者图像格式不支持。</sys:String>
 </ResourceDictionary>

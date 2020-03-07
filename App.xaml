@@ -8,7 +8,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Localization.en.xaml"/>
-                <ResourceDictionary Source="Resources/Localization.zh.xaml"/>
+                <!--<ResourceDictionary Source="Resources/Localization.zh.xaml"/>-->
                 <ResourceDictionary>
                     <Color x:Key="BackgroundColor">#FF333333</Color>
                     <Color x:Key="BackgroundDarkColor">#FF1F1F1F</Color>

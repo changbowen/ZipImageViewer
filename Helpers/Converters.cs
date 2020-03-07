@@ -147,4 +147,30 @@ namespace ZipImageViewer
             throw new NotImplementedException();
         }
     }
+
+    public class ResourceConverter : IMultiValueConverter
+    {
+        /// <summary>
+        /// value[0] converted to string will be used to get resource key.
+        /// parameter is the string format will be used to format resource key.
+        /// value[1] is optional and will be used to get resource from if specified.
+        /// </summary>
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+            if (values == null || values.Length == 0) return Binding.DoNothing;
+            var key = values[0];
+            if (parameter is string param)
+                key = string.Format(param, key);
+            object res;
+            if (values.Length > 1 && values[1] is FrameworkElement ele)
+                res = ele.Resources[key];
+            else
+                res = Application.Current.Resources[key];
+            if (res == null) return Binding.DoNothing;
+            return res;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
 }

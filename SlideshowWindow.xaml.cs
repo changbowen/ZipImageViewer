@@ -21,13 +21,13 @@ namespace ZipImageViewer
     {
         private readonly string basePath;
         private readonly DispatcherTimer animTimer;
-
-        public SlideAnimConfig AnimConfig {
-            get { return (SlideAnimConfig)GetValue(AnimConfigProperty); }
-            set { SetValue(AnimConfigProperty, value); }
-        }
-        public static readonly DependencyProperty AnimConfigProperty =
-            DependencyProperty.Register("AnimConfig", typeof(SlideAnimConfig), typeof(SlideshowWindow), new PropertyMetadata(null));
+        private readonly SlideAnimConfig animConfig;
+        //public SlideAnimConfig AnimConfig {
+        //    get { return (SlideAnimConfig)GetValue(AnimConfigProperty); }
+        //    set { SetValue(AnimConfigProperty, value); }
+        //}
+        //public static readonly DependencyProperty AnimConfigProperty =
+        //    DependencyProperty.Register("AnimConfig", typeof(SlideAnimConfig), typeof(SlideshowWindow), new PropertyMetadata(null));
 
         /// <summary>
         /// path will be used to get images from.
@@ -37,7 +37,7 @@ namespace ZipImageViewer
 
             basePath = path;
 
-            AnimConfig = new SlideAnimConfig(Setting.SlideAnimConfig);
+            animConfig = Setting.SlideAnimConfig;
             animTimer = new DispatcherTimer(DispatcherPriority.Normal, Application.Current.Dispatcher);
             animTimer.Tick += AnimTick;
 
@@ -66,21 +66,17 @@ namespace ZipImageViewer
         private ObjectInfo[] objectList;
 
         private void SlideWin_Loaded(object sender, RoutedEventArgs e) {
-            //init controls
-            CB_Transition.ItemsSource = Enum.GetValues(typeof(SlideTransition));
-            CB_Transition.SelectedItem = AnimConfig.Transition;
-
             //get image to use
-            objectList = GetAll(basePath).ToArray();
+            objectList = GetAll(basePath)?.ToArray();
 
             if (objectList?.Length == 0) {
-                MessageBox.Show($@"No images found under {basePath}.", "No Images", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show(GetRes("msg_NoImageFound", basePath), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 Close();
                 return;
             }
 
             //fullscreen
-            Helpers.SwitchFullScreen(this, ref lastRect, true);
+            SwitchFullScreen(this, ref lastRect, true);
 
             //start
             AnimTick(null, null);
@@ -88,38 +84,32 @@ namespace ZipImageViewer
 
         private void SlideWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             animTimer.Stop();
-            Setting.SlideAnimConfig = AnimConfig;//only the last closed window setting is saved
         }
 
         private void SlideWin_Closed(object sender, EventArgs e) {
-            Helpers.ShutdownCheck();
+            ShutdownCheck();
         }
 
         private void Btn_Preset_Click(object sender, RoutedEventArgs e) {
-            switch (AnimConfig.Transition) {
+            switch (animConfig.Transition) {
                 case SlideTransition.KenBurns:
-                    AnimConfig.FadeInDuration = new TimeSpan(0, 0, 2);
-                    AnimConfig.FadeOutDuration = new TimeSpan(0, 0, 2);
-                    AnimConfig.ImageDuration = new TimeSpan(0, 0, 7);
-                    AnimConfig.XPanDistanceR = 0.5;
-                    AnimConfig.YPanDistanceR = 0.5;
-                    AnimConfig.YPanUpOnly = true;
+                    animConfig.FadeInDuration = new TimeSpan(0, 0, 2);
+                    animConfig.FadeOutDuration = new TimeSpan(0, 0, 2);
+                    animConfig.ImageDuration = new TimeSpan(0, 0, 7);
+                    animConfig.XPanDistanceR = 0.5;
+                    animConfig.YPanDistanceR = 0.5;
+                    animConfig.YPanDownOnly = true;
                     break;
                 case SlideTransition.Breath:
-                    AnimConfig.FadeInDuration = TimeSpan.FromMilliseconds(1500);
-                    AnimConfig.FadeOutDuration = TimeSpan.FromMilliseconds(1500);
+                    animConfig.FadeInDuration = TimeSpan.FromMilliseconds(1500);
+                    animConfig.FadeOutDuration = TimeSpan.FromMilliseconds(1500);
                     break;
                 case SlideTransition.Emerge:
-                    AnimConfig.lastBool1 = ran.Next(2) == 0;
-                    AnimConfig.FadeInDuration = new TimeSpan(0, 0, 2);
-                    AnimConfig.FadeOutDuration = TimeSpan.FromMilliseconds(1500);
+                    animConfig.lastBool1 = ran.Next(2) == 0;
+                    animConfig.FadeInDuration = new TimeSpan(0, 0, 2);
+                    animConfig.FadeOutDuration = TimeSpan.FromMilliseconds(1500);
                     break;
             }
-        }
-
-        private void CB_Transition_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            var tran = (SlideTransition)e.AddedItems[0];
-            AnimConfig.Transition = tran;
         }
 
 
@@ -137,8 +127,8 @@ namespace ZipImageViewer
             
             //convert screen size to physical size
             var dpi = VisualTreeHelper.GetDpi(this);
-            var decodeSize = new SizeInt(Convert.ToInt32(canvas.ActualWidth * dpi.DpiScaleX * AnimConfig.ResolutionScale),
-                                         Convert.ToInt32(canvas.ActualHeight * dpi.DpiScaleY * AnimConfig.ResolutionScale));
+            var decodeSize = new SizeInt(Convert.ToInt32(canvas.ActualWidth * dpi.DpiScaleX * animConfig.ResolutionScale),
+                                         Convert.ToInt32(canvas.ActualHeight * dpi.DpiScaleY * animConfig.ResolutionScale));
             //calculate index
             var currObj = objectList[index.objIdx];
             switch (currObj.Flags) {
@@ -151,7 +141,7 @@ namespace ZipImageViewer
                         currObj.SourcePaths = await GetSourcePathsAsync(currObj);
                     nextSrc = await GetImageSourceAsync(currObj, sourcePathIdx: index.subIdx, decodeSize: decodeSize);
                     index.subIdx++;
-                    if (index.subIdx >= currObj.SourcePaths.Length) {
+                    if (index.subIdx >= currObj.SourcePaths?.Length) {
                         index.subIdx = 0;
                         index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
                     }
@@ -172,7 +162,7 @@ namespace ZipImageViewer
                 }
 
                 currImage.Source = nextSrc;
-                animTimer.Interval = AnimateImage(currImage, new Size(canvas.ActualWidth, canvas.ActualHeight), AnimConfig);
+                animTimer.Interval = AnimateImage(currImage, new Size(canvas.ActualWidth, canvas.ActualHeight), animConfig);
             }
             else {
                 animTimer.Interval = TimeSpan.FromMilliseconds(50);

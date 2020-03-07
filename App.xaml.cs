@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using static ZipImageViewer.SQLiteHelper;
 using static ZipImageViewer.TableHelper;
+using static ZipImageViewer.Helpers;
 
 namespace ZipImageViewer
 {
@@ -119,7 +120,8 @@ namespace ZipImageViewer
                     try {
                         //use the last arg as path
                         var path = e.Args[e.Args.Length - 1];
-                        var objInfo = new ObjectInfo(path, Helpers.GetPathType(new DirectoryInfo(path)));
+                        var objInfo = new ObjectInfo(path, GetPathType(path));
+
                         if (e.Args.Contains("-slideshow")) {
                             new SlideshowWindow(objInfo.ContainerPath).Show();
                             return;
@@ -136,7 +138,7 @@ namespace ZipImageViewer
                         }
                     }
                     catch (Exception ex) {
-                        MessageBox.Show(ex.Message, "Parametered Start Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(ex.Message, GetRes("ttl_ParamStartError"), MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
 
@@ -144,7 +146,7 @@ namespace ZipImageViewer
                 new MainWindow().Show();
             }
             catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Application Start Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, GetRes("ttl_AppStartError"), MessageBoxButton.OK, MessageBoxImage.Error);
                 Current.Shutdown();
             }
         }
