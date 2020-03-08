@@ -45,7 +45,7 @@ namespace ZipImageViewer
             virWrapPanel.Children.Cast<ContentPresenter>().Count(cp => ((ObjectInfo)cp.Content).SourcePaths?.Length > 0) * 200 + App.Random.Next(2, 7) * 1000));
 
         internal CancellationTokenSource tknSrc_LoadThumb;
-        internal readonly object lock_LoadThumb = new object();
+        private readonly object lock_LoadThumb = new object();
 
         private VirtualizingWrapPanel virWrapPanel;
         private Rect lastWindowRect;
@@ -96,7 +96,6 @@ namespace ZipImageViewer
             Setting.ThumbnailSize.PropertyChanged -= ThumbnailSizeChanged;
 
             tknSrc_LoadThumb?.Cancel();
-            tknSrc_LoadThumb?.Dispose();
             while (tknSrc_LoadThumb != null) { await Task.Delay(100); }
 
             Dispatcher.Invoke(() => ObjectList.Clear());
@@ -156,10 +155,13 @@ namespace ZipImageViewer
             OpenFolderDialog(this, path => Task.Run(() => LoadPath(path)));
         }
 
-        private async void callback_AddToImageList(ObjectInfo objInfo) {
+        /// <summary>
+        /// This needs to be synchronous for the cancallation to work.
+        /// </summary>
+        private void callback_AddToImageList(ObjectInfo objInfo) {
             //exclude non-image items in immersion mode
             if (Setting.ImmersionMode && objInfo.SourcePaths == null) {
-                objInfo.SourcePaths = await GetSourcePathsAsync(objInfo);//update needed to exclude items that do not have thumbs
+                objInfo.SourcePaths = GetSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
                 if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0)
                     return;
             }
@@ -220,7 +222,6 @@ namespace ZipImageViewer
                 //directory -> load thumbs
                 try {
                     tknSrc_LoadThumb?.Cancel();
-                    tknSrc_LoadThumb?.Dispose();
                     Monitor.Enter(lock_LoadThumb);
                     tknSrc_LoadThumb = new CancellationTokenSource();
                     preRefreshActions();
@@ -253,7 +254,6 @@ namespace ZipImageViewer
                 //archive itself -> extract and load thumbs
                 try {
                     tknSrc_LoadThumb?.Cancel();
-                    tknSrc_LoadThumb?.Dispose();
                     Monitor.Enter(lock_LoadThumb);
                     tknSrc_LoadThumb = new CancellationTokenSource();
                     preRefreshActions();
@@ -265,7 +265,6 @@ namespace ZipImageViewer
                         CldInfoCallback = callback_AddToImageList,
                     }, tknSrc_LoadThumb);
                     Dispatcher.Invoke(() => scrollPosition());
-                    //postRefreshActions();
                 }
                 finally {
                     tknSrc_LoadThumb.Dispose();

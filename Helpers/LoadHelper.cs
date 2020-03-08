@@ -631,7 +631,6 @@ namespace ZipImageViewer
 
         public static void CacheFolder(string path, ref CancellationTokenSource tknSrc, object tknLock, Action<string, int, int> callback) {
             tknSrc?.Cancel();
-            tknSrc?.Dispose();
             Monitor.Enter(tknLock);
             tknSrc = new CancellationTokenSource();
             var count = 0;
