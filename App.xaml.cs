@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using static ZipImageViewer.SQLiteHelper;
 using static ZipImageViewer.TableHelper;
+using static ZipImageViewer.Helpers;
 
 namespace ZipImageViewer
 {
@@ -18,13 +19,19 @@ namespace ZipImageViewer
         public static readonly string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         public static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] {
-                "jpg", "jpeg", "png", "gif", "tiff", "bmp",
-                ".jpg", ".jpeg", ".png", ".gif", ".tiff", ".bmp",
+                ".jpg", ".jpeg", ".png", ".tiff", ".gif", ".bmp", ".ico", ".dds", ".jxr", ".hdp", ".wdp"
             });
         public static readonly HashSet<string> ZipExtensions =
             new HashSet<string>(new[] {
-                "zip", "rar", "7z",
-                ".zip", ".rar", ".7z",
+                ".zip", ".rar", ".7z", ".bz2", ".bzip2", ".tbz2", ".tbz", ".gz", ".gzip", ".tgz", ".tar",
+                ".wim", ".swm", ".esd", ".xz", ".txz", ".zipx", ".jar", ".xpi", ".odt", ".ods", ".docx",
+                ".xlsx", ".epub", ".apm", ".ar", ".a", ".deb", ".lib", ".arj", ".cab", ".chm", ".chw",
+                ".chi", ".chq", ".msi", ".msp", ".doc", ".xls", ".ppt", ".cpio", ".cramfs", ".dmg",
+                ".ext", ".ext2", ".ext3", ".ext4", ".img", ".fat", ".img", ".hfs", ".hfsx", ".hxs",
+                ".hxi", ".hxr", ".hxq", ".hxw", ".lit", ".ihex", ".iso", ".img", ".lzh", ".lha", ".lzma",
+                ".mbr", ".mslz", ".mub", ".nsis", ".ntfs", ".img", ".mbr", ".r00", ".rpm", ".ppmd",
+                ".qcow", ".qcow2", ".qcow2c", ".001", ".squashfs", ".udf", ".iso", ".img", ".scap",
+                ".uefif", ".vdi", ".vhd", ".vmdk", ".xar", ".pkg", ".z", ".taz"
             });
         //public const int PreviewCount = 4;
         public static Random Random = new Random();
@@ -48,6 +55,38 @@ namespace ZipImageViewer
 
         private void App_Startup(object sender, StartupEventArgs e) {
             try {
+                //localization
+                var culture = System.Globalization.CultureInfo.CurrentCulture;
+                if (culture.TwoLetterISOLanguageName != @"en") {
+                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    var resourceName = assembly.GetName().Name + ".g";
+                    var resourceManager = new System.Resources.ResourceManager(resourceName, assembly);
+                    try {
+                        var resourceSet = resourceManager.GetResourceSet(culture, true, true);
+                        if (resourceSet.Cast<System.Collections.DictionaryEntry>()
+                            .Any(entry => (string)entry.Key == $@"resources/localization.{culture.TwoLetterISOLanguageName}.baml")) {
+                            Resources.MergedDictionaries.Add(new ResourceDictionary {
+                                Source = new Uri($@"Resources\Localization.{culture.TwoLetterISOLanguageName}.xaml", UriKind.Relative)
+                            });
+                        }
+                    }
+                    finally {
+                        resourceManager.ReleaseAllResources();
+                    }
+                }
+
+                //handle immersion mode change
+                Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
+
+                //get supported extensions
+                foreach (var ext in NativeHelpers.GetWICDecoders().Select(s => s.ToLowerInvariant())) {
+                    if (!ImageExtensions.Contains(ext)) ImageExtensions.Add(ext);
+                }
+
+                //set working directory
+                Directory.SetCurrentDirectory(ExeDir);
+
+                //load config
                 Setting.LoadConfigFromFile();
 
                 //create resources
@@ -63,29 +102,52 @@ namespace ZipImageViewer
                 //make sure thumbs db is correct
                 CheckThumbsDB();
 
+                //check args
+                if (e.Args?.Length > 0) {
 #if DEBUG
-                if (e.Args?.Length > 0 && e.Args[0] == "-cleandb") {
-                    Execute(Table.Thumbs, (table, con) => {
-                        using (var cmd = new SQLiteCommand(con)) {
-                            cmd.CommandText = $@"delete from {table.Name}";
-                            cmd.ExecuteNonQuery();
-                            cmd.CommandText = @"vacuum";
-                            cmd.ExecuteNonQuery();
-                        }
-                        return 0;
-                    });
-                }
+                    if (e.Args.Contains("-cleandb")) {
+                        Execute(Table.Thumbs, (table, con) => {
+                            using (var cmd = new SQLiteCommand(con)) {
+                                cmd.CommandText = $@"delete from {table.Name}";
+                                cmd.ExecuteNonQuery();
+                                cmd.CommandText = @"vacuum";
+                                cmd.ExecuteNonQuery();
+                            }
+                            return 0;
+                        });
+                    }
 #endif
+                    try {
+                        //use the last arg as path
+                        var path = e.Args[e.Args.Length - 1];
+                        var objInfo = new ObjectInfo(path, GetPathType(path));
 
-                //handle immersion mode change
-                Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
+                        if (e.Args.Contains("-slideshow")) {
+                            new SlideshowWindow(objInfo.ContainerPath).Show();
+                            return;
+                        }
+                        else {
+                            switch (objInfo.Flags) {
+                                case FileFlags.Image:
+                                    new ViewWindow(objInfo.ContainerPath, objInfo.FileName).Show();
+                                    return;
+                                default:
+                                    new MainWindow() { InitialPath = objInfo.ContainerPath }.Show();
+                                    return;
+                            }
+                        }
+                    }
+                    catch (Exception ex) {
+                        MessageBox.Show(ex.Message, GetRes("ttl_ParamStartError"), MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
 
-                //show mainwindow
+                //show mainwindow if no cmdline args
                 new MainWindow().Show();
             }
             catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Application Start Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                throw;
+                MessageBox.Show(ex.Message, GetRes("ttl_AppStartError"), MessageBoxButton.OK, MessageBoxImage.Error);
+                Current.Shutdown();
             }
         }
 

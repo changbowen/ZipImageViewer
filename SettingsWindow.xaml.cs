@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using static ZipImageViewer.Helpers;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
 using System.Threading;
@@ -29,12 +30,7 @@ namespace ZipImageViewer
 
 
         private void SettingsWin_Loaded(object sender, RoutedEventArgs e) {
-            CB_ViewerTransition.ItemsSource =   Enum.GetValues(typeof(Setting.Transition));
-            CB_ViewerTransition.SelectedItem =  Setting.ViewerTransition;
-            CB_AnimSpeed.ItemsSource =          Enum.GetValues(typeof(Setting.TransitionSpeed));
-            CB_AnimSpeed.SelectedItem =         Setting.ViewerTransitionSpeed;
-
-            CurrentThumbDbSize = Helpers.BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length);
+            CurrentThumbDbSize = BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length);
         }
 
         private void SettingsWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
@@ -50,18 +46,6 @@ namespace ZipImageViewer
         private void SettingsWin_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e) {
             if (e.Key != System.Windows.Input.Key.Escape || !(e.Source is ScrollViewer)) return;
             Close();
-        }
-
-        private void CB_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            var cb = (ComboBox)sender;
-            switch (cb.Name) {
-                case nameof(CB_ViewerTransition):
-                    Setting.ViewerTransition = (Setting.Transition)cb.SelectedItem;
-                    break;
-                case nameof(CB_AnimSpeed):
-                    Setting.ViewerTransitionSpeed = (Setting.TransitionSpeed)cb.SelectedItem;
-                    break;
-            }
         }
 
         private async void Btn_Move_Click(object sender, RoutedEventArgs e) {
@@ -87,10 +71,10 @@ namespace ZipImageViewer
                     }
                 });
                 Setting.DatabaseDir = targetDir;
-                MessageBox.Show("Database files moved successfully.", "Move Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(GetRes("msg_DbMovedSucc"), GetRes("ttl_OperationComplete"), MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex) {
-                MessageBox.Show(ex.Message, "Move Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, GetRes("ttl_OperationFailed"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
             btn.IsEnabled = true;
         }
@@ -140,15 +124,15 @@ namespace ZipImageViewer
         private void Btn_CacheFolder_Click(object sender, RoutedEventArgs e) {
             var mainWin = (MainWindow)Owner;
             var bw = new BlockWindow(Owner) {
-                MessageTitle = "Processing..."
+                MessageTitle = GetRes("msg_Processing")
             };
             //callback used to update progress
             Action<string, int, int> cb = (path, i, count) => {
-                var p = Convert.ToInt32((double)i / count * 100);
+                var p = (int)Math.Floor((double)i / count * 100);
                 Dispatcher.Invoke(() => {
                     bw.Percentage = p;
                     bw.MessageBody = path;
-                    if (bw.Percentage == 100) bw.MessageTitle = "All Done";
+                    if (bw.Percentage == 100) bw.MessageTitle = GetRes("ttl_OperationComplete");
                 });
             };
             //work thread

@@ -3,10 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" ResizeMode="NoResize" SizeToContent="Height"
-        xmlns:local="clr-namespace:ZipImageViewer" ShowInTaskbar="False"
+        xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
+        ShowInTaskbar="False" Topmost="True"
         Background="{StaticResource BackgroundLightBrush}"
-        Foreground="{StaticResource ForegroundBrush}" 
-        mc:Ignorable="d" Width="400" WindowStartupLocation="CenterScreen">
+        Foreground="{StaticResource ForegroundBrush}"
+        Width="400" WindowStartupLocation="CenterScreen">
     <StackPanel>
         <StackPanel.Resources>
             <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
@@ -17,18 +18,18 @@
         </StackPanel.Resources>
         
         <TextBlock Margin="10" FontSize="16"
-                   Text="Password for this archive"/>
+                   Text="{StaticResource txt_PasswordForArchive}"/>
         <ContentControl Margin="10 0">
             <TextBox x:Name="TB_Password" BorderThickness="0" FontSize="18" Padding="4"/>
         </ContentControl>
         <CheckBox x:Name="CB_Fallback" HorizontalAlignment="Right" Margin="10 5" Foreground="{Binding Foreground, ElementName=InputWin, Mode=OneTime}"
-                  Content="Add to fallback password list" IsChecked="True"/>
+                  Content="{StaticResource txt_AddToFallbackPwdLst}" IsChecked="True"/>
         <TextBlock HorizontalAlignment="Right" Margin="10 0" FontSize="10" FontStyle="Italic"
-                   Text="Fallback passwords will be tried on any new archives."/>
+                   Text="{StaticResource msg_FallbackPwdTip}"/>
         
         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="10">
-            <Button x:Name="Btn_OK" Content="OK" IsDefault="True" Margin="0 0 5 0" Click="Btn_OK_Click"/>
-            <Button x:Name="Btn_Cancel" Content="Cancel" IsCancel="True"/>
+            <Button x:Name="Btn_OK" Content="{StaticResource ttl_OK}" IsDefault="True" Margin="0 0 5 0" Click="Btn_OK_Click"/>
+            <Button x:Name="Btn_Cancel" Content="{StaticResource ttl_Cancel}" IsCancel="True"/>
         </StackPanel>
         
     </StackPanel>

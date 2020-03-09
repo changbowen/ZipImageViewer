@@ -24,6 +24,7 @@ namespace ZipImageViewer {
         /// Needs either a delegate or a property name to get the key from the child item.
         /// Using a delegate should be faster than the property name which will use reflection.
         /// If TItem implements both INotifyCollectionChanged and INotifyCollectionChanging, the name of the key property is also needed for key updating to work.
+		/// <para>Be aware that this is not thread-safe.</para>
         /// </summary>
         public ObservableKeyedCollection(Func<TItem, TKey> getKeyFunc = null, string keyPropName = null, IEnumerable<TItem> collection = null) {
             if (getKeyFunc == null && keyPropName == null)

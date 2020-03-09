@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using static ZipImageViewer.LoadHelper;
+using static ZipImageViewer.Helpers;
 
 namespace ZipImageViewer
 {
@@ -73,20 +74,20 @@ namespace ZipImageViewer
             return imgInfo;
         }
 
-        private void Menu_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
+        private void Menu_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
             if (ObjectInfo == null) return;
 
             var border = (Border)sender;
             switch (border.Name) {
                 case nameof(B_OpenInExplorer):
-                    Helpers.Run("explorer", $"/select, \"{ObjectInfo.FileSystemPath}\"");
+                    Run("explorer", $"/select, \"{ObjectInfo.FileSystemPath}\"");
                     break;
                 case nameof(B_OpenInNewWindow):
                     if (ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
                         MainWin?.LoadPath(ObjectInfo);
                     }
                     else if (ObjectInfo.Flags.HasFlag(FileFlags.Directory) ||
-                        ObjectInfo.Flags.HasFlag(FileFlags.Archive)) {
+                             ObjectInfo.Flags.HasFlag(FileFlags.Archive)) {
                         var win = new MainWindow {
                             InitialPath = ObjectInfo.FileSystemPath
                         };
@@ -94,12 +95,13 @@ namespace ZipImageViewer
                     }
                     break;
                 case nameof(B_Slideshow):
-                    var sldWin = new SlideshowWindow(ObjectInfo);
+                    var sldWin = new SlideshowWindow(ObjectInfo.ContainerPath);
                     sldWin.Show();
                     break;
             }
 
             Close();
+            e.Handled = true;
         }
 
         private void CTMWin_FadedOut(object sender, RoutedEventArgs e) {

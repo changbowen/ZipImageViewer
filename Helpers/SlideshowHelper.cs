@@ -14,7 +14,15 @@ namespace ZipImageViewer
 {
     public static class SlideshowHelper
     {
-        public enum SlideTransition { KenBurns, Breath, Emerge }
+        public enum SlideTransition
+        {
+            [Description("ttl_" + nameof(KenBurns), true)]
+            KenBurns,
+            [Description("ttl_" + nameof(Breath), true)]
+            Breath,
+            [Description("ttl_" + nameof(Emerge), true)]
+            Emerge
+        }
 
         public class SlideAnimConfig : INotifyPropertyChanged
         {
@@ -122,13 +130,13 @@ namespace ZipImageViewer
                 }
             }
 
-            private bool yPanUpOnly = true;
-            public bool YPanUpOnly {
-                get => yPanUpOnly;
+            private bool yPanDownOnly = true;
+            public bool YPanDownOnly {
+                get => yPanDownOnly;
                 set {
-                    if (yPanUpOnly == value) return;
-                    yPanUpOnly = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(YPanUpOnly)));
+                    if (yPanDownOnly == value) return;
+                    yPanDownOnly = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(YPanDownOnly)));
                 }
             }
 
@@ -176,7 +184,7 @@ namespace ZipImageViewer
                 fadeOutDuration = config.fadeOutDuration;
                 xPanDistanceR = config.xPanDistanceR;
                 yPanDistanceR = config.yPanDistanceR;
-                yPanUpOnly = config.yPanUpOnly;
+                yPanDownOnly = config.yPanDownOnly;
                 blur = config.blur;
                 resolutionScale = config.resolutionScale;
             }
@@ -230,57 +238,53 @@ namespace ZipImageViewer
         /// </summary>
         private static void Anim_KBE(DpiImage tgtImg, Size frameSize, SlideAnimConfig cfg) {
             var zoomIn = ran.Next(2) == 0;
-            var panLeftTop = ran.Next(2) == 0;
+            var panDirPri = ran.Next(2) == 0;//primary axis pan direction
             var imageDur = new Duration(cfg.ImageDuration);
 
             //zoon animation
             var animZoom = zoomIn ? new DoubleAnimation(1d, 1.2d, imageDur) : new DoubleAnimation(1.2d, 1d, imageDur);
-
+            
             //pan animation
-            DoubleAnimation animPan;
-            DependencyProperty transEdge;
+            DoubleAnimation animPanPri;
+            DependencyProperty transEdgePri;
             double delta;
-            double startPoint;
             var rCanvas = frameSize.Width / frameSize.Height;
             var rImage = tgtImg.RealSize.Width / tgtImg.RealSize.Height;
-            if (rImage > rCanvas) {
+            if (rImage >= rCanvas) {
                 //width is the longer edge comparing to the size of the canvas
                 tgtImg.Height = frameSize.Height;
                 tgtImg.Width = tgtImg.Height * rImage;
-                transEdge = TranslateTransform.XProperty;
+                transEdgePri = TranslateTransform.XProperty;
                 delta = tgtImg.Width - frameSize.Width;
-                startPoint = delta * cfg.XPanDistanceR;
                 
-                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0d, 0.5d) : new Point(1d, 0.5d);
-                animPan = panLeftTop ?
-                    new DoubleAnimation(startPoint - delta, zoomIn ? -delta - tgtImg.Width * 0.2d : -delta, imageDur) :
-                    new DoubleAnimation(-startPoint, zoomIn ? tgtImg.Width * 0.2d : 0d, imageDur);
+                tgtImg.RenderTransformOrigin = new Point(panDirPri ? ran.NextDouble(0.5, 1.0) : ran.NextDouble(0d, 0.5), ran.NextDouble());
+                animPanPri = panDirPri ?
+                    new DoubleAnimation(-delta + delta * cfg.XPanDistanceR, -delta, imageDur) :
+                    new DoubleAnimation(        -delta * cfg.XPanDistanceR,     0d, imageDur);
             }
             else {
                 //height is the longer edge comparing to the size of the canvas
                 tgtImg.Width = frameSize.Width;
                 tgtImg.Height = tgtImg.Width / rImage;
-                transEdge = TranslateTransform.YProperty;
+                transEdgePri = TranslateTransform.YProperty;
                 delta = tgtImg.Height - frameSize.Height;
-                startPoint = delta * cfg.YPanDistanceR;
-
-                if (cfg.YPanUpOnly && tgtImg.Height > frameSize.Height * cfg.YPanDistanceR)
-                    panLeftTop = false; //only move down for pics with height larger than YPanDistanceR * screen height after converted to same width as screen
+                if (cfg.YPanDownOnly && tgtImg.Height > frameSize.Height * cfg.YPanDistanceR)
+                    panDirPri = false; //only move down for pics with height larger than YPanDistanceR * screen height after converted to same width as screen
                 
-                tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0.5d, 0d) : new Point(0.5d, 1d);
-                animPan = panLeftTop ?
-                    new DoubleAnimation(startPoint - delta, zoomIn ? -delta - tgtImg.Height * 0.2d : -delta, imageDur) :
-                    new DoubleAnimation(-startPoint, zoomIn ? tgtImg.Height * 0.2d : 0d, imageDur);
+                tgtImg.RenderTransformOrigin = new Point(ran.NextDouble(), panDirPri ? ran.NextDouble(0.5, 1.0) : ran.NextDouble(0d, 0.5));
+                animPanPri = panDirPri ?
+                    new DoubleAnimation(-delta + delta * cfg.YPanDistanceR, -delta, imageDur) :
+                    new DoubleAnimation(        -delta * cfg.YPanDistanceR,     0d, imageDur);
             }
 
             animZoom.FillBehavior = FillBehavior.Stop;
-            animPan.FillBehavior = FillBehavior.Stop;
+            animPanPri.FillBehavior = FillBehavior.Stop;
 
             //apply animation
             var tg = (TransformGroup)tgtImg.RenderTransform;
             tg.Children[0].BeginAnimation(ScaleTransform.ScaleXProperty, animZoom);
             tg.Children[0].BeginAnimation(ScaleTransform.ScaleYProperty, animZoom);
-            tg.Children[1].BeginAnimation(transEdge, animPan);
+            tg.Children[1].BeginAnimation(transEdgePri, animPanPri);
         }
 
         public static void Anim_Breath(DpiImage tgtImg, Size frameSize, SlideAnimConfig cfg) {
@@ -322,7 +326,7 @@ namespace ZipImageViewer
                 delta = tgtImg.Height - frameSize.Height;
                 startPoint = delta * cfg.YPanDistanceR;
 
-                if (cfg.YPanUpOnly) panLeftTop = false;
+                if (cfg.YPanDownOnly) panLeftTop = false;
                 tgtImg.RenderTransformOrigin = panLeftTop ? new Point(0.5d, 0d) : new Point(0.5d, 1d);
                 animPan = panLeftTop ?
                     new DoubleAnimation(startPoint - delta, !cfg.lastBool1 ? -delta - tgtImg.Height * 0.1d : -delta, new Duration(cfg.ImageDuration)) :

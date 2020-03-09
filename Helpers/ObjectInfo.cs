@@ -8,6 +8,7 @@ using SizeInt = System.Drawing.Size;
 
 namespace ZipImageViewer
 {
+    [System.Diagnostics.DebuggerDisplay("{Flags}: {VirtualPath}")]
     public class ObjectInfo : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -108,8 +109,7 @@ namespace ZipImageViewer
 
         private ImageSource imageSource;
         /// <summary>
-        /// Only used for displaying images in archives because it is not practical to start more than one Task to extract an archive.
-        /// Thus loading images in archive will be a single thread.
+        /// Be careful when setting this property. Clean up when necessary to avoid memory leaks.
         /// </summary>
         public ImageSource ImageSource {
             get => imageSource;
@@ -120,6 +120,7 @@ namespace ZipImageViewer
             }
         }
 
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         public string DebugInfo {
             get {
                 return $"{nameof(FileName)}: {FileName}\r\n" +
@@ -143,9 +144,12 @@ namespace ZipImageViewer
             }
         }
 
-        public ObjectInfo(string fsPath, FileFlags flag = FileFlags.Unknown) {
+        public ObjectInfo(string fsPath, FileFlags flag, string fName = null) {
             FileSystemPath = fsPath;
             flags = flag;
+            fileName = fName;
+            if (fileName == null && !flags.HasFlag(FileFlags.Archive))
+                fileName = Path.GetFileName(FileSystemPath);
         }
     }
 

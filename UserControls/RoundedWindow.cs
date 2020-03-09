@@ -177,6 +177,7 @@ namespace ZipImageViewer
             if (e.ChangedButton == MouseButton.Left) {//right click moves the window
                 //unsubParentMouseDown();
                 Close();
+                e.Handled = true;
             }
         }
 

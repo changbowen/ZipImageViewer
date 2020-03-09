@@ -6,12 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using IniParser;
-using IniParser.Model;
 using SevenZip;
 using SizeInt = System.Drawing.Size;
+using static ZipImageViewer.Helpers;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
 using static ZipImageViewer.SlideshowHelper;
+using System.Reflection;
+using Newtonsoft.Json;
 
 namespace ZipImageViewer
 {
@@ -19,26 +21,58 @@ namespace ZipImageViewer
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public static event EventHandler<PropertyChangedEventArgs> StaticPropertyChanged;
-
         private static void OnStaticPropertyChanged(string propName) {
             StaticPropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propName));
         }
 
-        public enum Transition { None, Random, ZoomFadeBlur, Fade, HorizontalSwipe }
-        public enum TransitionSpeed { Fast, Medium, Slow }
+        [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+        sealed class SavedSettingAttribute : Attribute { }
 
-
-        private static string sevenZipDllPath = Path.Combine(App.ExeDir, @"7z.dll");
-        public static string SevenZipDllPath {
-            get => sevenZipDllPath;
-            set {
-                if (sevenZipDllPath == value) return;
-                sevenZipDllPath = value;
-                OnStaticPropertyChanged(nameof(SevenZipDllPath));
-            }
+        public enum Transition
+        {
+            [Description("ttl_" + nameof(None), true)]
+            None,
+            [Description("ttl_" + nameof(Random), true)]
+            Random,
+            [Description("ttl_" + nameof(ZoomFadeBlur), true)]
+            ZoomFadeBlur,
+            [Description("ttl_" + nameof(Fade), true)]
+            Fade,
+            [Description("ttl_" + nameof(HorizontalSwipe), true)]
+            HorizontalSwipe
+        }
+        public enum TransitionSpeed
+        {
+            [Description("ttl_" + nameof(Fast), true)]
+            Fast,
+            [Description("ttl_" + nameof(Medium), true)]
+            Medium,
+            [Description("ttl_" + nameof(Slow), true)]
+            Slow
+        }
+        public enum Background
+        {
+            [Description("ttl_" + nameof(DarkCheckerboard), true)]
+            DarkCheckerboard,
+            [Description("ttl_" + nameof(DarkLinear), true)]
+            DarkLinear,
+            [Description("ttl_" + nameof(Black), true)]
+            Black,
+            [Description("ttl_" + nameof(Grey), true)]
+            Grey,
+            [Description("ttl_" + nameof(White), true)]
+            White
         }
 
+        private enum ConfigSection
+        { AppConfig, CustomCommands, FallbackPasswords }
+
+        public static string FilePath => Path.Combine(App.ExeDir, @"config.ini");
+
+        private static string sevenZipDllPath => Path.Combine(App.ExeDir, @"7z.dll");
+
         private static string databaseDir = App.ExeDir;
+        [SavedSetting]
         public static string DatabaseDir {
             get => databaseDir;
             set {
@@ -49,6 +83,7 @@ namespace ZipImageViewer
         }
 
         private static ObservablePair<int, int> thumbnailSize = new ObservablePair<int, int>(300, 300);
+        [SavedSetting]
         public static ObservablePair<int, int> ThumbnailSize {
             get => thumbnailSize;
             set {
@@ -59,6 +94,7 @@ namespace ZipImageViewer
         }
 
         private static Transition viewerTransition = Transition.ZoomFadeBlur;
+        [SavedSetting]
         public static Transition ViewerTransition {
             get => viewerTransition;
             set {
@@ -69,6 +105,7 @@ namespace ZipImageViewer
         }
 
         private static TransitionSpeed viewerTransitionSpeed = TransitionSpeed.Fast;
+        [SavedSetting]
         public static TransitionSpeed ViewerTransitionSpeed {
             get => viewerTransitionSpeed;
             set {
@@ -78,7 +115,19 @@ namespace ZipImageViewer
             }
         }
 
+        private static Background viewerBackground = Background.DarkCheckerboard;
+        [SavedSetting]
+        public static Background ViewerBackground {
+            get => viewerBackground;
+            set {
+                if (viewerBackground == value) return;
+                viewerBackground = value;
+                OnStaticPropertyChanged(nameof(ViewerBackground));
+            }
+        }
+
         private static double thumbSwapDelayMultiplier = 1d;
+        [SavedSetting]
         public static double ThumbSwapDelayMultiplier {
             get => thumbSwapDelayMultiplier;
             set {
@@ -89,6 +138,7 @@ namespace ZipImageViewer
         }
 
         private static double thumbDbSize = 2d;
+        [SavedSetting]
         public static double ThumbDbSize {
             get => thumbDbSize;
             set {
@@ -98,7 +148,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static Size lastWindowSize = new Size(1280, 800);
+        private static Size lastWindowSize = new Size(1140, 730);
+        [SavedSetting]
         public static Size LastWindowSize {
             get => lastWindowSize;
             set {
@@ -109,6 +160,7 @@ namespace ZipImageViewer
         }
 
         private static string lastPath = "";
+        [SavedSetting]
         public static string LastPath {
             get => lastPath;
             set {
@@ -119,6 +171,7 @@ namespace ZipImageViewer
         }
 
         private static bool liteMode = false;
+        [SavedSetting]
         public static bool LiteMode {
             get => liteMode;
             set {
@@ -170,35 +223,43 @@ namespace ZipImageViewer
             }
         }
 
-        //this one is not used for binding
-        public static SlideAnimConfig SlideAnimConfig = new SlideAnimConfig();
+        private static SlideAnimConfig slideAnimConfig = new SlideAnimConfig();
+        [SavedSetting]
+        public static SlideAnimConfig SlideAnimConfig {
+            get => slideAnimConfig;
+            set {
+                if (slideAnimConfig == value) return;
+                slideAnimConfig = value;
+                OnStaticPropertyChanged(nameof(SlideAnimConfig));
+            }
+        }
 
+        private static IEnumerable<PropertyInfo> savedSettings => typeof(Setting).GetProperties(BindingFlags.Public | BindingFlags.Static)
+                .Where(p => p.GetCustomAttributes(typeof(SavedSettingAttribute), false).Length > 0);
 
-        public static void LoadConfigFromFile(string path = "config.ini") {
+        public static void LoadConfigFromFile(string path = null) {
+            if (path == null) path = FilePath;
+
             //load config
             if (!File.Exists(path)) {
                 //initialize default config
                 SaveConfigToFile();
             }
-            
+
+            //apply dll path
+            SevenZipBase.SetLibraryPath(sevenZipDllPath);
+
             //parse config file
             var iniData = new FileIniDataParser().ReadFile(path, System.Text.Encoding.UTF8);
-
-            SevenZipDllPath =          ParseConfig(iniData, nameof(SevenZipDllPath),       SevenZipDllPath);
-            DatabaseDir =              ParseConfig(iniData, nameof(DatabaseDir),            DatabaseDir);
-            ThumbnailSize =            ParseConfig(iniData, nameof(ThumbnailSize),         ThumbnailSize);
-            ThumbSwapDelayMultiplier = ParseConfig(iniData, nameof(ThumbSwapDelayMultiplier), ThumbSwapDelayMultiplier);
-            ThumbDbSize =              ParseConfig(iniData, nameof(ThumbDbSize),           ThumbDbSize);
-            ViewerTransition =         ParseConfig(iniData, nameof(ViewerTransition),      ViewerTransition);
-            ViewerTransitionSpeed =    ParseConfig(iniData, nameof(ViewerTransitionSpeed), ViewerTransitionSpeed);
-            LastWindowSize =           ParseConfig(iniData, nameof(LastWindowSize),        LastWindowSize);
-            LastPath =                 ParseConfig(iniData, nameof(LastPath),              LastPath);
-            LiteMode =                 ParseConfig(iniData, nameof(LiteMode),              LiteMode);
-            SlideAnimConfig =          ParseConfig(iniData, nameof(SlideAnimConfig),       SlideAnimConfig);
+            foreach (var prop in savedSettings) {
+                var saved = iniData[nameof(ConfigSection.AppConfig)][prop.Name];
+                if (saved == null) continue;
+                prop.SetValue(null, JsonConvert.DeserializeObject(saved, prop.PropertyType));
+            }
 
             //parse custom commands
             CustomCommands = new ObservableCollection<ObservableObj>();
-            var iniCmd = iniData["Custom Commands"];
+            var iniCmd = iniData[nameof(ConfigSection.CustomCommands)];
             if (iniCmd?.Count > 0) {
                 foreach (var row in iniCmd) {
                     var cells = row.Value.Split('\t');
@@ -209,7 +270,7 @@ namespace ZipImageViewer
 
             //parse saved passwords at last
             FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
-                iniData["Saved Passwords"].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
+                iniData[nameof(ConfigSection.FallbackPasswords)].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
             //MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1, "Item1",
             //iniData["Saved Passwords"].Where(d => d.Value.Length > 0).Select(d => new ObservablePair<string, string>(d.KeyName, d.Value)));
 
@@ -221,108 +282,37 @@ namespace ZipImageViewer
             if (File.Exists(mp.FullPath)) {
                 try { MappedPasswords.ReadXml(mp.FullPath); }
                 catch (Exception ex) {
-                    MessageBox.Show("There was an error loading mapped passwords. Loading will be skipped.\r\n" + ex.Message,
-                        null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(GetRes("msg_ErrorLoadMapPwds") + "\r\n" + ex.Message, null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
-
-            //apply dll path
-            if (string.IsNullOrEmpty(SevenZipDllPath))
-                MessageBox.Show("7z.dll path is missing from the configuration.", "", MessageBoxButton.OK, MessageBoxImage.Error);
-            else
-                SevenZipBase.SetLibraryPath(SevenZipDllPath);
-
         }
 
-        private static T ParseConfig<T>(IniData iniData, string key, T defaultVal) {
-            var value = iniData["App Config"][key];
-            if (value == null) return defaultVal;
-            object result = defaultVal;
-            switch (defaultVal) {
-                case string _:
-                    result = value;
-                    break;
-                case bool _:
-                    result = bool.Parse(value);
-                    break;
-                case SizeInt _:
-                case ObservablePair<int, int> _:
-                    int iW, iH;
-                    var split1 = value.Split('x', '*', ',');
-                    if (split1.Length != 2 || !int.TryParse(split1[0], out iW) || !int.TryParse(split1[1], out iH)) break;
-                    if (defaultVal is SizeInt)
-                        result = new SizeInt(iW, iH);
-                    else
-                        result = new ObservablePair<int, int>(iW, iH);
-                    break;
-                case Size _:
-                case ObservablePair<double, double> _:
-                    double dW, dH;
-                    var split2 = value.Split('x', '*', ',');
-                    if (split2.Length != 2 || !double.TryParse(split2[0], out dW) || !double.TryParse(split2[1], out dH)) break;
-                    if (defaultVal is Size)
-                        result = new Size(dW, dH);
-                    else
-                        result = new ObservablePair<double, double>(dW, dH);
-                    break;
-                case int _:
-                    int i;
-                    if (int.TryParse(value, out i)) result = i;
-                    break;
-                case double _:
-                    double d;
-                    if (double.TryParse(value, out d)) result = d;
-                    break;
-                case Transition _:
-                    Transition t;
-                    if (Enum.TryParse(value, out t)) result = t;
-                    break;
-                case TransitionSpeed _:
-                    TransitionSpeed ts;
-                    if (Enum.TryParse(value, out ts)) result = ts;
-                    break;
-                case SlideAnimConfig _:
-                    result = Newtonsoft.Json.JsonConvert.DeserializeObject<SlideAnimConfig>(iniData["App Config"][nameof(SlideAnimConfig)]);
-                    break;
-            }
-            return (T)result;
-        }
+        public static void SaveConfigToFile(string path = null) {
+            if (path == null) path = FilePath;
 
-        public static void SaveConfigToFile(string path = "config.ini") {
-            var savedPwds = "";
+            var fallbackPwds = "";
             if (FallbackPasswords != null && FallbackPasswords.Count > 0) {
                 foreach (var s in FallbackPasswords) {
                     if (string.IsNullOrWhiteSpace(s.Item)) continue;
-                    savedPwds += s.Item + "=\r\n";
+                    fallbackPwds += s.Item + "=\r\n";
                 }
             }
 
             MappedPasswords?.WriteXml(Tables[Table.MappedPasswords].FullPath, XmlWriteMode.WriteSchema);
-            
-            File.WriteAllText(path, $@"
-[App Config]
-{nameof(SevenZipDllPath)}={SevenZipDllPath}
-{nameof(DatabaseDir)}={DatabaseDir}
-{nameof(ThumbnailSize)}={ThumbnailSize.Item1}x{ThumbnailSize.Item2}
-{nameof(ThumbSwapDelayMultiplier)}={ThumbSwapDelayMultiplier}
-{nameof(ThumbDbSize)}={ThumbDbSize}
-{nameof(ViewerTransition)}={ViewerTransition}
-{nameof(ViewerTransitionSpeed)}={ViewerTransitionSpeed}
-{nameof(LastWindowSize)}={LastWindowSize.Width}x{LastWindowSize.Height}
-{nameof(LastPath)}={LastPath}
-{nameof(LiteMode)}={LiteMode}
-{nameof(SlideAnimConfig)}={Newtonsoft.Json.JsonConvert.SerializeObject(SlideAnimConfig)}
 
-[Custom Commands]
+            File.WriteAllText(path, 
+$@"[{nameof(ConfigSection.AppConfig)}]
+{string.Join("\r\n", savedSettings.Select(p => $"{p.Name}={JsonConvert.SerializeObject(p.GetValue(null))}"))}
+
+[{nameof(ConfigSection.CustomCommands)}]
 {(CustomCommands?.Count > 0 ?
     string.Join("\r\n", CustomCommands.Select(oo => $"{nameof(CustomCommands)}.{CustomCommands.IndexOf(oo)}={oo.Str1}\t{oo.Str2}\t{oo.Str3}")) :
     null)}
 
-;Saved passwords for zipped files. Supported formats:
+;Fallback passwords for zipped files in the format:
 ;password=
-;file_full_path=password
-[Saved Passwords]
-{savedPwds.Trim()}
+[{nameof(ConfigSection.FallbackPasswords)}]
+{fallbackPwds.Trim()}
 ");
         }
     }

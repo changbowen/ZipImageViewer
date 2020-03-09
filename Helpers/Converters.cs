@@ -24,19 +24,6 @@ namespace ZipImageViewer
         }
     }
 
-    //public class RectConverter : IMultiValueConverter
-    //{
-    //    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-    //    {
-    //        return new Rect(0d, 0d, (double)values[0], (double)values[1]);
-    //    }
-
-    //    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-    //    {
-    //        throw new NotSupportedException();
-    //    }
-    //}
-
     public class RectConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
@@ -73,24 +60,6 @@ namespace ZipImageViewer
             throw new NotImplementedException();
         }
     }
-
-    //public class ImageSourceFallbackConverter : IValueConverter
-    //{
-    //    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-    //        switch (value) {
-    //            case List<ImageSource> imgSources:
-    //                if (imgSources.Count > 0) return imgSources[0];
-    //                break;
-    //        }
-    //        return FontAwesome5.ImageAwesome.CreateImageSource(
-    //            FontAwesome5.EFontAwesomeIcon.Solid_Meh,
-    //            new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)));
-    //    }
-
-    //    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-    //        throw new NotImplementedException();
-    //    }
-    //}
 
     public class MathMultiplyConverter : IValueConverter
     {
@@ -175,6 +144,32 @@ namespace ZipImageViewer
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ResourceConverter : IMultiValueConverter
+    {
+        /// <summary>
+        /// value[0] converted to string will be used to get resource key.
+        /// parameter is the string format will be used to format resource key.
+        /// value[1] is optional and will be used to get resource from if specified.
+        /// </summary>
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+            if (values == null || values.Length == 0) return Binding.DoNothing;
+            var key = values[0];
+            if (parameter is string param)
+                key = string.Format(param, key);
+            object res;
+            if (values.Length > 1 && values[1] is FrameworkElement ele)
+                res = ele.Resources[key];
+            else
+                res = Application.Current.Resources[key];
+            if (res == null) return Binding.DoNothing;
+            return res;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
             throw new NotImplementedException();
         }
     }

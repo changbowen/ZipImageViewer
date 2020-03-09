@@ -9,8 +9,8 @@
         xmlns:vir="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
         Icon="Resources/ZipImageViewer.ico"
         mc:Ignorable="d" UseLayoutRounding="True" Background="{StaticResource BackgroundDarkBrush}" Foreground="{StaticResource ForegroundBrush}"
-        Title="{Binding ElementName=MainWin, Path=CurrentPath, Mode=OneWay}" Height="640" Width="1200" Drop="MainWin_Drop" AllowDrop="True"
-        Loaded="MainWin_Loaded" Unloaded="MainWin_Unloaded" Closing="MainWin_Closing" DpiChanged="MainWin_DpiChanged">
+        Title="{Binding ElementName=MainWin, Path=CurrentPath, Mode=OneWay}" Height="730" Width="1140" Drop="MainWin_Drop" AllowDrop="True"
+        Loaded="MainWin_Loaded" Closing="MainWin_Closing" Closed="MainWin_Closed" DpiChanged="MainWin_DpiChanged">
     <Window.Resources>
         <local:FlagToImageConverter x:Key="FlagToImageConverter"/>
         <CollectionViewSource x:Key="ObjectListViewSource"
@@ -30,20 +30,20 @@
                 </local:Thumbnail>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Panel.ZIndex="0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ImmersionMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    
                     <fa:FontAwesome FontSize="12" Margin="0 0 4 0"
                                     Icon="{Binding Flags, Converter={StaticResource FlagToImageConverter}, Mode=OneWay}"/>
                     <TextBlock Text="{Binding DisplayName, Mode=OneTime}" FontSize="10"
-                               MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ImmersionMode, Source={x:Static local:App.Setting}, Mode=OneWay}" Value="True">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                               MaxWidth="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"/>
                 </StackPanel>
             </StackPanel>
         </DataTemplate>
@@ -122,22 +122,22 @@
                         <RowDefinition/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <TextBlock ToolTip="Open Folder" Grid.Row="0">
+                    <TextBlock ToolTip="{StaticResource ttl_OpenFolder}" Grid.Row="0">
                         <Hyperlink Name="HY_Open" TextDecorations="{x:Null}" Click="Sidebar_Click">
                             <fa:ImageAwesome Icon="Solid_FolderOpen"/>
                         </Hyperlink>
                     </TextBlock>
-                    <TextBlock ToolTip="Options" Grid.Row="1">
+                    <TextBlock ToolTip="{StaticResource ttl_Options}" Grid.Row="1">
                         <Hyperlink Name="HY_Options" TextDecorations="{x:Null}" Click="Sidebar_Click">
                             <fa:ImageAwesome Icon="Solid_Cog"/>
                         </Hyperlink>
                     </TextBlock>
-                    <TextBlock ToolTip="Immsersion Mode" Grid.Row="2">
+                    <TextBlock ToolTip="{StaticResource ttl_ImmsersionMode}" Grid.Row="2">
                         <Hyperlink Name="HY_ImmersionMode" TextDecorations="{x:Null}" Click="Sidebar_Click">
                             <fa:ImageAwesome Icon="Solid_Film"/>
                         </Hyperlink>
                     </TextBlock>
-                    <TextBlock ToolTip="Close Window" Grid.Row="3">
+                    <TextBlock ToolTip="{StaticResource ttl_CloseWindow}" Grid.Row="3">
                         <Hyperlink Name="HY_Close" TextDecorations="{x:Null}" Click="Sidebar_Click">
                             <fa:ImageAwesome Icon="Solid_TimesCircle"/>
                         </Hyperlink>
@@ -145,8 +145,7 @@
                 </local:PaddedGrid>
             </Border>
         </Border>
-        
-        
+
         <vir:VirtualizingItemsControl x:Name="TV1" VirtualizingPanel.ScrollUnit="Pixel"
                                       ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
                                       ItemsSource="{Binding Source={StaticResource ObjectListViewSource}, Mode=OneTime}"
@@ -161,23 +160,6 @@
                 </ItemsPanelTemplate>
             </vir:VirtualizingItemsControl.ItemsPanel>
         </vir:VirtualizingItemsControl>
-        <!--<ListBox  >
-            
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <vir:VirtualizingWrapPanel/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            --><!--<ItemsControl.ItemContainerStyle>
-                <Style TargetType="{x:Type ContentPresenter}">
-                    <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Panel.ZIndex" Value="9999" />
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </ItemsControl.ItemContainerStyle>--><!--
-        </ListBox>-->
     </Grid>
     
     

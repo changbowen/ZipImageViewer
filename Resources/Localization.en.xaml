@@ -1,0 +1,105 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:local="clr-namespace:ZipImageViewer">
+    <sys:String x:Key="ttl_Settings">Settings</sys:String>
+    <sys:String x:Key="ttl_ThumbSize">Thumbnail Size</sys:String>
+    <Span x:Key="spn_ThumbSizeTip">
+        <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.<LineBreak/>
+        <Bold>Changing this value invalidates the entire thumbnail cache.</Bold><LineBreak/>
+        The Cache option will start a foreground task to ensure data needed to display the current view is cached in Thumbnail database.
+    </Span>
+    <sys:String x:Key="ttl_ThumbSwapDelayMulti">Thumbnail Swap Delay Multiplier</sys:String>
+    <sys:String x:Key="msg_ThumbSwapDelayMultiTip">The delay of thumbnail change on folders and archives. Higher value results in longer delay.</sys:String>
+    <sys:String x:Key="ttl_DatabaseDir">Database Directory</sys:String>
+    <sys:String x:Key="msg_DatabaseDirTip">The folder to save the all database files (thumbnail cache etc.).</sys:String>
+    <sys:String x:Key="ttl_ThumbDbSize">Thumbnail Cache Size (Current: {0})</sys:String>
+    <sys:String x:Key="ttl_Unlimited">Unlimited</sys:String>
+    <Span x:Key="spn_ThumbDbSizeTip">
+        Maximum size limit of the thumbnail database.<LineBreak/>
+        Setting it to Unlimited removes the limit on the application level.
+    </Span>
+    <sys:String x:Key="ttl_LiteMode">Lite Mode</sys:String>
+    <sys:String x:Key="msg_LiteModeTip">Disables most effects that affect UI performance.</sys:String>
+    <sys:String x:Key="ttl_ViewerBackground">Viewer Background</sys:String>
+    <sys:String x:Key="ttl_ViewerTransition">Viewer Transition</sys:String>
+    <sys:String x:Key="ttl_TransitionSpeed">Transition Speed</sys:String>
+    <sys:String x:Key="msg_ViewerTransitionTip">The transition animation used in the viewer.</sys:String>
+    <sys:String x:Key="ttl_CacheCurrentView">Cache Current View</sys:String>
+    <sys:String x:Key="ttl_ReloadView">Reload View</sys:String>
+    <sys:String x:Key="ttl_Move">Move</sys:String>
+    <sys:String x:Key="ttl_Clean">Clean</sys:String>
+    
+    <sys:String x:Key="ttl_None">None</sys:String>
+    <sys:String x:Key="ttl_Random">Random</sys:String>
+    <sys:String x:Key="ttl_ZoomFadeBlur">Zoom + Fade + Blur</sys:String>
+    <sys:String x:Key="ttl_Fade">Fade</sys:String>
+    <sys:String x:Key="ttl_HorizontalSwipe">Horizontal Swipe</sys:String>
+    <sys:String x:Key="ttl_Fast">Fast</sys:String>
+    <sys:String x:Key="ttl_Medium">Medium</sys:String>
+    <sys:String x:Key="ttl_Slow">Slow</sys:String>
+    <sys:String x:Key="ttl_DarkCheckerboard">Dark Checkerboard</sys:String>
+    <sys:String x:Key="ttl_DarkLinear">Dark Linear Gradient</sys:String>
+    <sys:String x:Key="ttl_Black">Black</sys:String>
+    <sys:String x:Key="ttl_Grey">Grey</sys:String>
+    <sys:String x:Key="ttl_White">White</sys:String>
+    <sys:String x:Key="ttl_KenBurns">Ken Burns</sys:String>
+    <sys:String x:Key="ttl_Breath">Breath</sys:String>
+    <sys:String x:Key="ttl_Emerge">Emerge</sys:String>
+    
+    <sys:String x:Key="ttl_SavedPasswords">Saved Passwords</sys:String>
+    <sys:String x:Key="ttl_FallbackPasswords">Fallback Passwords</sys:String>
+    <sys:String x:Key="ttl_MappedPasswords">Mapped Passwords</sys:String>
+    <Span x:Key="spn_SavedPasswordsTip">
+        Saved passwords for zipped files.<LineBreak/>
+        In the configuration file, fallback passwords are saved one on each line, with the below formats:<LineBreak/>
+        <Bold>password</Bold> =
+    </Span>
+    <sys:String x:Key="ttl_CustomCommands">Custom Commands (Comming Soon...)</sys:String>
+    <sys:String x:Key="ttl_Name">Name</sys:String>
+    <sys:String x:Key="ttl_ProgramPath">Program Path</sys:String>
+    <sys:String x:Key="ttl_Arguments">Arguments</sys:String>
+    <sys:String x:Key="txt_TargetNullValue">(Enter value)</sys:String>
+    <sys:String x:Key="ttl_Password">Password</sys:String>
+    <Span x:Key="spn_CustomCommandsTip">
+        Commands used in right-click menu. One in each line.<LineBreak/>
+        <Bold>%FileSystemPath%</Bold> - Path to the current file or folder.
+    </Span>
+    <sys:String x:Key="msg_DbMovedSucc">Database files moved successfully.</sys:String>
+    <sys:String x:Key="ttl_OperationComplete">Operation Complete</sys:String>
+    <sys:String x:Key="ttl_OperationFailed">Operation Failed</sys:String>
+    <sys:String x:Key="msg_PleaseWait">Please wait...</sys:String>
+    <sys:String x:Key="msg_Processing">Processing...</sys:String>
+    <sys:String x:Key="ttl_OpenFolder">Open Folder</sys:String>
+    <sys:String x:Key="ttl_Options">Options</sys:String>
+    <sys:String x:Key="ttl_ImmsersionMode">Immsersion Mode</sys:String>
+    <sys:String x:Key="ttl_CloseWindow">Close Window</sys:String>
+    <sys:String x:Key="txt_CreatedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (Created)</sys:String>
+    <sys:String x:Key="txt_ModifiedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (Modified)</sys:String>
+    <sys:String x:Key="txt_DateTakenStrFmt">{0} (Taken)</sys:String>
+    <sys:String x:Key="ttl_OpenInExplorer">Open in Explorer</sys:String>
+    <sys:String x:Key="ttl_OpenInNewWindow">Open in New Window</sys:String>
+    <sys:String x:Key="ttl_StartSlideshow">Start Slideshow</sys:String>
+    <sys:String x:Key="txt_PasswordForArchive">Password for this archive</sys:String>
+    <sys:String x:Key="txt_AddToFallbackPwdLst">Add to fallback password list</sys:String>
+    <sys:String x:Key="msg_FallbackPwdTip">Fallback passwords will be tried on any new encrypted archives.</sys:String>
+    <sys:String x:Key="ttl_OK">OK</sys:String>
+    <sys:String x:Key="ttl_Cancel">Cancel</sys:String>
+    <sys:String x:Key="ttl_Transition">Transition</sys:String>
+    <sys:String x:Key="ttl_ResolutionScale">Resolution Scale</sys:String>
+    <sys:String x:Key="ttl_ImageDuration">Image Duration</sys:String>
+    <sys:String x:Key="ttl_FadeInDuration">Fade In Duration</sys:String>
+    <sys:String x:Key="ttl_FadeOutDuration">Fade Out Duration</sys:String>
+    <sys:String x:Key="ttl_Blur">Blur Effect</sys:String>
+    <sys:String x:Key="ttl_XAxisPanReduction">Horizontal Pan Reduction</sys:String>
+    <sys:String x:Key="ttl_YAxisPanReduction">Vertical Pan Reduction</sys:String>
+    <sys:String x:Key="ttl_YAxisPanDownOnly">Vertical Pan Down Only</sys:String>
+    <sys:String x:Key="ttl_ResetTransDefault">Reset Transition Default</sys:String>
+    <sys:String x:Key="msg_NoImageFound">No images found under {0}.</sys:String>
+    <sys:String x:Key="msg_NoMore">No more!</sys:String>
+    <sys:String x:Key="ttl_ParamStartError">Parametered Start Error</sys:String>
+    <sys:String x:Key="ttl_AppStartError">Application Start Error</sys:String>
+    <sys:String x:Key="msg_ErrorOpenDbFile">Error opening database file {0}.</sys:String>
+    <sys:String x:Key="msg_ErrorLoadMapPwds">There was an error loading mapped passwords. Loading will be skipped.</sys:String>
+    <sys:String x:Key="msg_ExtractFailed">Extraction failed. Bad password or not supported image formats.</sys:String>
+</ResourceDictionary>

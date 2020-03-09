@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" Background="Black" Foreground="{StaticResource ForegroundBrush}" Padding="0"
-        mc:Ignorable="d" Height="600" Width="800" Loaded="SlideWin_Loaded" Closing="SlideWin_Closing">
+        mc:Ignorable="d" Height="600" Width="800" Loaded="SlideWin_Loaded" Closing="SlideWin_Closing" Closed="SlideWin_Closed">
     <Canvas x:Name="canvas">
         <Canvas.Resources>
             <Style TargetType="local:DpiImage">
@@ -44,10 +44,12 @@
                     <Style TargetType="StackPanel">
                         <Setter Property="Orientation" Value="Horizontal" />
                     </Style>
-                    <Style TargetType="CheckBox">
+                    <Style TargetType="CheckBox" BasedOn="{StaticResource SlideSwitchStyle}">
                         <Setter Property="VerticalAlignment" Value="Center" />
                         <Setter Property="HorizontalAlignment" Value="Right" />
                         <Setter Property="Foreground" Value="{Binding Foreground, ElementName=SlideWin, Mode=OneTime}" />
+                        <Setter Property="Width" Value="48" />
+                        <Setter Property="Height" Value="24" />
                     </Style>
                 </StackPanel.Resources>
                 <StackPanel.Style>
@@ -62,74 +64,76 @@
                 
                 <Border>
                     <DockPanel>
-                        <TextBlock Text="Transition" Style="{StaticResource HeaderStyle}"/>
+                        <TextBlock Text="{StaticResource ttl_Transition}" Style="{StaticResource HeaderStyle}"/>
                         <ContentControl>
-                            <ComboBox x:Name="CB_Transition" SelectionChanged="CB_Transition_SelectionChanged"/>
+                            <ComboBox ItemsSource="{Binding Source={local:Enumeration {x:Type local:SlideshowHelper+SlideTransition}}}"
+                                      SelectedValue="{Binding Source={x:Static local:App.Setting}, Path=SlideAnimConfig.Transition}"
+                                      DisplayMemberPath="Description" SelectedValuePath="Value"/>
                         </ContentControl>
                     </DockPanel>
                 </Border>
                 <Border>
                     <DockPanel>
-                        <TextBlock Text="Resolution Scale" Style="{StaticResource HeaderStyle}"/>
+                        <TextBlock Text="{StaticResource ttl_ResolutionScale}" Style="{StaticResource HeaderStyle}"/>
                         <ContentControl>
-                            <TextBox Text="{Binding AnimConfig.ResolutionScale, ElementName=SlideWin}"/>
+                            <TextBox Text="{Binding SlideAnimConfig.ResolutionScale, Source={x:Static local:App.Setting}}"/>
                         </ContentControl>
                     </DockPanel>
                 </Border>
                 <Border>
                     <DockPanel>
-                        <TextBlock Text="Image Duration" Style="{StaticResource HeaderStyle}"/>
+                        <TextBlock Text="{StaticResource ttl_ImageDuration}" Style="{StaticResource HeaderStyle}"/>
                         <ContentControl>
-                            <TextBox Text="{Binding AnimConfig.ImageDuration, ElementName=SlideWin}"/>
+                            <TextBox Text="{Binding SlideAnimConfig.ImageDuration, Source={x:Static local:App.Setting}}"/>
                         </ContentControl>
                     </DockPanel>
                 </Border>
                 <Border>
                     <DockPanel>
-                        <TextBlock Text="Fade In Duration" Style="{StaticResource HeaderStyle}"/>
+                        <TextBlock Text="{StaticResource ttl_FadeInDuration}" Style="{StaticResource HeaderStyle}"/>
                         <ContentControl>
-                            <TextBox Text="{Binding AnimConfig.FadeInDuration, ElementName=SlideWin}"/>
+                            <TextBox Text="{Binding SlideAnimConfig.FadeInDuration, Source={x:Static local:App.Setting}}"/>
                         </ContentControl>
                     </DockPanel>
                 </Border>
                 <Border>
                     <DockPanel>
-                        <TextBlock Text="Fade Out Duration" Style="{StaticResource HeaderStyle}"/>
+                        <TextBlock Text="{StaticResource ttl_FadeOutDuration}" Style="{StaticResource HeaderStyle}"/>
                         <ContentControl>
-                            <TextBox Text="{Binding AnimConfig.FadeOutDuration, ElementName=SlideWin}"/>
+                            <TextBox Text="{Binding SlideAnimConfig.FadeOutDuration, Source={x:Static local:App.Setting}}"/>
                         </ContentControl>
                     </DockPanel>
                 </Border>
                 <Border>
                     <DockPanel>
-                        <TextBlock Text="Blur" Style="{StaticResource HeaderStyle}"/>
-                        <CheckBox IsChecked="{Binding AnimConfig.Blur, ElementName=SlideWin}" Content="Enabled"/>
+                        <TextBlock Text="{StaticResource ttl_Blur}" Style="{StaticResource HeaderStyle}"/>
+                        <CheckBox IsChecked="{Binding SlideAnimConfig.Blur, Source={x:Static local:App.Setting}}"/>
                     </DockPanel>
                 </Border>
                 <Border>
                     <DockPanel>
-                        <TextBlock Text="X Axis Pan Reduction" Style="{StaticResource HeaderStyle}"/>
+                        <TextBlock Text="{StaticResource ttl_XAxisPanReduction}" Style="{StaticResource HeaderStyle}"/>
                         <ContentControl>
-                            <TextBox Text="{Binding AnimConfig.XPanDistanceR, ElementName=SlideWin}"/>
+                            <TextBox Text="{Binding SlideAnimConfig.XPanDistanceR, Source={x:Static local:App.Setting}}"/>
                         </ContentControl>
                     </DockPanel>
                 </Border>
                 <Border>
                     <DockPanel>
-                        <TextBlock Text="Y Axis Pan Reduction" Style="{StaticResource HeaderStyle}"/>
+                        <TextBlock Text="{StaticResource ttl_YAxisPanReduction}" Style="{StaticResource HeaderStyle}"/>
                         <ContentControl>
-                            <TextBox Text="{Binding AnimConfig.YPanDistanceR, ElementName=SlideWin}"/>
+                            <TextBox Text="{Binding SlideAnimConfig.YPanDistanceR, Source={x:Static local:App.Setting}}"/>
                         </ContentControl>
                     </DockPanel>
                 </Border>
                 <Border>
                     <DockPanel>
-                        <TextBlock Text="Y Axis Pan Up Only" Style="{StaticResource HeaderStyle}"/>
-                        <CheckBox IsChecked="{Binding AnimConfig.YPanUpOnly, ElementName=SlideWin}" Content="Enabled"/>
+                        <TextBlock Text="{StaticResource ttl_YAxisPanDownOnly}" Style="{StaticResource HeaderStyle}"/>
+                        <CheckBox IsChecked="{Binding SlideAnimConfig.YPanDownOnly, Source={x:Static local:App.Setting}}"/>
                     </DockPanel>
                 </Border>
 
-                <Button Style="{StaticResource ButtonStyle}" Margin="10 8" Content="Reset Transition Default"
+                <Button Style="{StaticResource ButtonStyle}" Margin="10 8" Content="{StaticResource ttl_ResetTransDefault}"
                         Click="Btn_Preset_Click"/>
             </StackPanel>
         </Border>

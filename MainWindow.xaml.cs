@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Linq;
-using SevenZip;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Media;
@@ -15,6 +14,7 @@ using System.Windows.Threading;
 using System.Data;
 using Path = System.IO.Path;
 using SizeInt = System.Drawing.Size;
+using static ZipImageViewer.Helpers;
 using static ZipImageViewer.LoadHelper;
 
 namespace ZipImageViewer
@@ -45,7 +45,7 @@ namespace ZipImageViewer
             virWrapPanel.Children.Cast<ContentPresenter>().Count(cp => ((ObjectInfo)cp.Content).SourcePaths?.Length > 0) * 200 + App.Random.Next(2, 7) * 1000));
 
         internal CancellationTokenSource tknSrc_LoadThumb;
-        internal readonly object lock_LoadThumb = new object();
+        private readonly object lock_LoadThumb = new object();
 
         private VirtualizingWrapPanel virWrapPanel;
         private Rect lastWindowRect;
@@ -66,13 +66,13 @@ namespace ZipImageViewer
             if (App.ContextMenuWin == null)
                 App.ContextMenuWin = new ContextMenuWindow();
 
-            virWrapPanel = Helpers.GetVisualChild<VirtualizingWrapPanel>(TV1);
+            virWrapPanel = GetVisualChild<VirtualizingWrapPanel>(TV1);
 
             DpiScale = VisualTreeHelper.GetDpi(this);
             Setting.ThumbnailSize.PropertyChanged += ThumbnailSizeChanged;
 
             var view = (ListCollectionView)((CollectionViewSource)FindResource("ObjectListViewSource")).View;
-            view.CustomSort = new FolderSorter();
+            view.CustomSort = new Helpers.ObjectInfoSorter();
 
             //load last path or open dialog
             if (InitialPath?.Length > 0)
@@ -83,9 +83,8 @@ namespace ZipImageViewer
                 openFolderPrompt();
         }
 
-        private void MainWin_Unloaded(object sender, RoutedEventArgs e) {
-            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow) == 0)
-                Application.Current.Shutdown();
+        private void MainWin_Closed(object sender, EventArgs e) {
+            ShutdownCheck();
         }
 
         private bool reallyClose = false;
@@ -97,7 +96,6 @@ namespace ZipImageViewer
             Setting.ThumbnailSize.PropertyChanged -= ThumbnailSizeChanged;
 
             tknSrc_LoadThumb?.Cancel();
-            tknSrc_LoadThumb?.Dispose();
             while (tknSrc_LoadThumb != null) { await Task.Delay(100); }
 
             Dispatcher.Invoke(() => ObjectList.Clear());
@@ -154,13 +152,16 @@ namespace ZipImageViewer
         #region Private Helper Methods
 
         private void openFolderPrompt() {
-            Helpers.OpenFolderDialog(this, path => Task.Run(() => LoadPath(path)));
+            OpenFolderDialog(this, path => Task.Run(() => LoadPath(path)));
         }
 
+        /// <summary>
+        /// This needs to be synchronous for the cancallation to work.
+        /// </summary>
         private void callback_AddToImageList(ObjectInfo objInfo) {
             //exclude non-image items in immersion mode
             if (Setting.ImmersionMode && objInfo.SourcePaths == null) {
-                UpdateSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
+                objInfo.SourcePaths = GetSourcePaths(objInfo);//update needed to exclude items that do not have thumbs
                 if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0)
                     return;
             }
@@ -207,7 +208,7 @@ namespace ZipImageViewer
         /// Flags are inferred from path. Not for opening image in an archive.
         /// </summary>
         internal void LoadPath(string path, ViewWindow viewWin = null) {
-            LoadPath(new ObjectInfo(path), viewWin);
+            LoadPath(new ObjectInfo(path, GetPathType(path)), viewWin);
         }
 
         /// <summary>
@@ -216,16 +217,11 @@ namespace ZipImageViewer
         /// Support cancellation. Used in Task.
         /// </summary>
         internal void LoadPath(ObjectInfo objInfo, ViewWindow viewWin = null) {
-            //infer path type (flags)
-            if (objInfo.Flags == FileFlags.Unknown)
-                objInfo.Flags = Helpers.GetPathType(new DirectoryInfo(objInfo.FileSystemPath));
-
             // action based on flags
             if (objInfo.Flags.HasFlag(FileFlags.Directory)) {
                 //directory -> load thumbs
                 try {
                     tknSrc_LoadThumb?.Cancel();
-                    tknSrc_LoadThumb?.Dispose();
                     Monitor.Enter(lock_LoadThumb);
                     tknSrc_LoadThumb = new CancellationTokenSource();
                     preRefreshActions();
@@ -233,10 +229,8 @@ namespace ZipImageViewer
                     foreach (var childInfo in new DirectoryInfo(objInfo.FileSystemPath).EnumerateFileSystemInfos()) {
                         if (tknSrc_LoadThumb?.IsCancellationRequested == true) return;
 
-                        var flag = Helpers.GetPathType(childInfo);
-                        callback_AddToImageList(new ObjectInfo(childInfo.FullName, flag) {
-                            FileName = childInfo.Name,
-                        });
+                        var flag = GetPathType(childInfo);
+                        callback_AddToImageList(new ObjectInfo(childInfo.FullName, flag, childInfo.Name));
                     }
                     Dispatcher.Invoke(() => scrollPosition());
                 }
@@ -246,54 +240,37 @@ namespace ZipImageViewer
                     Monitor.Exit(lock_LoadThumb);
                 }
             }
+            else if (objInfo.Flags.HasFlag(FileFlags.Image)) {
+                //plain image file or image inside archive -> open viewer
+                //using a new ObjectInfo to avoid confusion and reduce chance of holding ImageSource
+                Dispatcher.Invoke(() => {
+                    if (viewWin == null)
+                        new ViewWindow(objInfo.ContainerPath, objInfo.FileName, this).Show();
+                    else
+                        viewWin.ViewPath = (objInfo.ContainerPath, objInfo.FileName);
+                });
+            }
             else if (objInfo.Flags.HasFlag(FileFlags.Archive)) {
-                if (objInfo.Flags.HasFlag(FileFlags.Image)) {
-                    //image inside archive -> open viewer
-                    LoadFile(new LoadOptions(objInfo.FileSystemPath) {
+                //archive itself -> extract and load thumbs
+                try {
+                    tknSrc_LoadThumb?.Cancel();
+                    Monitor.Enter(lock_LoadThumb);
+                    tknSrc_LoadThumb = new CancellationTokenSource();
+                    preRefreshActions();
+                    CurrentPath = objInfo.FileSystemPath;
+                    ExtractZip(new LoadOptions(objInfo.FileSystemPath) {
                         Flags = objInfo.Flags,
                         LoadImage = true,
-                        FileNames = new[] { objInfo.FileName },
-                        CldInfoCallback = oi => Dispatcher.Invoke(() => {
-                            if (viewWin == null) new ViewWindow(this) { ObjectInfo = oi }.Show();
-                            else viewWin.ObjectInfo = oi;
-                        }),
-                    });
+                        DecodeSize = (SizeInt)Setting.ThumbnailSize,
+                        CldInfoCallback = callback_AddToImageList,
+                    }, tknSrc_LoadThumb);
+                    Dispatcher.Invoke(() => scrollPosition());
                 }
-                else {
-                    //archive itself -> extract and load thumbs
-                    try {
-                        tknSrc_LoadThumb?.Cancel();
-                        tknSrc_LoadThumb?.Dispose();
-                        Monitor.Enter(lock_LoadThumb);
-                        tknSrc_LoadThumb = new CancellationTokenSource();
-                        preRefreshActions();
-                        CurrentPath = objInfo.FileSystemPath;
-                        LoadFile(new LoadOptions(objInfo.FileSystemPath) {
-                            Flags = objInfo.Flags,
-                            LoadImage = true,
-                            DecodeSize = (SizeInt)Setting.ThumbnailSize,
-                            CldInfoCallback = callback_AddToImageList,
-                        }, tknSrc_LoadThumb);
-                        Dispatcher.Invoke(() => scrollPosition());
-                        //postRefreshActions();
-                    }
-                    finally {
-                        tknSrc_LoadThumb.Dispose();
-                        tknSrc_LoadThumb = null;
-                        Monitor.Exit(lock_LoadThumb);
-                    }
+                finally {
+                    tknSrc_LoadThumb.Dispose();
+                    tknSrc_LoadThumb = null;
+                    Monitor.Exit(lock_LoadThumb);
                 }
-            }
-            else if (objInfo.Flags.HasFlag(FileFlags.Image)) {
-                //plain image file -> open viewer
-                LoadFile(new LoadOptions(objInfo.FileSystemPath) {
-                    Flags = objInfo.Flags,
-                    LoadImage = true,
-                    ObjInfoCallback = oi => Dispatcher.Invoke(() => {
-                        if (viewWin == null) new ViewWindow(this) { ObjectInfo = oi }.Show();
-                        else viewWin.ObjectInfo = oi;
-                    }),
-                });
             }
         }
 

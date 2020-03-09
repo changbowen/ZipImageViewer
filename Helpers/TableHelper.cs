@@ -15,8 +15,8 @@ namespace ZipImageViewer
 
         public enum Column
         {
-            VirtualPath, DecodeWidth, DecodeHeight, ThumbData,
-            Path, Password,
+            BasePath, SubPath, DecodeWidth, DecodeHeight, ThumbData,//Thumbs table
+            Path, Password,//MappedPasswords table
         }
 
         public class TableInfo

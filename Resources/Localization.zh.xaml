@@ -1,0 +1,105 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:local="clr-namespace:ZipImageViewer">
+    <sys:String x:Key="ttl_Settings">设置</sys:String>
+    <sys:String x:Key="ttl_ThumbSize">缩略图尺寸</sys:String>
+    <Span x:Key="spn_ThumbSizeTip">
+        <Bold>宽</Bold> x <Bold>高</Bold> （像素）。<LineBreak/>
+        <Bold>更改此值会使所有当前尺寸的缩略图失效。</Bold><LineBreak/>
+        使用缓存目录选项会开始缓存当前视图下的图像到缩略图数据库。
+    </Span>
+    <sys:String x:Key="ttl_ThumbSwapDelayMulti">缩略图切换延迟速率</sys:String>
+    <sys:String x:Key="msg_ThumbSwapDelayMultiTip">目录和压缩文件缩略图的切换延迟。数值越高延迟越高。</sys:String>
+    <sys:String x:Key="ttl_DatabaseDir">数据库目录</sys:String>
+    <sys:String x:Key="msg_DatabaseDirTip">存放数据库文件（缩略图缓存数据库等）的目录</sys:String>
+    <sys:String x:Key="ttl_ThumbDbSize">缩略图缓存大小 （当前: {0}）</sys:String>
+    <sys:String x:Key="ttl_Unlimited">无限制</sys:String>
+    <Span x:Key="spn_ThumbDbSizeTip">
+        缩略图缓存的最大文件尺寸。<LineBreak/>
+        设置为无限制会解除软件层面的限制。
+    </Span>
+    <sys:String x:Key="ttl_LiteMode">简洁模式</sys:String>
+    <sys:String x:Key="msg_LiteModeTip">禁用多数影响界面性能的特效。</sys:String>
+    <sys:String x:Key="ttl_ViewerBackground">查看器背景</sys:String>
+    <sys:String x:Key="ttl_ViewerTransition">查看器过渡效果</sys:String>
+    <sys:String x:Key="ttl_TransitionSpeed">过渡效果速度</sys:String>
+    <sys:String x:Key="msg_ViewerTransitionTip">查看器中使用的过渡效果。</sys:String>
+    <sys:String x:Key="ttl_CacheCurrentView">缓存当前视图</sys:String>
+    <sys:String x:Key="ttl_ReloadView">重新载入视图</sys:String>
+    <sys:String x:Key="ttl_Move">移动</sys:String>
+    <sys:String x:Key="ttl_Clean">清空</sys:String>
+
+    <sys:String x:Key="ttl_None">无</sys:String>
+    <sys:String x:Key="ttl_Random">随机</sys:String>
+    <sys:String x:Key="ttl_ZoomFadeBlur">缩放 + 淡入淡出 + 模糊</sys:String>
+    <sys:String x:Key="ttl_Fade">淡入淡出</sys:String>
+    <sys:String x:Key="ttl_HorizontalSwipe">水平滑动</sys:String>
+    <sys:String x:Key="ttl_Fast">快</sys:String>
+    <sys:String x:Key="ttl_Medium">中</sys:String>
+    <sys:String x:Key="ttl_Slow">慢</sys:String>
+    <sys:String x:Key="ttl_DarkCheckerboard">暗色棋盘</sys:String>
+    <sys:String x:Key="ttl_DarkLinear">暗色线性渐变</sys:String>
+    <sys:String x:Key="ttl_Black">黑色</sys:String>
+    <sys:String x:Key="ttl_Grey">灰色</sys:String>
+    <sys:String x:Key="ttl_White">白色</sys:String>
+    <sys:String x:Key="ttl_KenBurns">Ken Burns</sys:String>
+    <sys:String x:Key="ttl_Breath">呼吸</sys:String>
+    <sys:String x:Key="ttl_Emerge">浮现</sys:String>
+    
+    <sys:String x:Key="ttl_SavedPasswords">保存的密码</sys:String>
+    <sys:String x:Key="ttl_FallbackPasswords">备用密码</sys:String>
+    <sys:String x:Key="ttl_MappedPasswords">密码字典</sys:String>
+    <Span x:Key="spn_SavedPasswordsTip">
+        压缩文件使用的密码。<LineBreak/>
+        在配置文件中，备用密码每行一个，采用如下格式存储：<LineBreak/>
+        <Bold>密码</Bold> =
+    </Span>
+    <sys:String x:Key="ttl_CustomCommands">自定义命令（敬请期待...）</sys:String>
+    <sys:String x:Key="ttl_Name">名称</sys:String>
+    <sys:String x:Key="ttl_ProgramPath">程序路径</sys:String>
+    <sys:String x:Key="ttl_Arguments">参数</sys:String>
+    <sys:String x:Key="txt_TargetNullValue">(输入数据)</sys:String>
+    <sys:String x:Key="ttl_Password">密码</sys:String>
+    <Span x:Key="spn_CustomCommandsTip">
+        右键菜单中使用的自定义命令，每行一个。<LineBreak/>
+        <Bold>%FileSystemPath%</Bold> - 当前文件或目录的路径
+    </Span>
+    <sys:String x:Key="msg_DbMovedSucc">数据库文件移动完成。</sys:String>
+    <sys:String x:Key="ttl_OperationComplete">操作完成</sys:String>
+    <sys:String x:Key="ttl_OperationFailed">操作失败</sys:String>
+    <sys:String x:Key="msg_PleaseWait">请稍后...</sys:String>
+    <sys:String x:Key="msg_Processing">处理中...</sys:String>
+    <sys:String x:Key="ttl_OpenFolder">打开文件夹</sys:String>
+    <sys:String x:Key="ttl_Options">选项</sys:String>
+    <sys:String x:Key="ttl_ImmsersionMode">沉浸模式</sys:String>
+    <sys:String x:Key="ttl_CloseWindow">关闭窗口</sys:String>
+    <sys:String x:Key="txt_CreatedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (创建)</sys:String>
+    <sys:String x:Key="txt_ModifiedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (修改)</sys:String>
+    <sys:String x:Key="txt_DateTakenStrFmt">{0} (拍摄)</sys:String>
+    <sys:String x:Key="ttl_OpenInExplorer">在资源管理器中打开</sys:String>
+    <sys:String x:Key="ttl_OpenInNewWindow">在新窗口中打开</sys:String>
+    <sys:String x:Key="ttl_StartSlideshow">开始放映幻灯片</sys:String>
+    <sys:String x:Key="txt_PasswordForArchive">压缩文件密码</sys:String>
+    <sys:String x:Key="txt_AddToFallbackPwdLst">添加到备用密码</sys:String>
+    <sys:String x:Key="msg_FallbackPwdTip">对陌生加密压缩文件会尝试备用密码用来解压。</sys:String>
+    <sys:String x:Key="ttl_OK">确定</sys:String>
+    <sys:String x:Key="ttl_Cancel">取消</sys:String>
+    <sys:String x:Key="ttl_Transition">过渡效果</sys:String>
+    <sys:String x:Key="ttl_ResolutionScale">分辨率比例</sys:String>
+    <sys:String x:Key="ttl_ImageDuration">图像时长</sys:String>
+    <sys:String x:Key="ttl_FadeInDuration">渐入时长</sys:String>
+    <sys:String x:Key="ttl_FadeOutDuration">渐出时长</sys:String>
+    <sys:String x:Key="ttl_Blur">模糊效果</sys:String>
+    <sys:String x:Key="ttl_XAxisPanReduction">水平平移缩减</sys:String>
+    <sys:String x:Key="ttl_YAxisPanReduction">垂直平移缩减</sys:String>
+    <sys:String x:Key="ttl_YAxisPanDownOnly">垂直平移仅向下</sys:String>
+    <sys:String x:Key="ttl_ResetTransDefault">重置效果默认值</sys:String>
+    <sys:String x:Key="msg_NoImageFound">在{0}下没有找到可用图像。</sys:String>
+    <sys:String x:Key="msg_NoMore">没有了！</sys:String>
+    <sys:String x:Key="ttl_ParamStartError">参数启动错误</sys:String>
+    <sys:String x:Key="ttl_AppStartError">程序启动错误</sys:String>
+    <sys:String x:Key="msg_ErrorOpenDbFile">打开数据库文件{0}时发生错误。</sys:String>
+    <sys:String x:Key="msg_ErrorLoadMapPwds">载入密码字典时发生错误。已跳过字典加载。</sys:String>
+    <sys:String x:Key="msg_ExtractFailed">解压失败。密码错误或者图像格式不支持。</sys:String>
+</ResourceDictionary>
