@@ -14,9 +14,6 @@ using static ZipImageViewer.LoadHelper;
 
 namespace ZipImageViewer
 {
-    /// <summary>
-    /// Interaction logic for SlideshowWindow.xaml
-    /// </summary>
     public partial class SlideshowWindow : BorderlessWindow
     {
         private readonly string basePath;
@@ -74,9 +71,14 @@ namespace ZipImageViewer
                 Close();
                 return;
             }
+            //minimize other app windows
+            foreach (var win in Application.Current.Windows.Cast<Window>()) {
+                if (win is MainWindow || win is ViewWindow) win.WindowState = WindowState.Minimized;
+            }
 
             //fullscreen
             SwitchFullScreen(this, ref lastRect, true);
+            Topmost = true;
 
             //start
             AnimTick(null, null);
@@ -84,9 +86,14 @@ namespace ZipImageViewer
 
         private void SlideWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             animTimer.Stop();
+            Topmost = false;
         }
 
         private void SlideWin_Closed(object sender, EventArgs e) {
+            //reopen app windows
+            foreach (var win in Application.Current.Windows.Cast<Window>()) {
+                if ((win is MainWindow || win is ViewWindow) && win.WindowState == WindowState.Minimized) win.WindowState = WindowState.Normal;
+            }
             ShutdownCheck();
         }
 
