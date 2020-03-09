@@ -18,6 +18,8 @@ Need 64bit Windows and .Net Framework 4.7.2 (included in Windows 10 April 2018 U
 - PerMonitor DPI awareness.
 - Thumbnail cache for instant loading.
 - "Picture Wall"
+- A slideshow feature with 3 transition effects.
+- English and Simplified Chinese UI language.
 
 #### Using Fallback Passwords
 ![Fallback Passwords](https://github.com/changbowen/Misc/raw/master/ZipImageViewer/fallback_passwords.gif)
