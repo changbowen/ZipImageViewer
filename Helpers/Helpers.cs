@@ -96,7 +96,7 @@ namespace ZipImageViewer
     }
 
     /// <summary>
-    /// FileFlags also determines the sorting order (defined in FolderSorter).
+    /// FileFlags also determines the sorting order (defined in ObjectInfoSorter).
     /// Being casted to int, lower number comes in the front. Except for Unknown which comes last;
     /// </summary>
     [Flags]
@@ -106,6 +106,7 @@ namespace ZipImageViewer
         Directory = 2,
         Archive = 4,
         Image = 8,
+        File = 16,
     }
 
     public static class Helpers {

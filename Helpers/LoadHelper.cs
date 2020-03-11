@@ -176,6 +176,12 @@ namespace ZipImageViewer
             try {
                 ext = options.Password?.Length > 0 ? new SevenZipExtractor(options.FilePath, options.Password) :
                                                      new SevenZipExtractor(options.FilePath);
+                //check for multi-volume archives (nope doesnt work)
+                //if (ext.VolumeFileNames.Count > 1 && ext.FileName != ext.VolumeFileNames[0]) {
+                //    objInfo.Flags = FileFlags.Unknown;
+                //    return true;
+                //}
+
                 var isThumb = options.DecodeSize == (SizeInt)Setting.ThumbnailSize;
                 bool fromDisk = false;
 
@@ -187,18 +193,19 @@ namespace ZipImageViewer
                     toDo = ext.ArchiveFileData
                         .Where(d => !d.IsDirectory && GetFileType(d.FileName) == FileFlags.Image)
                         .Select(d => d.FileName).ToArray();
-                
+
                 //for archives with encrypted file names, ext.ArchiveFileData will be empty.
                 if (toDo == null || toDo.Length == 0) return false;
 
-                foreach (var fileName in toDo) {
-                    if (tknSrc?.IsCancellationRequested == true) break;
+                //iterate over each file and extract when needed
+                if (options.LoadImage && options.CldInfoCallback != null) {
+                    foreach (var fileName in toDo) {
+                        if (tknSrc?.IsCancellationRequested == true) break;
 
-                    //skip if already done
-                    if (done.Contains(fileName)) continue;
+                        //skip if already done
+                        if (done.Contains(fileName)) continue;
 
-                    ImageSource source = null;
-                    if (options.LoadImage) {
+                        ImageSource source = null;
                         if (options.TryCache && isThumb) {
                             //try load from cache
                             source = SQLiteHelper.GetFromThumbDB(options.FilePath, options.DecodeSize, fileName)?.Item1;
@@ -217,18 +224,16 @@ namespace ZipImageViewer
                             }
                             if (isThumb && source != null) SQLiteHelper.AddToThumbDB(source, options.FilePath, fileName, options.DecodeSize);
                         }
-                    }
-
-                    if (options.CldInfoCallback != null) {
                         var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive) {
                             FileName = fileName,
                             SourcePaths = new[] { fileName },
-                            ImageSource = source,
                         };
+                        if (source == null) cldInfo.Flags |= FileFlags.Error;
+                        else cldInfo.ImageSource = source;
                         options.CldInfoCallback.Invoke(cldInfo);
+                        
+                        done.Add(fileName);
                     }
-
-                    done.Add(fileName);
                 }
 
                 //update objInfo
@@ -244,7 +249,8 @@ namespace ZipImageViewer
             catch (Exception ex) {
                 if (ex is ExtractionFailedException ||
                     ex is SevenZipArchiveException ||
-                    ex is NotSupportedException) return false;
+                    ex is NotSupportedException ||
+                    ex is ArgumentOutOfRangeException) return false;
 
                 if (ext != null) {
                     ext.Dispose();
@@ -406,14 +412,12 @@ namespace ZipImageViewer
                 switch (objInfo.Flags) {
                     case FileFlags.Directory:
                         if (sourcePath != null)
-                            source = GetImageSource(Path.Combine(objInfo.FileSystemPath, sourcePath), decodeSize, tryCache);
-                        if (source == null)
+                            source = GetImageSource(Path.Combine(objInfo.FileSystemPath, sourcePath), decodeSize, tryCache) ?? App.fa_image;
+                        else
                             source = App.fa_folder;
                         break;
                     case FileFlags.Image:
-                        source = GetImageSource(objInfo.FileSystemPath, decodeSize, tryCache);
-                        if (source == null)
-                            source = App.fa_image;
+                        source = GetImageSource(objInfo.FileSystemPath, decodeSize, tryCache) ?? App.fa_image;
                         break;
                     case FileFlags.Archive:
                         if (sourcePath != null) {
@@ -426,16 +430,15 @@ namespace ZipImageViewer
                                 CldInfoCallback = oi => source = oi.ImageSource,
                                 ObjInfoCallback = oi => objInfo.Flags = oi.Flags
                             });
+                            if (source == null) source = App.fa_image;//CldInfoCallback may not get called when error
                         }
-                        if (source == null)
+                        else
                             source = App.fa_archive;
                         break;
                     case FileFlags.Archive | FileFlags.Image:
                         //archives are loaded with ImageSource in a single thread
                         //this is only pointing to the source
-                        source = objInfo.ImageSource;
-                        if (source == null)
-                            source = App.fa_image;
+                        source = objInfo.ImageSource ?? App.fa_image;
                         break;
                 }
             }
@@ -448,6 +451,7 @@ namespace ZipImageViewer
                 Console.WriteLine($"Helpers.GetImageSource() exited after {watch.ElapsedMilliseconds}ms. Leaving {LoadThrottle.CurrentCount} slots.");
 #endif
             }
+
             return source;
         }
 
