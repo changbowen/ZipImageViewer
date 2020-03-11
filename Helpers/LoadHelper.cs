@@ -191,7 +191,7 @@ namespace ZipImageViewer
                     toDo = options.FileNames;
                 else
                     toDo = ext.ArchiveFileData
-                        .Where(d => !d.IsDirectory && GetFileType(d.FileName) == FileFlags.Image)
+                        //.Where(d => !d.IsDirectory && GetFileType(d.FileName) == FileFlags.Image)
                         .Select(d => d.FileName).ToArray();
 
                 //for archives with encrypted file names, ext.ArchiveFileData will be empty.
@@ -205,33 +205,39 @@ namespace ZipImageViewer
                         //skip if already done
                         if (done.Contains(fileName)) continue;
 
-                        ImageSource source = null;
-                        if (options.TryCache && isThumb) {
-                            //try load from cache
-                            source = SQLiteHelper.GetFromThumbDB(options.FilePath, options.DecodeSize, fileName)?.Item1;
-                        }
-                        if (source == null) {
-#if DEBUG
-                            Console.WriteLine("Extracting " + fileName);
-#endif
-                            fromDisk = true;
-                            //load from disk
-                            using (var ms = new MemoryStream()) {
-                                ext.ExtractFile(fileName, ms);
-                                if (ms.Length == 0) return false;
-                                success = true; //if the task is cancelled, success info is still returned correctly.
-                                source = GetImageSource(ms, options.DecodeSize);
-                            }
-                            if (isThumb && source != null) SQLiteHelper.AddToThumbDB(source, options.FilePath, fileName, options.DecodeSize);
-                        }
-                        var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive) {
+                        var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Archive) {
                             FileName = fileName,
-                            SourcePaths = new[] { fileName },
+                            //SourcePaths = new[] { fileName },
                         };
-                        if (source == null) cldInfo.Flags |= FileFlags.Error;
-                        else cldInfo.ImageSource = source;
+
+                        //extract if its an image
+                        if (!ext.ArchiveFileData[fileName].IsDirectory && GetFileType(fileName) == FileFlags.Image) {
+                            cldInfo.Flags = FileFlags.Archive | FileFlags.Image;
+                            ImageSource source = null;
+                            if (options.TryCache && isThumb) {
+                                //try load from cache
+                                source = SQLiteHelper.GetFromThumbDB(options.FilePath, options.DecodeSize, fileName)?.Item1;
+                            }
+                            if (source == null) {
+#if DEBUG
+                                Console.WriteLine("Extracting " + fileName);
+#endif
+                                fromDisk = true;
+                                //load from disk
+                                using (var ms = new MemoryStream()) {
+                                    ext.ExtractFile(fileName, ms);
+                                    if (ms.Length == 0) return false;
+                                    success = true; //if the task is cancelled, success info is still returned correctly.
+                                    source = GetImageSource(ms, options.DecodeSize);
+                                }
+                                if (isThumb && source != null) SQLiteHelper.AddToThumbDB(source, options.FilePath, fileName, options.DecodeSize);
+                            }
+
+                            if (source == null) cldInfo.Flags |= FileFlags.Error;
+                            else cldInfo.ImageSource = source;
+                        }
+
                         options.CldInfoCallback.Invoke(cldInfo);
-                        
                         done.Add(fileName);
                     }
                 }
