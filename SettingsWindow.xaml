@@ -14,7 +14,7 @@
         <local:PaddedGrid Padding="4" VerticalChildrenAlignment="Stretch" HorizontalChildrenAlignment="Stretch">
             <local:PaddedGrid.ColumnDefinitions>
                 <ColumnDefinition Width="3*"/>
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1.6*"/>
             </local:PaddedGrid.ColumnDefinitions>
             <local:PaddedGrid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -42,9 +42,9 @@
             </local:PaddedGrid.Resources>
 
             <Border Grid.Row="1">
-                <StackPanel>
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbSize}"/>
-                    <DockPanel LastChildFill="False">
+                <DockPanel LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbSize}"/>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Top">
                         <ContentControl>
                             <TextBox MinWidth="32" VerticalAlignment="Top"
                                      Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item1}"/>
@@ -54,10 +54,9 @@
                             <TextBox MinWidth="32" VerticalAlignment="Top"
                                      Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item2}"/>
                         </ContentControl>
-                        <Button DockPanel.Dock="Right" Content="{StaticResource ttl_CacheCurrentView}" Margin="8 0 0 0" VerticalAlignment="Center" Click="Btn_CacheFolder_Click"/>
-                        <Button DockPanel.Dock="Right" Content="{StaticResource ttl_ReloadView}" VerticalAlignment="Center" Click="Btn_Reload_Click"/>
-                    </DockPanel>
-                </StackPanel>
+                    </StackPanel>
+                    <Button DockPanel.Dock="Right" Content="{StaticResource ttl_ReloadView}" VerticalAlignment="Center" Click="Btn_Reload_Click"/>
+                </DockPanel>
             </Border>
             <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_ThumbSizeTip"/>
@@ -88,29 +87,34 @@
             <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_DatabaseDirTip}"/>
 
             <Border Grid.Row="4">
-                <StackPanel>
-                    <DockPanel LastChildFill="False">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Margin="8 0 0 0">
+                        <Button Content="{StaticResource ttl_Clean}" Click="Btn_Clean_Click"/>
+                        <Button x:Name="Btn_CacheFirst" Content="{StaticResource ttl_CacheFirstInView}" Click="Btn_CacheFolder_Click" Margin="0 5"/>
+                        <Button x:Name="Btn_CacheAll" Content="{StaticResource ttl_CacheAllInView}" Click="Btn_CacheFolder_Click"/>
+                    </StackPanel>
+                    
+                    <StackPanel>
                         <TextBlock Style="{StaticResource HeaderTextStyle}" 
-                                   Text="{Binding CurrentThumbDbSize, ElementName=SettingsWin, Mode=OneWay, StringFormat={StaticResource ttl_ThumbDbSize}}"/>
-                        <Button Content="{StaticResource ttl_Clean}" VerticalAlignment="Center" DockPanel.Dock="Right" Click="Btn_Clean_Click"/>
-                    </DockPanel>
-                    <DockPanel>
-                        <Slider x:Name="SL_ThumbDbSize" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"
+                               Text="{Binding CurrentThumbDbSize, ElementName=SettingsWin, Mode=OneWay, StringFormat={StaticResource ttl_ThumbDbSize}}"/>
+                        <DockPanel>
+                            <Slider x:Name="SL_ThumbDbSize" Minimum="0.1" Maximum="10" DockPanel.Dock="Top"
                                 Value="{Binding Source={x:Static local:App.Setting}, Path=ThumbDbSize}"/>
-                        <TextBlock TextAlignment="Center" DockPanel.Dock="Bottom">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="{Binding ElementName=SL_ThumbDbSize, Path=Value, Mode=OneWay, StringFormat='\{0:#,0.0} GB'}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ElementName=SL_ThumbDbSize, Path=Value, Mode=OneWay}" Value="10">
-                                            <Setter Property="Text" Value="{StaticResource ttl_Unlimited}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </DockPanel>
-                </StackPanel>
+                            <TextBlock TextAlignment="Center" DockPanel.Dock="Bottom">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="{Binding ElementName=SL_ThumbDbSize, Path=Value, Mode=OneWay, StringFormat='\{0:#,0.0} GB'}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ElementName=SL_ThumbDbSize, Path=Value, Mode=OneWay}" Value="10">
+                                                <Setter Property="Text" Value="{StaticResource ttl_Unlimited}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </DockPanel>
+                    </StackPanel>
+                </DockPanel>
             </Border>
             <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_ThumbDbSizeTip"/>

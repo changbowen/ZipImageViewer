@@ -4,13 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using SizeInt = System.Drawing.Size;
 using static ZipImageViewer.Helpers;
-using System.Threading;
 using static ZipImageViewer.TableHelper;
+using static ZipImageViewer.SQLiteHelper;
 using System.Data;
 using SevenZip;
 
@@ -37,6 +38,16 @@ namespace ZipImageViewer
             /// Should be called on returning of each child ObjectInfo (thumbnails, raw images).
             /// </summary>
             public Action<ObjectInfo> CldInfoCallback { get; set; } = null;
+            /// <summary>
+            /// <para>SevenZipExtractor's extract methods should only be used with when LoadImage == false to avoid extracting twice.</para>
+            /// <para>This is called first for each image in the archive. Returned ImageSource will be used when it's not null and LoadImage == false.</para>
+            /// <para>No need to call dispose on the extractor.</para>
+            /// </summary>
+            public Func<SevenZipExtractor, string, LoadOptions, ImageSource> ExtractorCallback { get; set; } = null;
+            /// <summary>
+            /// Indicate whether to continue extracting files.
+            /// </summary>
+            public bool Continue { get; set; } = true;
             public bool TryCache { get; set; } = true;
 
             public LoadOptions(string filePath) {
@@ -197,47 +208,61 @@ namespace ZipImageViewer
                 //for archives with encrypted file names, ext.ArchiveFileData will be empty.
                 if (toDo == null || toDo.Length == 0) return false;
 
+                //update objInfo
+                objInfo.SourcePaths = toDo;
+
                 //iterate over each file and extract when needed
-                if (options.LoadImage && options.CldInfoCallback != null) {
+                if (options.LoadImage || options.CldInfoCallback != null || options.ExtractorCallback != null) {
                     foreach (var fileName in toDo) {
                         if (tknSrc?.IsCancellationRequested == true) break;
+                        if (!options.Continue) break;
 
                         //skip if already done
                         if (done.Contains(fileName)) continue;
 
                         ImageSource source = null;
-                        if (options.TryCache && isThumb) {
-                            //try load from cache
-                            source = SQLiteHelper.GetFromThumbDB(options.FilePath, options.DecodeSize, fileName)?.Item1;
-                        }
-                        if (source == null) {
-#if DEBUG
-                            Console.WriteLine("Extracting " + fileName);
-#endif
-                            fromDisk = true;
-                            //load from disk
-                            using (var ms = new MemoryStream()) {
-                                ext.ExtractFile(fileName, ms);
-                                if (ms.Length == 0) return false;
-                                success = true; //if the task is cancelled, success info is still returned correctly.
-                                source = GetImageSource(ms, options.DecodeSize);
+
+                        //extractor callback first to ensure it is executed for each file
+                        var srcOverride = options.ExtractorCallback?.Invoke(ext, fileName, options);
+                        if (srcOverride != null && !options.LoadImage)
+                            source = srcOverride;
+
+                        //load image
+                        if (options.LoadImage) {
+                            if (options.TryCache && isThumb) {
+                                //try load from cache
+                                source = GetFromThumbDB(options.FilePath, options.DecodeSize, fileName)?.Item1;
                             }
-                            if (isThumb && source != null) SQLiteHelper.AddToThumbDB(source, options.FilePath, fileName, options.DecodeSize);
+                            if (source == null) {
+#if DEBUG
+                                Console.WriteLine("Extracting " + fileName);
+#endif
+                                fromDisk = true;
+                                //load from disk
+                                using (var ms = new MemoryStream()) {
+                                    ext.ExtractFile(fileName, ms);
+                                    if (ms.Length == 0) return false;
+                                    success = true; //if the task is cancelled, success info is still returned correctly.
+                                    source = GetImageSource(ms, options.DecodeSize);
+                                }
+                                if (isThumb && source != null) AddToThumbDB(source, options.FilePath, fileName, options.DecodeSize);
+                            }
                         }
-                        var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive) {
-                            FileName = fileName,
-                            SourcePaths = new[] { fileName },
-                        };
-                        if (source == null) cldInfo.Flags |= FileFlags.Error;
-                        else cldInfo.ImageSource = source;
-                        options.CldInfoCallback.Invoke(cldInfo);
+                        
+                        //child info callback
+                        if (options.CldInfoCallback != null) {
+                            var cldInfo = new ObjectInfo(options.FilePath, FileFlags.Image | FileFlags.Archive) {
+                                FileName = fileName,
+                                SourcePaths = new[] { fileName },
+                                ImageSource = source,
+                            };
+                            if (source == null && options.LoadImage) cldInfo.Flags |= FileFlags.Error;
+                            options.CldInfoCallback.Invoke(cldInfo);
+                        }
                         
                         done.Add(fileName);
                     }
                 }
-
-                //update objInfo
-                objInfo.SourcePaths = toDo;
 
                 //save password for the future
                 if (fromDisk && options.Password?.Length > 0) {
@@ -246,17 +271,18 @@ namespace ZipImageViewer
 
                 return true; //it is considered successful if the code reaches here
             }
-            catch (Exception ex) {
-                if (ex is ExtractionFailedException ||
-                    ex is SevenZipArchiveException ||
-                    ex is NotSupportedException ||
-                    ex is ArgumentOutOfRangeException) return false;
+            catch {
+                return false; 
+                //if (ex is ExtractionFailedException ||
+                //    ex is SevenZipArchiveException ||
+                //    ex is NotSupportedException ||
+                //    ex is ArgumentOutOfRangeException) return false;
 
-                if (ext != null) {
-                    ext.Dispose();
-                    ext = null;
-                }
-                throw;
+                //if (ext != null) {
+                //    ext.Dispose();
+                //    ext = null;
+                //}
+                //throw;
             }
             finally {
                 if (ext != null) {
@@ -348,15 +374,20 @@ namespace ZipImageViewer
                     }
                     break;
                 case FileFlags.Archive:
-                    ExtractZip(new LoadOptions(objInfo.FileSystemPath) {
-                        Flags = FileFlags.Archive,
-                        LoadImage = false,
-                        ObjInfoCallback = oi => {
-                            if (oi.SourcePaths == null || oi.SourcePaths.Length == 0) return;
-                            Array.Sort(oi.SourcePaths, new NativeHelpers.NaturalStringComparer());
-                            paths = oi.SourcePaths;
-                        }
-                    });
+                    try {
+                        ExtractZip(new LoadOptions(objInfo.FileSystemPath) {
+                            Flags = FileFlags.Archive,
+                            LoadImage = false,
+                            ObjInfoCallback = oi => {
+                                if (oi.SourcePaths == null || oi.SourcePaths.Length == 0) return;
+                                Array.Sort(oi.SourcePaths, new NativeHelpers.NaturalStringComparer());
+                                paths = oi.SourcePaths;
+                            }
+                        });
+                    }
+                    catch {
+                        objInfo.Flags |= FileFlags.Error;
+                    }
                     break;
                 case FileFlags.Image:
                 //FileFlags.Archive | FileFlags.Image should have SourcePaths[1] set when loaded the first time.
@@ -474,7 +505,7 @@ namespace ZipImageViewer
                 var isThumb = decodeSize == (SizeInt)Setting.ThumbnailSize;
                 if (tryCache && isThumb) {
                     //try load from cache when decodeSize is non-zero
-                    bs = SQLiteHelper.GetFromThumbDB(basePath, decodeSize, subPath)?.Item1;
+                    bs = GetFromThumbDB(basePath, decodeSize, subPath)?.Item1;
                     if (bs != null) return bs;
                 }
 #if DEBUG
@@ -484,7 +515,7 @@ namespace ZipImageViewer
                     bs = GetImageSource(fs, decodeSize);
                 }
                 if (isThumb && bs != null)
-                    SQLiteHelper.AddToThumbDB(bs, basePath, subPath, decodeSize);
+                    AddToThumbDB(bs, basePath, subPath, decodeSize);
             }
             catch { }
             
@@ -610,17 +641,21 @@ namespace ZipImageViewer
         }
 
         /// <summary>
-        /// Get a list of images and archives.
+        /// Get a list of path contents with specified flags.
+        /// <paramref name="flags"/> = Image | Archive means the child can be either Image or Archive.
         /// </summary>
-        public static IEnumerable<ObjectInfo> GetAll(string path) {
+        public static IEnumerable<ObjectInfo> GetAll(string path, bool recursive = true, FileFlags flags = FileFlags.Image | FileFlags.Archive) {
             IEnumerable<ObjectInfo> infos = null;
 
             switch (GetPathType(path)) {
                 case FileFlags.Directory:
                     try {
-                        infos = from fsInfo in new DirectoryInfo(path).EnumerateFileSystemInfos(@"*", SearchOption.AllDirectories)
-                                let fType = Helpers.GetPathType(fsInfo)
-                                where fType == FileFlags.Image || fType == FileFlags.Archive
+                        var fsInfos = recursive ?
+                            new DirectoryInfo(path).EnumerateFileSystemInfos(@"*", SearchOption.AllDirectories) :
+                            new DirectoryInfo(path).EnumerateFileSystemInfos();
+                        infos = from fsInfo in fsInfos
+                                let fType = GetPathType(fsInfo)
+                                where flags.HasFlag(fType)
                                 select new ObjectInfo(fsInfo.FullName, fType);
                     }
                     catch { }
@@ -633,61 +668,83 @@ namespace ZipImageViewer
             return infos?.OrderBy(i => i.FileSystemPath, new NativeHelpers.NaturalStringComparer());
         }
 
-        public static void CacheFolder(string path, ref CancellationTokenSource tknSrc, object tknLock, Action<string, int, int> callback) {
+        public static void CacheFolder(string path, ref CancellationTokenSource tknSrc, object tknLock, Action<string, int, int> callback, bool cacheAll) {
             tknSrc?.Cancel();
             Monitor.Enter(tknLock);
             tknSrc = new CancellationTokenSource();
+            var tknSrcLocal = tknSrc; //for use in lambda
             var count = 0;
 
             var decodeSize = (SizeInt)Setting.ThumbnailSize;
-            var pathType = GetPathType(path);
             try {
-                if (pathType == FileFlags.Archive) {
-                    var all = GetSourcePaths(new ObjectInfo(path, pathType));
-                    ExtractZip(new LoadOptions(path) {
-                        Flags = FileFlags.Archive,
-                        LoadImage = true,
-                        DecodeSize = decodeSize,
-                        CldInfoCallback = oi => {
-                            oi.ImageSource = null;
-                            callback?.Invoke(oi.SourcePaths?.Length > 0 ? oi.SourcePaths[0] : "", Interlocked.Increment(ref count), all.Length);
-                        },
-                    }, tknSrc);
-                }
-                else if (pathType == FileFlags.Directory) {
-                    var threadCount = MaxLoadThreads / 2;
-                    if (threadCount < 1) threadCount = 1;
-                    else if (threadCount > 6) threadCount = 6;
-                    var paraOptions = new ParallelOptions() {
-                        CancellationToken = tknSrc.Token,
-                        MaxDegreeOfParallelism = threadCount,
-                    };
+                //get list to work with
+                var infos = cacheAll ?
+                    GetAll(path, true,  FileFlags.Archive | FileFlags.Image) :
+                    GetAll(path, false, FileFlags.Archive | FileFlags.Image | FileFlags.Directory);
+                var total = infos.Count();
 
-                    var infos = new DirectoryInfo(path).EnumerateFileSystemInfos();
-                    var total = infos.Count();
-                    Parallel.ForEach(infos, paraOptions, (info, state) => {
-                        if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
-                        var flag = GetPathType(info);
-                        var objInfo = new ObjectInfo(info.FullName, flag, info.Name);
-                        try {
-                            objInfo.SourcePaths = GetSourcePaths(objInfo);
-                            if (objInfo.SourcePaths?.Length > 0) {
-                                if (!SQLiteHelper.ThumbExistInDB(objInfo.ContainerPath, objInfo.SourcePaths[0], decodeSize)) {
-                                    GetImageSource(objInfo, 0, decodeSize, false);
-                                }
+                //calculate max thread count
+                var threadCount = MaxLoadThreads / 2;
+                if (threadCount < 1) threadCount = 1;
+                else if (threadCount > 6) threadCount = 6;
+                var paraOptions = new ParallelOptions() {
+                    CancellationToken = tknSrc.Token,
+                    MaxDegreeOfParallelism = threadCount,
+                };
+                //loop
+                Parallel.ForEach(infos, paraOptions, (objInfo, state) => {
+                    if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
+                    try {
+                        objInfo.SourcePaths = GetSourcePaths(objInfo);
+                        if (objInfo.SourcePaths.IsNullOrEmpty()) return;
+
+                        if (objInfo.Flags == FileFlags.Archive) {
+                            ExtractZip(new LoadOptions(objInfo.FileSystemPath) {
+                                Flags = FileFlags.Archive,
+                                LoadImage = false,
+                                DecodeSize = decodeSize,
+                                ExtractorCallback = (ext, fileName, options) => {
+                                    try {
+                                        if (ThumbExistInDB(ext.FileName, fileName, decodeSize)) {
+                                            if (!cacheAll) options.Continue = false;
+                                            return null;
+                                        }
+                                        ImageSource source = null;
+                                        using (var ms = new MemoryStream()) {
+                                            ext.ExtractFile(fileName, ms);
+                                            if (ms.Length > 0)
+                                                source = GetImageSource(ms, decodeSize);
+                                        }
+                                        if (source != null) {
+                                            AddToThumbDB(source, objInfo.FileSystemPath, fileName, decodeSize);
+                                            if (!cacheAll) options.Continue = false;
+                                        }
+                                    }
+                                    catch { }
+                                    finally {
+                                        callback?.Invoke(fileName, count, total);
+                                    }
+                                    return null;
+                                },
+                            }, tknSrcLocal);
+                        }
+                        else {//flag can be Image or Directory
+                            if (!ThumbExistInDB(objInfo.ContainerPath, objInfo.SourcePaths[0], decodeSize)) {
+                                GetImageSource(objInfo, 0, decodeSize, false);
                             }
                         }
-                        catch { }
-                        finally {
-                            callback?.Invoke(info.FullName, Interlocked.Increment(ref count), total);
-                        }
-                        if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
-                    });
-                }
+                    }
+                    catch { }
+                    finally {
+                        callback?.Invoke(objInfo.FileSystemPath, Interlocked.Increment(ref count), total);
+                    }
+                    if (paraOptions.CancellationToken.IsCancellationRequested) state.Break();
+                });
             }
-            catch (OperationCanceledException) { }
+            catch { }
             finally {
                 tknSrc.Dispose();
+                tknSrcLocal = null;
                 tknSrc = null;
                 Monitor.Exit(tknLock);
             }

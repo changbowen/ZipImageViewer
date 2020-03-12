@@ -58,6 +58,7 @@
         <Setter Property="FontStyle" Value="Italic"/>
         <Setter Property="Padding" Value="0 2"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="TextAlignment" Value="Justify"/>
     </Style>
     <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="16"/>

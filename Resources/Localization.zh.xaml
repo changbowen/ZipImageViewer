@@ -5,9 +5,8 @@
     <sys:String x:Key="ttl_Settings">设置</sys:String>
     <sys:String x:Key="ttl_ThumbSize">缩略图尺寸</sys:String>
     <Span x:Key="spn_ThumbSizeTip">
-        <Bold>宽</Bold> x <Bold>高</Bold> （像素）。<LineBreak/>
-        <Bold>更改此值会使所有当前尺寸的缩略图失效。</Bold><LineBreak/>
-        使用缓存目录选项会开始缓存当前视图下的图像到缩略图数据库。
+        <Bold>宽</Bold> x <Bold>高</Bold>（像素）。<LineBreak/>
+        <Bold>更改此值会使所有当前尺寸的缩略图失效。</Bold>
     </Span>
     <sys:String x:Key="ttl_ThumbSwapDelayMulti">缩略图切换延迟速率</sys:String>
     <sys:String x:Key="msg_ThumbSwapDelayMultiTip">目录和压缩文件缩略图的切换延迟。数值越高延迟越高。</sys:String>
@@ -16,8 +15,9 @@
     <sys:String x:Key="ttl_ThumbDbSize">缩略图缓存大小 （当前: {0}）</sys:String>
     <sys:String x:Key="ttl_Unlimited">无限制</sys:String>
     <Span x:Key="spn_ThumbDbSizeTip">
-        缩略图缓存的最大文件尺寸。<LineBreak/>
-        设置为无限制会解除软件层面的限制。
+        缩略图缓存的最大文件尺寸。设置为无限制会解除软件层面的限制。<LineBreak/>
+        <Bold>缓存视图（第一张）</Bold>缓存当前视图下的图像，还有每个文件夹或压缩文件中的第一个图像。<LineBreak/>
+        <Bold>缓存视图（所有）</Bold>缓存当前视图下的图像，还有所有目录和压缩文件内的图像。
     </Span>
     <sys:String x:Key="ttl_LiteMode">简洁模式</sys:String>
     <sys:String x:Key="msg_LiteModeTip">禁用多数影响界面性能的特效。</sys:String>
@@ -25,7 +25,8 @@
     <sys:String x:Key="ttl_ViewerTransition">查看器过渡效果</sys:String>
     <sys:String x:Key="ttl_TransitionSpeed">过渡效果速度</sys:String>
     <sys:String x:Key="msg_ViewerTransitionTip">查看器中使用的过渡效果。</sys:String>
-    <sys:String x:Key="ttl_CacheCurrentView">缓存当前视图</sys:String>
+    <sys:String x:Key="ttl_CacheFirstInView">缓存视图（第一张）</sys:String>
+    <sys:String x:Key="ttl_CacheAllInView">缓存视图（所有）</sys:String>
     <sys:String x:Key="ttl_ReloadView">重新载入视图</sys:String>
     <sys:String x:Key="ttl_Move">移动</sys:String>
     <sys:String x:Key="ttl_Clean">清空</sys:String>

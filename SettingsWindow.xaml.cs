@@ -135,6 +135,9 @@ namespace ZipImageViewer
                     if (bw.Percentage == 100) bw.MessageTitle = GetRes("ttl_OperationComplete");
                 });
             };
+
+            var cacheAll = false;
+            if (((Button)sender).Name == nameof(Btn_CacheAll)) cacheAll = true;
             //work thread
             bw.Work = () => {
                 mainWin.tknSrc_LoadThumb?.Cancel();
@@ -142,7 +145,7 @@ namespace ZipImageViewer
                     Thread.Sleep(200);
                 }
                 mainWin.preRefreshActions();
-                LoadHelper.CacheFolder(mainWin.CurrentPath, ref bw.tknSrc_Work, bw.lock_Work, cb);
+                LoadHelper.CacheFolder(mainWin.CurrentPath, ref bw.tknSrc_Work, bw.lock_Work, cb, cacheAll);
                 Task.Run(() => mainWin.LoadPath(mainWin.CurrentPath));
             };
             bw.FadeIn();

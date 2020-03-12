@@ -144,6 +144,9 @@ namespace ZipImageViewer
             }
         }
 
+        /// <summary>
+        /// Setting <paramref name="fName"/> when you can otherwise it will be set based on FileSystemPath if it's not an archive.
+        /// </summary>
         public ObjectInfo(string fsPath, FileFlags flag, string fName = null) {
             FileSystemPath = fsPath;
             flags = flag;

@@ -93,6 +93,10 @@ namespace ZipImageViewer
         public static double NextDouble(this Random ran, double min, double max) {
             return ran.NextDouble() * (max - min) + min;
         }
+
+        public static bool IsNullOrEmpty(this Array array) {
+            return array == null || array.Length == 0;
+        }
     }
 
     /// <summary>
@@ -106,7 +110,7 @@ namespace ZipImageViewer
         Directory = 2,
         Archive = 4,
         Image = 8,
-        File = 16,
+        //File = 16,
     }
 
     public static class Helpers {
