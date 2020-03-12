@@ -134,6 +134,17 @@ namespace ZipImageViewer
             Task.Run(() => LoadPath(paths[0]));
         }
 
+        private void MainWin_KeyDown(object sender, KeyEventArgs e) {
+            switch (e.Key) {
+                case Key.PageDown:
+                    virWrapPanel.ScrollOwner.PageDown();
+                    break;
+                case Key.PageUp:
+                    virWrapPanel.ScrollOwner.PageUp();
+                    break;
+            }
+        }
+
         private void TV1_MouseDown(object sender, MouseButtonEventArgs e) {
             if (!e.Source.Equals(sender)) return;
             if (e.ClickCount == 1 && e.ChangedButton == MouseButton.Right) {

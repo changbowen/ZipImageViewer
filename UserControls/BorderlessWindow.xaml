@@ -35,12 +35,12 @@
                                 <!--the close button-->
                                 <StackPanel x:Name="systemButtons" Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Right"
                                             Effect="{StaticResource DS_Below}">
-                                    <Button x:Name="minimizeButton" Style="{StaticResource WindowButtonStyle}" Content="0"
-                                        Visibility="{TemplateBinding ButtonMinVisibility}" Margin="0 0 8 0"/>
-                                    <Button x:Name="restoreButton" Style="{StaticResource WindowButtonStyle}" Content="1"
-                                        Visibility="{TemplateBinding ButtonMaxVisibility}" Margin="0 0 8 0"/>
-                                    <Button x:Name="closeButton" Style="{StaticResource WindowButtonStyle}" Content="r"
-                                        Visibility="{TemplateBinding ButtonCloseVisibility}" Margin="0 0 8 0"/>
+                                    <Button x:Name="minimizeButton" Style="{StaticResource WindowButtonStyle}" Content="0" IsTabStop="False"
+                                            Visibility="{TemplateBinding ButtonMinVisibility}" Margin="0 0 8 0"/>
+                                    <Button x:Name="restoreButton" Style="{StaticResource WindowButtonStyle}" Content="1" IsTabStop="False"
+                                            Visibility="{TemplateBinding ButtonMaxVisibility}" Margin="0 0 8 0"/>
+                                    <Button x:Name="closeButton" Style="{StaticResource WindowButtonStyle}" Content="r" IsTabStop="False"
+                                            Visibility="{TemplateBinding ButtonCloseVisibility}" Margin="0 0 8 0"/>
                                 </StackPanel>
                             </DockPanel>
                         </Border>
