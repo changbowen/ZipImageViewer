@@ -146,17 +146,16 @@
             </Border>
         </Border>
 
-        <vir:VirtualizingItemsControl x:Name="TV1" VirtualizingPanel.ScrollUnit="Pixel"
+        <vir:VirtualizingItemsControl x:Name="TV1" MouseDown="TV1_MouseDown"
                                       ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
                                       ItemsSource="{Binding Source={StaticResource ObjectListViewSource}, Mode=OneTime}"
-                                      ItemTemplate="{StaticResource ThumbDataTemplate}"
-                                      MouseDown="TV1_MouseDown">
+                                      ItemTemplate="{StaticResource ThumbDataTemplate}">
             <vir:VirtualizingItemsControl.Resources>
                 <Style TargetType="ScrollBar" BasedOn="{StaticResource AppleStyleScrollBar}"/>
             </vir:VirtualizingItemsControl.Resources>
             <vir:VirtualizingItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <local:VirtualizingWrapPanel/>
+                    <local:VirtualizingWrapPanel MouseWheelDeltaItem="1"/>
                 </ItemsPanelTemplate>
             </vir:VirtualizingItemsControl.ItemsPanel>
         </vir:VirtualizingItemsControl>
