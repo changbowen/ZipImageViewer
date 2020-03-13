@@ -267,4 +267,21 @@
         </Setter>
     </Style>
 
+    <!--tooltip style-->
+    <Style x:Key="{x:Type ToolTip}" TargetType="ToolTip">
+        <Setter Property="TextBlock.TextAlignment" Value="Left"/>
+        <Setter Property="TextBlock.FontSize" Value="12" />
+        <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4" UseLayoutRounding="True"
+                            Margin="10" Effect="{StaticResource DS_Below}">
+                        <ContentPresenter Margin="4" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>
