@@ -58,29 +58,6 @@ namespace ZipImageViewer
         public static readonly int MaxLoadThreads = Environment.ProcessorCount;
         public static SemaphoreSlim LoadThrottle = new SemaphoreSlim(MaxLoadThreads);
 
-        //public static void Extract(LoadOptions options, CancellationTokenSource tknSrc = null) {
-        //    if (tknSrc?.IsCancellationRequested == true) return;
-            
-        //    //objInfo to be returned
-        //    var objInfo = new ObjectInfo(options.FilePath, options.Flags) {
-        //        FileName = Path.GetFileName(options.FilePath)
-        //    };
-
-        //    var done = new HashSet<string>();
-        //    var trials = 0;
-        //    bool trial1() {
-        //        if (!(Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow row)) return false;
-        //        options.Password = (string)row[nameof(Column.Password)];
-        //        return extractZip(options, objInfo, done, tknSrc);
-        //    }
-
-        //    while (trials < 5) {
-        //        if (tknSrc?.IsCancellationRequested == true) break;
-
-        //    }
-        //}
-
-
         /// <summary>
         /// <para>
         /// ObjectInfo.Flags in ObjInfoCallback will contain FileFlag.Error when extraction fails.
@@ -293,53 +270,25 @@ namespace ZipImageViewer
         }
 
         public static void ExtractFile(string path, string fileName, Action<ArchiveFileInfo, Stream> callback) {
-            SevenZipExtractor ext = null;
-            try {
-                for (int caseIdx = 0; caseIdx < 3; caseIdx++) {
-                    var success = false;
-                    switch (caseIdx) {
-                        case 0 when Setting.MappedPasswords.Rows.Find(path) is DataRow row:
-                            success = extractFile(path, fileName, callback, (string)row[nameof(Column.Password)]);
-                            break;
-                        case 1:
-                            success = extractFile(path, fileName, callback);
-                            break;
-                        case 2:
-                            foreach (var fp in Setting.FallbackPasswords) {
-                                success = extractFile(path, fileName, callback, fp);
-                                if (success) break;
-                            }
-                            break;
+            ExtractZip(new LoadOptions(path) {
+                FileNames = new[] { fileName },
+                Flags = FileFlags.Archive,
+                LoadImage = false,
+                ExtractorCallback = (ext, fn, options) => {
+                    MemoryStream ms = null;
+                    try {
+                        ms = new MemoryStream();
+                        ext.ExtractFile(fn, ms);
+                        if (ms.Length == 0) return null;
+                        callback.Invoke(ext.ArchiveFileData.First(f => f.FileName == fn), ms);
+                        return null;
                     }
-                    
-                    if (success) break;
+                    catch { return null; }
+                    finally {
+                        ms?.Dispose();
+                    }
                 }
-            }
-            catch { }
-            finally {
-                ext?.Dispose();
-            }
-        }
-
-        private static bool extractFile(string path, string fileName, Action<ArchiveFileInfo, Stream> callback, string password = null) {
-            SevenZipExtractor ext = null;
-            try {
-                ext = password?.Length > 0 ?
-                new SevenZipExtractor(path, password) :
-                new SevenZipExtractor(path);
-                using (var ms = new MemoryStream()) {
-                    ext.ExtractFile(fileName, ms);
-                    if (ms.Length == 0) return false;
-                    callback.Invoke(ext.ArchiveFileData.First(f => f.FileName == fileName), ms);
-                }
-                return true;
-            }
-            catch {
-                return false;
-            }
-            finally {
-                ext?.Dispose();
-            }
+            });
         }
 
         public static async Task<string[]> GetSourcePathsAsync(ObjectInfo objInfo) {
@@ -528,6 +477,7 @@ namespace ZipImageViewer
         /// Does not dispose the stream.
         /// </summary>
         public static void UpdateImageInfo(Stream stream, ImageInfo imgInfo) {
+            if (stream == null || stream.Length == 0) return;
             stream.Position = 0;
             var frame = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
             ushort orien = 0;

@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer"
         xmlns:fa="http://schemas.fontawesome.com/icons/"
-        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:vir="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
         Icon="Resources/ZipImageViewer.ico"
         mc:Ignorable="d" UseLayoutRounding="True" Background="{StaticResource BackgroundDarkBrush}" Foreground="{StaticResource ForegroundBrush}"
