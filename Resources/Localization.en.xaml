@@ -14,11 +14,7 @@
     <sys:String x:Key="msg_DatabaseDirTip">The folder to save the all database files (thumbnail cache etc.).</sys:String>
     <sys:String x:Key="ttl_ThumbDbSize">Thumbnail Cache Size (Current: {0})</sys:String>
     <sys:String x:Key="ttl_Unlimited">Unlimited</sys:String>
-    <Span x:Key="spn_ThumbDbSizeTip">
-        Maximum size limit of the thumbnail database. Setting it to Unlimited removes the limit on the application level.<LineBreak/>
-        <Bold>Cache View (First Image)</Bold> caches images under the current view, as well as the first image in each folder or archive.<LineBreak/>
-        <Bold>Cache View (All Images)</Bold> caches every image found recursively under the current view.
-    </Span>
+    <sys:String x:Key="msg_ThumbDbSizeTip">Maximum size limit of the thumbnail database. Setting to Unlimited removes the limit on the application level.</sys:String>
     <sys:String x:Key="ttl_LiteMode">Lite Mode</sys:String>
     <sys:String x:Key="msg_LiteModeTip">Disables most effects that affect UI performance.</sys:String>
     <sys:String x:Key="ttl_ViewerBackground">Viewer Background</sys:String>
@@ -27,6 +23,14 @@
     <sys:String x:Key="msg_ViewerTransitionTip">The transition animation used in the viewer.</sys:String>
     <sys:String x:Key="ttl_CacheFirstInView">Cache View (First Image)</sys:String>
     <sys:String x:Key="ttl_CacheAllInView">Cache View (All Images)</sys:String>
+    <Span x:Key="spn_CacheFirstTip">
+        <Bold><StaticResource ResourceKey="ttl_CacheFirstInView"/></Bold><LineBreak/>
+        Caches images under the current view, as well as the first image in each folder or archive.
+    </Span>
+    <Span x:Key="spn_CacheAllTip">
+        <Bold><StaticResource ResourceKey="ttl_CacheAllInView"/></Bold><LineBreak/>
+        Caches every image found recursively under the current view.
+    </Span>
     <sys:String x:Key="ttl_ReloadView">Reload View</sys:String>
     <sys:String x:Key="ttl_Move">Move</sys:String>
     <sys:String x:Key="ttl_Clean">Clean</sys:String>

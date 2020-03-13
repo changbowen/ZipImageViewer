@@ -39,6 +39,9 @@ namespace ZipImageViewer
         internal CancellationTokenSource tknSrc_Work;
         internal readonly object lock_Work = new object();
 
+        /// <summary>
+        /// <paramref name="owner"/> and its owned windows will be disabled until BlockWindow is closed.
+        /// </summary>
         public BlockWindow(Window owner) {
             Owner = owner;
             InitializeComponent();
@@ -50,6 +53,8 @@ namespace ZipImageViewer
                 win.IsEnabled = false;
                 win.IsHitTestVisible = false;
             }
+            Owner.IsEnabled = false;
+            Owner.IsHitTestVisible = false;
 
             var thrd = new Thread(new ThreadStart(Work)) { IsBackground = true };
             thrd.Start();
@@ -66,6 +71,8 @@ namespace ZipImageViewer
                 win.IsEnabled = true;
                 win.IsHitTestVisible = true;
             }
+            Owner.IsEnabled = true;
+            Owner.IsHitTestVisible = true;
         }
     }
 }

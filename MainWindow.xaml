@@ -85,9 +85,10 @@
                     <DropShadowEffect ShadowDepth="0" BlurRadius="10"/>
                 </Border.Effect>
                 <Border.Resources>
-                    <Style TargetType="fa:ImageAwesome" BasedOn="{StaticResource S_DropShadow}">
+                    <Style TargetType="fa:FontAwesome" BasedOn="{StaticResource S_DropShadow}">
+                        <EventSetter Event="MouseDown" Handler="Sidebar_Click"/>
                         <Setter Property="Width" Value="48"/>
-                        <Setter Property="Height" Value="48"/>
+                        <Setter Property="FontSize" Value="42"/>
                         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
                         <Setter Property="Cursor" Value="Hand"/>
                         <Setter Property="RenderTransformOrigin" Value="0.5 0.5"/>
@@ -120,27 +121,15 @@
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <TextBlock ToolTip="{StaticResource ttl_OpenFolder}" Grid.Row="0">
-                        <Hyperlink Name="HY_Open" TextDecorations="{x:Null}" Click="Sidebar_Click">
-                            <fa:ImageAwesome Icon="Solid_FolderOpen"/>
-                        </Hyperlink>
-                    </TextBlock>
-                    <TextBlock ToolTip="{StaticResource ttl_Options}" Grid.Row="1">
-                        <Hyperlink Name="HY_Options" TextDecorations="{x:Null}" Click="Sidebar_Click">
-                            <fa:ImageAwesome Icon="Solid_Cog"/>
-                        </Hyperlink>
-                    </TextBlock>
-                    <TextBlock ToolTip="{StaticResource ttl_ImmsersionMode}" Grid.Row="2">
-                        <Hyperlink Name="HY_ImmersionMode" TextDecorations="{x:Null}" Click="Sidebar_Click">
-                            <fa:ImageAwesome Icon="Solid_Film"/>
-                        </Hyperlink>
-                    </TextBlock>
-                    <TextBlock ToolTip="{StaticResource ttl_CloseWindow}" Grid.Row="3">
-                        <Hyperlink Name="HY_Close" TextDecorations="{x:Null}" Click="Sidebar_Click">
-                            <fa:ImageAwesome Icon="Solid_TimesCircle"/>
-                        </Hyperlink>
-                    </TextBlock>
+                    <fa:FontAwesome Grid.Row="0" Name="HY_Open" ToolTip="{StaticResource ttl_OpenFolder}" Icon="Solid_FolderOpen"/>
+                    <fa:FontAwesome Grid.Row="1" Name="HY_CacheFirst" ToolTip="{StaticResource spn_CacheFirstTip}" Icon="Solid_AngleDown"/>
+                    <fa:FontAwesome Grid.Row="2" Name="HY_CacheAll" ToolTip="{StaticResource spn_CacheAllTip}" Icon="Solid_AngleDoubleDown"/>
+                    <fa:FontAwesome Grid.Row="3" Name="HY_Options" ToolTip="{StaticResource ttl_Options}" Icon="Solid_Cog"/>
+                    <fa:FontAwesome Grid.Row="4" Name="HY_ImmersionMode" ToolTip="{StaticResource ttl_ImmsersionMode}" Icon="Solid_Film"/>
+                    <fa:FontAwesome Grid.Row="5" Name="HY_Close" ToolTip="{StaticResource ttl_CloseWindow}" Icon="Solid_TimesCircle"/>
                 </local:PaddedGrid>
             </Border>
         </Border>

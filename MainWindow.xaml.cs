@@ -314,10 +314,16 @@ namespace ZipImageViewer
             Task.Run(() => LoadPath(Path.GetDirectoryName(CurrentPath)));
         }
 
-        private void Sidebar_Click(object sender, RoutedEventArgs e) {
-            switch (((FrameworkContentElement)sender).Name) {
+        private void Sidebar_Click(object sender, MouseButtonEventArgs e) {
+            switch (((FrameworkElement)sender).Name) {
                 case nameof(HY_Open):
                     openFolderPrompt();
+                    break;
+                case nameof(HY_CacheFirst):
+                    cacheView(false);
+                    break;
+                case nameof(HY_CacheAll):
+                    cacheView(true);
                     break;
                 case nameof(HY_Options):
                     var win = new SettingsWindow(this);
@@ -357,6 +363,33 @@ namespace ZipImageViewer
             }
         }
 
+        private void cacheView(bool cacheAll) {
+            var bw = new BlockWindow(this) {
+                MessageTitle = GetRes("msg_Processing")
+            };
+            //callback used to update progress
+            Action<string, int, int> cb = (path, i, count) => {
+                var p = (int)Math.Floor((double)i / count * 100);
+                Dispatcher.Invoke(() => {
+                    bw.Percentage = p;
+                    bw.MessageBody = path;
+                    if (bw.Percentage == 100) bw.MessageTitle = GetRes("ttl_OperationComplete");
+                });
+            };
+
+            //work thread
+            bw.Work = () => {
+                tknSrc_LoadThumb?.Cancel();
+                while (tknSrc_LoadThumb != null) {
+                    Thread.Sleep(200);
+                }
+                preRefreshActions();
+                CacheFolder(CurrentPath, ref bw.tknSrc_Work, bw.lock_Work, cb, cacheAll);
+                Task.Run(() => LoadPath(CurrentPath));
+            };
+            bw.FadeIn();
+        }
+
         protected override void OnStateChanged(EventArgs e) {
             //override state behavior to enable fullscreen in immersion mode
             if (WindowState == WindowState.Maximized && Setting.ImmersionMode) {
@@ -381,6 +414,5 @@ namespace ZipImageViewer
         }
 
         #endregion
-
     }
 }

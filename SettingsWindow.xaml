@@ -88,12 +88,8 @@
 
             <Border Grid.Row="4">
                 <DockPanel>
-                    <StackPanel DockPanel.Dock="Right" Margin="8 0 0 0">
-                        <Button Content="{StaticResource ttl_Clean}" Click="Btn_Clean_Click"/>
-                        <Button x:Name="Btn_CacheFirst" Content="{StaticResource ttl_CacheFirstInView}" Click="Btn_CacheFolder_Click" Margin="0 5"/>
-                        <Button x:Name="Btn_CacheAll" Content="{StaticResource ttl_CacheAllInView}" Click="Btn_CacheFolder_Click"/>
-                    </StackPanel>
-                    
+                    <Button DockPanel.Dock="Right" Margin="8 0 0 0" VerticalAlignment="Top" Content="{StaticResource ttl_Clean}" Click="Btn_Clean_Click"/>
+
                     <StackPanel>
                         <TextBlock Style="{StaticResource HeaderTextStyle}" 
                                Text="{Binding CurrentThumbDbSize, ElementName=SettingsWin, Mode=OneWay, StringFormat={StaticResource ttl_ThumbDbSize}}"/>
@@ -116,9 +112,7 @@
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}">
-                <StaticResource ResourceKey="spn_ThumbDbSizeTip"/>
-            </TextBlock>
+            <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ThumbDbSizeTip}"/>
 
             <Border Grid.Row="5">
                 <DockPanel LastChildFill="False">

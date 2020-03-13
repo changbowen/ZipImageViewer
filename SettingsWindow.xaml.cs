@@ -10,7 +10,6 @@ using System.Windows.Controls;
 using static ZipImageViewer.Helpers;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
-using System.Threading;
 
 namespace ZipImageViewer
 {
@@ -91,7 +90,7 @@ namespace ZipImageViewer
                 return 0;
             });
 
-            CurrentThumbDbSize = Helpers.BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length);
+            CurrentThumbDbSize = BytesToString(new FileInfo(Tables[Table.Thumbs].FullPath).Length);
         }
 
         private void Btn_Reload_Click(object sender, RoutedEventArgs e) {
@@ -119,36 +118,6 @@ namespace ZipImageViewer
                     }
                     break;
             }
-        }
-
-        private void Btn_CacheFolder_Click(object sender, RoutedEventArgs e) {
-            var mainWin = (MainWindow)Owner;
-            var bw = new BlockWindow(Owner) {
-                MessageTitle = GetRes("msg_Processing")
-            };
-            //callback used to update progress
-            Action<string, int, int> cb = (path, i, count) => {
-                var p = (int)Math.Floor((double)i / count * 100);
-                Dispatcher.Invoke(() => {
-                    bw.Percentage = p;
-                    bw.MessageBody = path;
-                    if (bw.Percentage == 100) bw.MessageTitle = GetRes("ttl_OperationComplete");
-                });
-            };
-
-            var cacheAll = false;
-            if (((Button)sender).Name == nameof(Btn_CacheAll)) cacheAll = true;
-            //work thread
-            bw.Work = () => {
-                mainWin.tknSrc_LoadThumb?.Cancel();
-                while (mainWin.tknSrc_LoadThumb != null) {
-                    Thread.Sleep(200);
-                }
-                mainWin.preRefreshActions();
-                LoadHelper.CacheFolder(mainWin.CurrentPath, ref bw.tknSrc_Work, bw.lock_Work, cb, cacheAll);
-                Task.Run(() => mainWin.LoadPath(mainWin.CurrentPath));
-            };
-            bw.FadeIn();
         }
     }
 
