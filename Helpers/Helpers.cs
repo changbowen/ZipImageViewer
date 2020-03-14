@@ -178,27 +178,6 @@ namespace ZipImageViewer
             return FileFlags.Unknown;
         }
 
-        ///// <summary>
-        ///// Get the ObjectInfo pointing to <paramref name="path"/>'s container when itself is not a container, with ObjectInfo.FileName set to itself.
-        ///// Otherwise the ObjectInfo pointing to <paramref name="path"/> itself.
-        ///// Returns null if error occured.
-        ///// </summary>
-        //public static ObjectInfo GetContainerInfo(string path) {
-        //    try {
-        //        var dirInfo = new DirectoryInfo(path);
-        //        var flags = GetPathType(dirInfo);
-        //        if (flags != FileFlags.Directory && flags != FileFlags.Archive) {//path is a file
-        //            var parent = dirInfo.Parent?.FullName;
-        //            if (parent != null)
-        //                return new ObjectInfo(parent, FileFlags.Directory, dirInfo.Name);
-        //        }
-        //        return new ObjectInfo(path, flags);
-        //    }
-        //    catch {
-        //        return null;
-        //    }
-        //}
-
         private static double GetAverageBrightness(BitmapFrame frame) {
             using (var bmpStream = new MemoryStream()) {
                 var enc = new BmpBitmapEncoder();

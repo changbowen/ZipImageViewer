@@ -145,7 +145,6 @@ namespace ZipImageViewer
 
                 //show mainwindow if no cmdline args
                 new MainWindow().Show();
-                //new Thread(LibraryHelper.ScanThread) { IsBackground = true }.Start();
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, GetRes("ttl_AppStartError"), MessageBoxButton.OK, MessageBoxImage.Error);

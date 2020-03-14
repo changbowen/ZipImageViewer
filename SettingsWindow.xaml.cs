@@ -113,15 +113,8 @@ namespace ZipImageViewer
                     }
                     return;
                 case Observable<string> o:
-                    var remove = false;
                     if (string.IsNullOrWhiteSpace(o.Item))
-                        remove = true;
-                    //else if (BindingOperations.GetBinding(dg, ItemsControl.ItemsSourceProperty)?.Path?.Path == nameof(Setting.LibraryPaths)) {
-                    //    if (Setting.LibraryPaths.Any(p => !ReferenceEquals(p, o) && o.Item.PathRelationship(p.Item) != PathRelation.Unrelated))
-                    //        remove = true;
-                    //}
-
-                    if (remove) ((Collection<Observable<string>>)dg.ItemsSource).Remove(o);
+                        ((Collection<Observable<string>>)dg.ItemsSource).Remove(o);
                     return;
             }
         }

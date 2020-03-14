@@ -41,26 +41,6 @@
                 <Style TargetType="CheckBox" BasedOn="{StaticResource SlideSwitchStyle}"/>
             </local:PaddedGrid.Resources>
 
-            <!--<Border>
-                <DockPanel>
-                    <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_LibraryPaths}"/>
-                        <CheckBox Height="24" DockPanel.Dock="Right" Content="{StaticResource ttl_AutoScan}"
-                                  IsChecked="{Binding Source={x:Static local:App.Setting}, Path=ScanLibrary}"/>
-                    </DockPanel>
-                    <ContentControl>
-                        <DataGrid AutoGenerateColumns="False" RowEditEnding="DataGrid_RowEditEnding" Height="100"
-                                  EnableRowVirtualization="True" EnableColumnVirtualization="True"
-                                  ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=LibraryPaths}">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="{StaticResource ttl_Path}" Binding="{Binding Item, TargetNullValue={StaticResource txt_TargetNullValue}}"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </ContentControl>
-                </DockPanel>
-            </Border>
-            <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_LibraryPathsTip}"/>-->
-
             <Border Grid.Row="1">
                 <DockPanel LastChildFill="False">
                     <TextBlock DockPanel.Dock="Top" Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbSize}"/>

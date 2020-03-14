@@ -66,23 +66,11 @@ namespace ZipImageViewer
 
         private enum ConfigSection
         { AppConfig, CustomCommands, FallbackPasswords }
-        //{ AppConfig, LibraryPaths, CustomCommands, FallbackPasswords }
 
         public static string FilePath => Path.Combine(App.ExeDir, @"config.ini");
 
         private static string sevenZipDllPath => Path.Combine(App.ExeDir, @"7z.dll");
 
-
-        //private static bool scanLibrary = false;
-        //[AppConfig]
-        //public static bool ScanLibrary {
-        //    get => scanLibrary;
-        //    set {
-        //        if (scanLibrary == value) return;
-        //        scanLibrary = value;
-        //        OnStaticPropertyChanged(nameof(ScanLibrary));
-        //    }
-        //}
 
         private static string databaseDir = App.ExeDir;
         [AppConfig]
@@ -224,16 +212,6 @@ namespace ZipImageViewer
                 OnStaticPropertyChanged(nameof(MappedPasswords));
             }
         }
-
-        //private static ObservableKeyedCollection<string, Observable<string>> libraryPaths;
-        //public static ObservableKeyedCollection<string, Observable<string>> LibraryPaths {
-        //    get => libraryPaths;
-        //    set {
-        //        if (libraryPaths == value) return;
-        //        libraryPaths = value;
-        //        OnStaticPropertyChanged(nameof(LibraryPaths));
-        //    }
-        //}
 
         private static bool immersionMode;
         //this one is not saved
