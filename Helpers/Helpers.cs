@@ -97,6 +97,33 @@ namespace ZipImageViewer
         public static bool IsNullOrEmpty(this Array array) {
             return array == null || array.Length == 0;
         }
+
+        /// <summary>
+        /// Get the relationship between two paths (what <paramref name="pathA"/> is to <paramref name="pathB"/>).
+        /// </summary>
+        public static PathRelation PathRelationship(this string pathA, string pathB) {
+            if (pathA.TrimEnd('\\') == pathB.TrimEnd('\\')) return PathRelation.Same;
+            FileSystemInfo infoA = null, infoB = null;
+            try { infoA = new DirectoryInfo(pathA); infoB = new DirectoryInfo(pathB); } catch { }
+            if (infoA == null || infoB == null ||
+                infoA.Attributes == (FileAttributes)(-1) || infoB.Attributes == (FileAttributes)(-1))
+                return PathRelation.Error;
+
+            if (infoA.Attributes.HasFlag(FileAttributes.Directory)) pathA = pathA.TrimEnd('\\') + @"\";
+            if (infoB.Attributes.HasFlag(FileAttributes.Directory)) pathB = pathB.TrimEnd('\\') + @"\";
+            if (pathA.StartsWith(pathB, StringComparison.OrdinalIgnoreCase)) return PathRelation.Child;
+            if (pathB.StartsWith(pathA, StringComparison.OrdinalIgnoreCase)) return PathRelation.Parent;
+            return PathRelation.Unrelated;
+        }
+
+        /// <summary>
+        /// Null-friendly version of IEnumerable.Concat().
+        /// </summary>
+        public static IEnumerable<T> Concatenate<T>(this IEnumerable<T> a, IEnumerable<T> b) {
+            if (a == null) return b;
+            if (b == null) return a;
+            return a.Concat(b);
+        }
     }
 
     /// <summary>
@@ -105,13 +132,16 @@ namespace ZipImageViewer
     /// </summary>
     [Flags]
     public enum FileFlags {
-        Unknown = 0,
+        Unset = 0,
         Error = 1,
         Directory = 2,
         Archive = 4,
         Image = 8,
+        Unknown = 16,
         //File = 16,
     }
+
+    public enum PathRelation { Same, Parent, Child, Unrelated, Error }
 
     public static class Helpers {
         /// <summary>
@@ -130,7 +160,7 @@ namespace ZipImageViewer
 
         public static FileFlags GetPathType(string path) {
             DirectoryInfo dirInfo = null;
-            try { dirInfo = new DirectoryInfo(path); }
+            try { dirInfo = new DirectoryInfo(path.TrimEnd('\\')); }
             catch { }
             if (dirInfo == null) return FileFlags.Error;
             return GetPathType(dirInfo);

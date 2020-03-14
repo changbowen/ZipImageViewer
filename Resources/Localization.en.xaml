@@ -3,6 +3,10 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:local="clr-namespace:ZipImageViewer">
     <sys:String x:Key="ttl_Settings">Settings</sys:String>
+    <!--<sys:String x:Key="ttl_LibraryPaths">Library Paths</sys:String>
+    <sys:String x:Key="msg_LibraryPathsTip">If scan is enabled, all images under the paths listed here will be cached in the background. Paths need to be valid and not parent or child to any existing paths.</sys:String>
+    <sys:String x:Key="ttl_AutoScan">Auto Scan</sys:String>
+    <sys:String x:Key="ttl_Path">Path</sys:String>-->
     <sys:String x:Key="ttl_ThumbSize">Thumbnail Size</sys:String>
     <Span x:Key="spn_ThumbSizeTip">
         <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.<LineBreak/>

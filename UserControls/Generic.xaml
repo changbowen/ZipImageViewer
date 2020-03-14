@@ -149,6 +149,8 @@
                                     <ElasticEase EasingMode="EaseOut" Oscillations="1"/>
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetName="text_on" Storyboard.TargetProperty="Opacity" Duration="0:0:0.1" To="1"/>
+                            <DoubleAnimation Storyboard.TargetName="text_off" Storyboard.TargetProperty="Opacity" Duration="0:0:0.1" To="0"/>
                         </Storyboard>
                         <Storyboard x:Key="unchecked">
                             <DoubleAnimation Storyboard.TargetName="slider" Storyboard.TargetProperty="Tag" Duration="0:0:0.2">
@@ -159,6 +161,8 @@
                                     <ElasticEase EasingMode="EaseOut" Oscillations="1"/>
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetName="text_on" Storyboard.TargetProperty="Opacity" Duration="0:0:0.1" To="0"/>
+                            <DoubleAnimation Storyboard.TargetName="text_off" Storyboard.TargetProperty="Opacity" Duration="0:0:0.1" To="1"/>
                         </Storyboard>
                     </ControlTemplate.Resources>
                     
@@ -168,7 +172,7 @@
                                           ContentStringFormat="{TemplateBinding ContentStringFormat}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
                                           RecognizesAccessKey="True" VerticalAlignment="Center"/>
-                        <Grid x:Name="grid" MinWidth="36" MinHeight="20" Margin="4 0 0 0" UseLayoutRounding="False">
+                        <Grid x:Name="grid" MinWidth="40" MinHeight="20" Margin="4 0 0 0" UseLayoutRounding="False">
                             <Grid.Clip>
                                 <RectangleGeometry RadiusX="{Binding ActualHeight, ElementName=grid, Converter={StaticResource MathConverter}, ConverterParameter='0.5*x', Mode=OneWay}"
                                                    RadiusY="{Binding RadiusX, RelativeSource={RelativeSource Self}, Mode=OneWay}">

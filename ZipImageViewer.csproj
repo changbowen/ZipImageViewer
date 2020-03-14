@@ -126,6 +126,7 @@
     <Compile Include="ContextMenuWindow.xaml.cs">
       <DependentUpon>ContextMenuWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\CacheHelper.cs" />
     <Compile Include="Helpers\LoadHelper.cs" />
     <Compile Include="Helpers\NativeHelpers.cs" />
     <Compile Include="Helpers\ObjectInfo.cs" />

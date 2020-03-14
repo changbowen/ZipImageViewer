@@ -11,6 +11,7 @@ using System.Windows.Media.Animation;
 using static ZipImageViewer.SQLiteHelper;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.Helpers;
+using System.Threading;
 
 namespace ZipImageViewer
 {
@@ -144,6 +145,7 @@ namespace ZipImageViewer
 
                 //show mainwindow if no cmdline args
                 new MainWindow().Show();
+                //new Thread(LibraryHelper.ScanThread) { IsBackground = true }.Start();
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, GetRes("ttl_AppStartError"), MessageBoxButton.OK, MessageBoxImage.Error);
@@ -152,11 +154,13 @@ namespace ZipImageViewer
         }
 
         private void Setting_StaticPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
-            if (e.PropertyName == nameof(Setting.ImmersionMode)) {
-                foreach (var win in Windows) {
-                    if (!(win is MainWindow mainWin)) continue;
-                    Task.Run(() => mainWin.LoadPath(mainWin.CurrentPath));
-                }
+            switch (e.PropertyName) {
+                case nameof(Setting.ImmersionMode):
+                    foreach (var win in Windows) {
+                        if (!(win is MainWindow mainWin)) continue;
+                        Task.Run(() => mainWin.LoadPath(mainWin.CurrentPath));
+                    }
+                    break;
             }
         }
 

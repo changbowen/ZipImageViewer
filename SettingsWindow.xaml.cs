@@ -111,12 +111,18 @@ namespace ZipImageViewer
                         //dg.CancelEdit(); requires implementing IEditableObject on ObservablePair
                         ((Collection<ObservablePair<string, string>>)dg.ItemsSource).Remove(op);
                     }
-                    break;
+                    return;
                 case Observable<string> o:
-                    if (string.IsNullOrWhiteSpace(o.Item)) {
-                        ((Collection<Observable<string>>)dg.ItemsSource).Remove(o);
-                    }
-                    break;
+                    var remove = false;
+                    if (string.IsNullOrWhiteSpace(o.Item))
+                        remove = true;
+                    //else if (BindingOperations.GetBinding(dg, ItemsControl.ItemsSourceProperty)?.Path?.Path == nameof(Setting.LibraryPaths)) {
+                    //    if (Setting.LibraryPaths.Any(p => !ReferenceEquals(p, o) && o.Item.PathRelationship(p.Item) != PathRelation.Unrelated))
+                    //        remove = true;
+                    //}
+
+                    if (remove) ((Collection<Observable<string>>)dg.ItemsSource).Remove(o);
+                    return;
             }
         }
     }

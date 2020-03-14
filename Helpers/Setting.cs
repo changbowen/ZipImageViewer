@@ -26,7 +26,7 @@ namespace ZipImageViewer
         }
 
         [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
-        sealed class SavedSettingAttribute : Attribute { }
+        sealed class AppConfigAttribute : Attribute { }
 
         public enum Transition
         {
@@ -66,13 +66,26 @@ namespace ZipImageViewer
 
         private enum ConfigSection
         { AppConfig, CustomCommands, FallbackPasswords }
+        //{ AppConfig, LibraryPaths, CustomCommands, FallbackPasswords }
 
         public static string FilePath => Path.Combine(App.ExeDir, @"config.ini");
 
         private static string sevenZipDllPath => Path.Combine(App.ExeDir, @"7z.dll");
 
+
+        //private static bool scanLibrary = false;
+        //[AppConfig]
+        //public static bool ScanLibrary {
+        //    get => scanLibrary;
+        //    set {
+        //        if (scanLibrary == value) return;
+        //        scanLibrary = value;
+        //        OnStaticPropertyChanged(nameof(ScanLibrary));
+        //    }
+        //}
+
         private static string databaseDir = App.ExeDir;
-        [SavedSetting]
+        [AppConfig]
         public static string DatabaseDir {
             get => databaseDir;
             set {
@@ -83,7 +96,7 @@ namespace ZipImageViewer
         }
 
         private static ObservablePair<int, int> thumbnailSize = new ObservablePair<int, int>(300, 300);
-        [SavedSetting]
+        [AppConfig]
         public static ObservablePair<int, int> ThumbnailSize {
             get => thumbnailSize;
             set {
@@ -94,7 +107,7 @@ namespace ZipImageViewer
         }
 
         private static Transition viewerTransition = Transition.ZoomFadeBlur;
-        [SavedSetting]
+        [AppConfig]
         public static Transition ViewerTransition {
             get => viewerTransition;
             set {
@@ -105,7 +118,7 @@ namespace ZipImageViewer
         }
 
         private static TransitionSpeed viewerTransitionSpeed = TransitionSpeed.Fast;
-        [SavedSetting]
+        [AppConfig]
         public static TransitionSpeed ViewerTransitionSpeed {
             get => viewerTransitionSpeed;
             set {
@@ -116,7 +129,7 @@ namespace ZipImageViewer
         }
 
         private static Background viewerBackground = Background.DarkCheckerboard;
-        [SavedSetting]
+        [AppConfig]
         public static Background ViewerBackground {
             get => viewerBackground;
             set {
@@ -127,7 +140,7 @@ namespace ZipImageViewer
         }
 
         private static double thumbSwapDelayMultiplier = 1d;
-        [SavedSetting]
+        [AppConfig]
         public static double ThumbSwapDelayMultiplier {
             get => thumbSwapDelayMultiplier;
             set {
@@ -138,7 +151,7 @@ namespace ZipImageViewer
         }
 
         private static double thumbDbSize = 2d;
-        [SavedSetting]
+        [AppConfig]
         public static double ThumbDbSize {
             get => thumbDbSize;
             set {
@@ -149,7 +162,7 @@ namespace ZipImageViewer
         }
 
         private static Size lastWindowSize = new Size(1140, 730);
-        [SavedSetting]
+        [AppConfig]
         public static Size LastWindowSize {
             get => lastWindowSize;
             set {
@@ -160,7 +173,7 @@ namespace ZipImageViewer
         }
 
         private static string lastPath = "";
-        [SavedSetting]
+        [AppConfig]
         public static string LastPath {
             get => lastPath;
             set {
@@ -171,7 +184,7 @@ namespace ZipImageViewer
         }
 
         private static bool liteMode = false;
-        [SavedSetting]
+        [AppConfig]
         public static bool LiteMode {
             get => liteMode;
             set {
@@ -212,6 +225,16 @@ namespace ZipImageViewer
             }
         }
 
+        //private static ObservableKeyedCollection<string, Observable<string>> libraryPaths;
+        //public static ObservableKeyedCollection<string, Observable<string>> LibraryPaths {
+        //    get => libraryPaths;
+        //    set {
+        //        if (libraryPaths == value) return;
+        //        libraryPaths = value;
+        //        OnStaticPropertyChanged(nameof(LibraryPaths));
+        //    }
+        //}
+
         private static bool immersionMode;
         //this one is not saved
         public static bool ImmersionMode {
@@ -224,7 +247,7 @@ namespace ZipImageViewer
         }
 
         private static SlideAnimConfig slideAnimConfig = new SlideAnimConfig();
-        [SavedSetting]
+        [AppConfig]
         public static SlideAnimConfig SlideAnimConfig {
             get => slideAnimConfig;
             set {
@@ -234,8 +257,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static IEnumerable<PropertyInfo> savedSettings => typeof(Setting).GetProperties(BindingFlags.Public | BindingFlags.Static)
-                .Where(p => p.GetCustomAttributes(typeof(SavedSettingAttribute), false).Length > 0);
+        private static IEnumerable<PropertyInfo> appConfigs => typeof(Setting).GetProperties(BindingFlags.Public | BindingFlags.Static)
+                .Where(p => p.GetCustomAttributes(typeof(AppConfigAttribute), false).Length > 0);
 
         public static void LoadConfigFromFile(string path = null) {
             if (path == null) path = FilePath;
@@ -251,7 +274,7 @@ namespace ZipImageViewer
 
             //parse config file
             var iniData = new FileIniDataParser().ReadFile(path, System.Text.Encoding.UTF8);
-            foreach (var prop in savedSettings) {
+            foreach (var prop in appConfigs) {
                 var saved = iniData[nameof(ConfigSection.AppConfig)][prop.Name];
                 if (saved == null) continue;
                 prop.SetValue(null, JsonConvert.DeserializeObject(saved, prop.PropertyType));
@@ -268,9 +291,13 @@ namespace ZipImageViewer
                 }
             }
 
-            //parse saved passwords at last
+            //parse lists at last
+            //LibraryPaths = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
+            //    iniData[nameof(ConfigSection.LibraryPaths)].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
+            
             FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
                 iniData[nameof(ConfigSection.FallbackPasswords)].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
+            
             //MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1, "Item1",
             //iniData["Saved Passwords"].Where(d => d.Value.Length > 0).Select(d => new ObservablePair<string, string>(d.KeyName, d.Value)));
 
@@ -302,7 +329,7 @@ namespace ZipImageViewer
 
             File.WriteAllText(path, 
 $@"[{nameof(ConfigSection.AppConfig)}]
-{string.Join("\r\n", savedSettings.Select(p => $"{p.Name}={JsonConvert.SerializeObject(p.GetValue(null))}"))}
+{string.Join("\r\n", appConfigs.Select(p => $"{p.Name}={JsonConvert.SerializeObject(p.GetValue(null))}"))}
 
 [{nameof(ConfigSection.CustomCommands)}]
 {(CustomCommands?.Count > 0 ?

@@ -67,7 +67,7 @@ namespace ZipImageViewer
             });
             ToolTipService.SetShowDuration(IM1, 20000);
 #endif
-            thumbTransAnimCount = Resources.Keys.Cast<string>().Count(k => k.StartsWith(@"SB_ThumbTrans_")) / 2;
+            thumbTransAnimCount = Resources.Keys.Cast<string>().Count(k => k.StartsWith(@"SB_ThumbTrans_", StringComparison.OrdinalIgnoreCase)) / 2;
 
         }
 

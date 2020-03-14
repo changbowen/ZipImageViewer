@@ -320,10 +320,10 @@ namespace ZipImageViewer
                     openFolderPrompt();
                     break;
                 case nameof(HY_CacheFirst):
-                    cacheView(false);
+                    cacheView(true);
                     break;
                 case nameof(HY_CacheAll):
-                    cacheView(true);
+                    cacheView(false);
                     break;
                 case nameof(HY_Options):
                     var win = new SettingsWindow(this);
@@ -363,7 +363,7 @@ namespace ZipImageViewer
             }
         }
 
-        private void cacheView(bool cacheAll) {
+        private void cacheView(bool firstOnly) {
             var bw = new BlockWindow(this) {
                 MessageTitle = GetRes("msg_Processing")
             };
@@ -383,8 +383,12 @@ namespace ZipImageViewer
                 while (tknSrc_LoadThumb != null) {
                     Thread.Sleep(200);
                 }
+                //get list to work with
+                var infos = firstOnly ?
+                    GetAll(CurrentPath, false, FileFlags.Archive | FileFlags.Image | FileFlags.Directory) :
+                    GetAll(CurrentPath, true, FileFlags.Archive | FileFlags.Image);
                 preRefreshActions();
-                CacheFolder(CurrentPath, ref bw.tknSrc_Work, bw.lock_Work, cb, cacheAll);
+                CacheHelper.CacheObjInfos(infos, ref bw.tknSrc_Work, bw.lock_Work, firstOnly, cb);
                 Task.Run(() => LoadPath(CurrentPath));
             };
             bw.FadeIn();
