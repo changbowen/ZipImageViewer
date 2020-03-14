@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using static ZipImageViewer.Helpers;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
+using System.Windows.Data;
 
 namespace ZipImageViewer
 {
@@ -116,14 +117,16 @@ namespace ZipImageViewer
                     var remove = false;
                     if (string.IsNullOrWhiteSpace(o.Item))
                         remove = true;
-                    //else if (BindingOperations.GetBinding(dg, ItemsControl.ItemsSourceProperty)?.Path?.Path == nameof(Setting.LibraryPaths)) {
-                    //    if (Setting.LibraryPaths.Any(p => !ReferenceEquals(p, o) && o.Item.PathRelationship(p.Item) != PathRelation.Unrelated))
-                    //        remove = true;
-                    //}
+                    else if (BindingOperations.GetBinding(dg, ItemsControl.ItemsSourceProperty)?.Path?.Path == nameof(Setting.LibraryPaths)) {
+                        if (Setting.LibraryPaths.Any(p => !ReferenceEquals(p, o) && o.Item.PathRelationship(p.Item) != PathRelation.Unrelated))
+                            remove = true;
+                    }
 
                     if (remove) ((Collection<Observable<string>>)dg.ItemsSource).Remove(o);
                     return;
             }
+
+                        
         }
     }
 

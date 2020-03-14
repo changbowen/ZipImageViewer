@@ -65,24 +65,23 @@ namespace ZipImageViewer
         }
 
         private enum ConfigSection
-        { AppConfig, CustomCommands, FallbackPasswords }
-        //{ AppConfig, LibraryPaths, CustomCommands, FallbackPasswords }
+        { AppConfig, LibraryPaths, CustomCommands, FallbackPasswords }
 
         public static string FilePath => Path.Combine(App.ExeDir, @"config.ini");
 
         private static string sevenZipDllPath => Path.Combine(App.ExeDir, @"7z.dll");
 
 
-        //private static bool scanLibrary = false;
-        //[AppConfig]
-        //public static bool ScanLibrary {
-        //    get => scanLibrary;
-        //    set {
-        //        if (scanLibrary == value) return;
-        //        scanLibrary = value;
-        //        OnStaticPropertyChanged(nameof(ScanLibrary));
-        //    }
-        //}
+        private static bool scanLibrary = false;
+        [AppConfig]
+        public static bool ScanLibrary {
+            get => scanLibrary;
+            set {
+                if (scanLibrary == value) return;
+                scanLibrary = value;
+                OnStaticPropertyChanged(nameof(ScanLibrary));
+            }
+        }
 
         private static string databaseDir = App.ExeDir;
         [AppConfig]
@@ -225,15 +224,15 @@ namespace ZipImageViewer
             }
         }
 
-        //private static ObservableKeyedCollection<string, Observable<string>> libraryPaths;
-        //public static ObservableKeyedCollection<string, Observable<string>> LibraryPaths {
-        //    get => libraryPaths;
-        //    set {
-        //        if (libraryPaths == value) return;
-        //        libraryPaths = value;
-        //        OnStaticPropertyChanged(nameof(LibraryPaths));
-        //    }
-        //}
+        private static ObservableKeyedCollection<string, Observable<string>> libraryPaths;
+        public static ObservableKeyedCollection<string, Observable<string>> LibraryPaths {
+            get => libraryPaths;
+            set {
+                if (libraryPaths == value) return;
+                libraryPaths = value;
+                OnStaticPropertyChanged(nameof(LibraryPaths));
+            }
+        }
 
         private static bool immersionMode;
         //this one is not saved
@@ -292,8 +291,8 @@ namespace ZipImageViewer
             }
 
             //parse lists at last
-            //LibraryPaths = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
-            //    iniData[nameof(ConfigSection.LibraryPaths)].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
+            LibraryPaths = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
+                iniData[nameof(ConfigSection.LibraryPaths)].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
             
             FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
                 iniData[nameof(ConfigSection.FallbackPasswords)].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
@@ -330,6 +329,9 @@ namespace ZipImageViewer
             File.WriteAllText(path, 
 $@"[{nameof(ConfigSection.AppConfig)}]
 {string.Join("\r\n", appConfigs.Select(p => $"{p.Name}={JsonConvert.SerializeObject(p.GetValue(null))}"))}
+
+[{nameof(ConfigSection.LibraryPaths)}]
+{string.Join("\r\n", LibraryPaths.Select(p => p.Item + @"="))}
 
 [{nameof(ConfigSection.CustomCommands)}]
 {(CustomCommands?.Count > 0 ?

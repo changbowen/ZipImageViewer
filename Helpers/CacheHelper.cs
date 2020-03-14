@@ -14,33 +14,33 @@ namespace ZipImageViewer
 {
     public static class CacheHelper
     {
-        //private static CancellationTokenSource tknSrc_BgCache;
-        //private static readonly object lock_BgCache = new object();
+        private static CancellationTokenSource tknSrc_BgCache;
+        private static readonly object lock_BgCache = new object();
 
-        //public static void ScanThread() {
-        //    while (true) {
-        //        while (!Setting.ScanLibrary || Setting.LibraryPaths == null || Setting.LibraryPaths.Count == 0) {
-        //            tknSrc_BgCache?.Cancel();
-        //            Thread.Sleep(20000);
-        //        }
+        public static void ScanThread() {
+            while (true) {
+                while (!Setting.ScanLibrary || Setting.LibraryPaths == null || Setting.LibraryPaths.Count == 0) {
+                    tknSrc_BgCache?.Cancel();
+                    Thread.Sleep(20000);
+                }
 
-        //        IEnumerable<ObjectInfo> infos = null;
-        //        foreach (var path in Setting.LibraryPaths) {
-        //            var pathAll = GetAll(path, true, FileFlags.Archive | FileFlags.Image);
-        //            if (pathAll == null || pathAll.Count() == 0) continue;
+                IEnumerable<ObjectInfo> infos = null;
+                foreach (var path in Setting.LibraryPaths) {
+                    var pathAll = GetAll(path, true, FileFlags.Archive | FileFlags.Image);
+                    if (pathAll == null || pathAll.Count() == 0) continue;
 
-        //            //check if path is all cached??
+                    //check if path is all cached??
 
-        //            infos = infos.Concatenate(pathAll);
-        //        }
-        //        if (infos == null || infos.Count() == 0) return;
-        //        CacheObjInfos(infos, ref tknSrc_BgCache, lock_BgCache, false, (s, c, t) => {
-        //            Console.WriteLine($"Count: {c}; Total: {t}; Item: {s};");
-        //        }, 1);
+                    infos = infos.Concatenate(pathAll);
+                }
+                if (infos == null || infos.Count() == 0) return;
+                CacheObjInfos(infos, ref tknSrc_BgCache, lock_BgCache, false, (s, c, t) => {
+                    Console.WriteLine($"Count: {c}; Total: {t}; Item: {s};");
+                }, 1);
 
-        //        Thread.Sleep(20000);
-        //    }
-        //}
+                Thread.Sleep(20000);
+            }
+        }
 
         public static void CacheObjInfos(IEnumerable<ObjectInfo> infos, ref CancellationTokenSource tknSrc, object tknLock, bool firstOnly,
             Action<string, int, int> callback = null, int maxThreads = 0) {

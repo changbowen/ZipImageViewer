@@ -41,7 +41,7 @@
                 <Style TargetType="CheckBox" BasedOn="{StaticResource SlideSwitchStyle}"/>
             </local:PaddedGrid.Resources>
 
-            <!--<Border>
+            <Border>
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" LastChildFill="False">
                         <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_LibraryPaths}"/>
@@ -59,7 +59,7 @@
                     </ContentControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_LibraryPathsTip}"/>-->
+            <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_LibraryPathsTip}"/>
 
             <Border Grid.Row="1">
                 <DockPanel LastChildFill="False">

@@ -3,10 +3,10 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:local="clr-namespace:ZipImageViewer">
     <sys:String x:Key="ttl_Settings">设置</sys:String>
-    <!--<sys:String x:Key="ttl_LibraryPaths">库路径</sys:String>
+    <sys:String x:Key="ttl_LibraryPaths">库路径</sys:String>
     <sys:String x:Key="msg_LibraryPathsTip">如果启用了扫描，程序会在后台缓存指定路径下的图像。路径需有效并与列表中其它路径不为父子关系。</sys:String>
     <sys:String x:Key="ttl_AutoScan">自动扫描</sys:String>
-    <sys:String x:Key="ttl_Path">路径</sys:String>-->
+    <sys:String x:Key="ttl_Path">路径</sys:String>
     <sys:String x:Key="ttl_ThumbSize">缩略图尺寸</sys:String>
     <Span x:Key="spn_ThumbSizeTip">
         <Bold>宽</Bold> x <Bold>高</Bold>（像素）。<LineBreak/>
