@@ -3,13 +3,13 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:local="clr-namespace:ZipImageViewer">
     <sys:String x:Key="ttl_Settings">设置</sys:String>
-    <sys:String x:Key="ttl_ThumbSize">缩略图尺寸</sys:String>
+    <sys:String x:Key="ttl_ThumbnailSize">缩略图尺寸</sys:String>
     <Span x:Key="spn_ThumbSizeTip">
         <Bold>宽</Bold> x <Bold>高</Bold>（像素）。<LineBreak/>
         <Bold>更改此值会使所有当前尺寸的缩略图失效。</Bold>
     </Span>
-    <sys:String x:Key="ttl_ThumbSwapDelayMulti">缩略图切换延迟速率</sys:String>
-    <sys:String x:Key="msg_ThumbSwapDelayMultiTip">目录和压缩文件缩略图的切换延迟。数值越高延迟越高。</sys:String>
+    <sys:String x:Key="ttl_ThumbSwapDelayMultiplier">缩略图切换延迟速率</sys:String>
+    <sys:String x:Key="msg_ThumbSwapDelayMultiplierTip">目录和压缩文件缩略图的切换延迟。数值越高延迟越高。</sys:String>
     <sys:String x:Key="ttl_DatabaseDir">数据库目录</sys:String>
     <sys:String x:Key="msg_DatabaseDirTip">存放数据库文件（缩略图缓存数据库等）的目录</sys:String>
     <sys:String x:Key="ttl_ThumbDbSize">缩略图缓存大小 （当前: {0}）</sys:String>
@@ -19,7 +19,7 @@
     <sys:String x:Key="msg_LiteModeTip">禁用多数影响界面性能的特效。</sys:String>
     <sys:String x:Key="ttl_ViewerBackground">查看器背景</sys:String>
     <sys:String x:Key="ttl_ViewerTransition">查看器过渡效果</sys:String>
-    <sys:String x:Key="ttl_TransitionSpeed">过渡效果速度</sys:String>
+    <sys:String x:Key="ttl_ViewerTransitionSpeed">过渡效果速度</sys:String>
     <sys:String x:Key="msg_ViewerTransitionTip">查看器中使用的过渡效果。</sys:String>
     <sys:String x:Key="ttl_CacheFirstInView">缓存视图（第一张）</sys:String>
     <sys:String x:Key="ttl_CacheAllInView">缓存视图（所有）</sys:String>
@@ -60,7 +60,7 @@
         在配置文件中，备用密码每行一个，采用如下格式存储：<LineBreak/>
         <Bold>密码</Bold> =
     </Span>
-    <sys:String x:Key="ttl_CustomCommands">自定义命令（敬请期待...）</sys:String>
+    <sys:String x:Key="ttl_CustomCommands">自定义命令</sys:String>
     <sys:String x:Key="ttl_Name">名称</sys:String>
     <sys:String x:Key="ttl_ProgramPath">程序路径</sys:String>
     <sys:String x:Key="ttl_Arguments">参数</sys:String>
@@ -82,6 +82,7 @@
     <sys:String x:Key="txt_CreatedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (创建)</sys:String>
     <sys:String x:Key="txt_ModifiedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (修改)</sys:String>
     <sys:String x:Key="txt_DateTakenStrFmt">{0} (拍摄)</sys:String>
+    <sys:String x:Key="ttl_OpenWithDefaultApp">用默认程序打开</sys:String>
     <sys:String x:Key="ttl_OpenInExplorer">在资源管理器中打开</sys:String>
     <sys:String x:Key="ttl_OpenInNewWindow">在新窗口中打开</sys:String>
     <sys:String x:Key="ttl_StartSlideshow">开始放映幻灯片</sys:String>
@@ -105,6 +106,6 @@
     <sys:String x:Key="ttl_ParamStartError">参数启动错误</sys:String>
     <sys:String x:Key="ttl_AppStartError">程序启动错误</sys:String>
     <sys:String x:Key="msg_ErrorOpenDbFile">打开数据库文件{0}时发生错误。</sys:String>
-    <sys:String x:Key="msg_ErrorLoadMapPwds">载入密码字典时发生错误。已跳过字典加载。</sys:String>
+    <sys:String x:Key="msg_ErrorLoadConfig">载入{0}时发生错误。已跳过加载该项。</sys:String>
     <sys:String x:Key="msg_ExtractFailed">解压失败。密码错误或者图像格式不支持。</sys:String>
 </ResourceDictionary>

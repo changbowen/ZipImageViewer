@@ -76,28 +76,34 @@ namespace ZipImageViewer
 
         private void Menu_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
             if (ObjectInfo == null) return;
-
-            var border = (Border)sender;
-            switch (border.Name) {
-                case nameof(B_OpenInExplorer):
-                    Run("explorer", $"/select, \"{ObjectInfo.FileSystemPath}\"");
-                    break;
-                case nameof(B_OpenInNewWindow):
-                    if (ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
-                        MainWin?.LoadPath(ObjectInfo);
-                    }
-                    else if (ObjectInfo.Flags.HasFlag(FileFlags.Directory) ||
-                             ObjectInfo.Flags.HasFlag(FileFlags.Archive)) {
-                        var win = new MainWindow {
-                            InitialPath = ObjectInfo.FileSystemPath
-                        };
-                        win.Show();
-                    }
-                    break;
-                case nameof(B_Slideshow):
-                    var sldWin = new SlideshowWindow(ObjectInfo.ContainerPath);
-                    sldWin.Show();
-                    break;
+            if (sender is Border border) {
+                switch (border.Name) {
+                    case nameof(B_OpenWithDefaultApp):
+                        Run("explorer", ObjectInfo.FileSystemPath);
+                        break;
+                    case nameof(B_OpenInExplorer):
+                        Run("explorer", $"/select, \"{ObjectInfo.FileSystemPath}\"");
+                        break;
+                    case nameof(B_OpenInNewWindow):
+                        if (ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
+                            MainWin?.LoadPath(ObjectInfo);
+                        }
+                        else if (ObjectInfo.Flags.HasFlag(FileFlags.Directory) ||
+                                 ObjectInfo.Flags.HasFlag(FileFlags.Archive)) {
+                            var win = new MainWindow {
+                                InitialPath = ObjectInfo.FileSystemPath
+                            };
+                            win.Show();
+                        }
+                        break;
+                    case nameof(B_Slideshow):
+                        var sldWin = new SlideshowWindow(ObjectInfo.ContainerPath);
+                        sldWin.Show();
+                        break;
+                }
+            }
+            else if (sender is ContentPresenter cp && cp.Content is ObservableObj obsObj) {
+                Run(obsObj.Str2, CustomCmdArgsReplace(obsObj.Str3, ObjectInfo));
             }
 
             Close();

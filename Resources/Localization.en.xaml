@@ -3,13 +3,13 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:local="clr-namespace:ZipImageViewer">
     <sys:String x:Key="ttl_Settings">Settings</sys:String>
-    <sys:String x:Key="ttl_ThumbSize">Thumbnail Size</sys:String>
+    <sys:String x:Key="ttl_ThumbnailSize">Thumbnail Size</sys:String>
     <Span x:Key="spn_ThumbSizeTip">
         <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.<LineBreak/>
         <Bold>Changing this value invalidates the entire thumbnail cache.</Bold>
     </Span>
-    <sys:String x:Key="ttl_ThumbSwapDelayMulti">Thumbnail Swap Delay Multiplier</sys:String>
-    <sys:String x:Key="msg_ThumbSwapDelayMultiTip">The delay of thumbnail change on folders and archives. Higher value results in longer delay.</sys:String>
+    <sys:String x:Key="ttl_ThumbSwapDelayMultiplier">Thumbnail Swap Delay Multiplier</sys:String>
+    <sys:String x:Key="msg_ThumbSwapDelayMultiplierTip">The delay of thumbnail change on folders and archives. Higher value results in longer delay.</sys:String>
     <sys:String x:Key="ttl_DatabaseDir">Database Directory</sys:String>
     <sys:String x:Key="msg_DatabaseDirTip">The folder to save the all database files (thumbnail cache etc.).</sys:String>
     <sys:String x:Key="ttl_ThumbDbSize">Thumbnail Cache Size (Current: {0})</sys:String>
@@ -19,7 +19,7 @@
     <sys:String x:Key="msg_LiteModeTip">Disables most effects that affect UI performance.</sys:String>
     <sys:String x:Key="ttl_ViewerBackground">Viewer Background</sys:String>
     <sys:String x:Key="ttl_ViewerTransition">Viewer Transition</sys:String>
-    <sys:String x:Key="ttl_TransitionSpeed">Transition Speed</sys:String>
+    <sys:String x:Key="ttl_ViewerTransitionSpeed">Transition Speed</sys:String>
     <sys:String x:Key="msg_ViewerTransitionTip">The transition animation used in the viewer.</sys:String>
     <sys:String x:Key="ttl_CacheFirstInView">Cache View (First Image)</sys:String>
     <sys:String x:Key="ttl_CacheAllInView">Cache View (All Images)</sys:String>
@@ -60,7 +60,7 @@
         In the configuration file, fallback passwords are saved one on each line, with the below formats:<LineBreak/>
         <Bold>password</Bold> =
     </Span>
-    <sys:String x:Key="ttl_CustomCommands">Custom Commands (Comming Soon...)</sys:String>
+    <sys:String x:Key="ttl_CustomCommands">Custom Commands</sys:String>
     <sys:String x:Key="ttl_Name">Name</sys:String>
     <sys:String x:Key="ttl_ProgramPath">Program Path</sys:String>
     <sys:String x:Key="ttl_Arguments">Arguments</sys:String>
@@ -82,6 +82,7 @@
     <sys:String x:Key="txt_CreatedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (Created)</sys:String>
     <sys:String x:Key="txt_ModifiedTimeStrFmt">{0:yyyy-MM-dd HH:mm:ss} (Modified)</sys:String>
     <sys:String x:Key="txt_DateTakenStrFmt">{0} (Taken)</sys:String>
+    <sys:String x:Key="ttl_OpenWithDefaultApp">Open with Default App</sys:String>
     <sys:String x:Key="ttl_OpenInExplorer">Open in Explorer</sys:String>
     <sys:String x:Key="ttl_OpenInNewWindow">Open in New Window</sys:String>
     <sys:String x:Key="ttl_StartSlideshow">Start Slideshow</sys:String>
@@ -105,6 +106,6 @@
     <sys:String x:Key="ttl_ParamStartError">Parametered Start Error</sys:String>
     <sys:String x:Key="ttl_AppStartError">Application Start Error</sys:String>
     <sys:String x:Key="msg_ErrorOpenDbFile">Error opening database file {0}.</sys:String>
-    <sys:String x:Key="msg_ErrorLoadMapPwds">There was an error loading mapped passwords. Loading will be skipped.</sys:String>
+    <sys:String x:Key="msg_ErrorLoadConfig">There was an error loading {0}. Loading will be skipped.</sys:String>
     <sys:String x:Key="msg_ExtractFailed">Extraction failed. Bad password or not supported image formats.</sys:String>
 </ResourceDictionary>

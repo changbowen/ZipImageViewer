@@ -99,18 +99,32 @@ namespace ZipImageViewer
         }
 
         /// <summary>
+        /// Return true for file, false for directory, or null if the target <paramref name="path"/> points to does not exist.
+        /// </summary>
+        public static bool? PathIsFile(this string path) {
+            DirectoryInfo dirInfo = null;
+            try { dirInfo = new DirectoryInfo(path.TrimEnd(Path.DirectorySeparatorChar)); }
+            catch { }
+            if (dirInfo == null || dirInfo.Attributes == (FileAttributes)(-1))
+                return null;
+            else if (dirInfo.Attributes.HasFlag(FileAttributes.Directory))
+                return false;
+            return true;
+        }
+
+        /// <summary>
         /// Get the relationship between two paths (what <paramref name="pathA"/> is to <paramref name="pathB"/>).
         /// </summary>
         public static PathRelation PathRelationship(this string pathA, string pathB) {
-            if (pathA.TrimEnd('\\') == pathB.TrimEnd('\\')) return PathRelation.Same;
+            if (pathA.TrimEnd(Path.DirectorySeparatorChar) == pathB.TrimEnd(Path.DirectorySeparatorChar)) return PathRelation.Same;
             FileSystemInfo infoA = null, infoB = null;
             try { infoA = new DirectoryInfo(pathA); infoB = new DirectoryInfo(pathB); } catch { }
             if (infoA == null || infoB == null ||
                 infoA.Attributes == (FileAttributes)(-1) || infoB.Attributes == (FileAttributes)(-1))
                 return PathRelation.Error;
 
-            if (infoA.Attributes.HasFlag(FileAttributes.Directory)) pathA = pathA.TrimEnd('\\') + @"\";
-            if (infoB.Attributes.HasFlag(FileAttributes.Directory)) pathB = pathB.TrimEnd('\\') + @"\";
+            if (infoA.Attributes.HasFlag(FileAttributes.Directory)) pathA = pathA.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            if (infoB.Attributes.HasFlag(FileAttributes.Directory)) pathB = pathB.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             if (pathA.StartsWith(pathB, StringComparison.OrdinalIgnoreCase)) return PathRelation.Child;
             if (pathB.StartsWith(pathA, StringComparison.OrdinalIgnoreCase)) return PathRelation.Parent;
             return PathRelation.Unrelated;
@@ -160,7 +174,7 @@ namespace ZipImageViewer
 
         public static FileFlags GetPathType(string path) {
             DirectoryInfo dirInfo = null;
-            try { dirInfo = new DirectoryInfo(path.TrimEnd('\\')); }
+            try { dirInfo = new DirectoryInfo(path.TrimEnd(Path.DirectorySeparatorChar)); }
             catch { }
             if (dirInfo == null) return FileFlags.Error;
             return GetPathType(dirInfo);
@@ -317,10 +331,15 @@ namespace ZipImageViewer
         }
 
         public static void Run(string path, string args) {
-            var info = new ProcessStartInfo(path, args) {
-                WorkingDirectory = App.ExeDir
-            };
-            Process.Start(path, args);
+            try {
+                var info = new ProcessStartInfo(path, args) {
+                    WorkingDirectory = App.ExeDir
+                };
+                Process.Start(path, args);
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message, null, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public static string BytesToString(long byteCount) {
@@ -333,8 +352,8 @@ namespace ZipImageViewer
             return (Math.Sign(byteCount) * num).ToString() + suf[place];
         }
 
-        public static string CustomCmdArgsReplace(string input, ObjectInfo objInfo) {
-            return input.Replace(@"%FileSystemPath%", objInfo.FileSystemPath);
+        public static string CustomCmdArgsReplace(string args, ObjectInfo objInfo) {
+            return args?.Replace(@"%FileSystemPath%", objInfo.FileSystemPath);
         }
 
 
@@ -432,6 +451,9 @@ namespace ZipImageViewer
             return (T)Application.Current.Resources[key];
         }
 
+        public static ImageSource GetFaIcon(FontAwesome5.EFontAwesomeIcon icon, Brush brush = null) {
+            return FontAwesome5.ImageAwesome.CreateImageSource(icon, brush ?? GetRes<Brush>(@"ForegroundBrush"));
+        }
     }
 
     [AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = false)]

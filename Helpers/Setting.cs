@@ -255,29 +255,38 @@ namespace ZipImageViewer
             foreach (var prop in appConfigs) {
                 var saved = iniData[nameof(ConfigSection.AppConfig)][prop.Name];
                 if (saved == null) continue;
-                prop.SetValue(null, JsonConvert.DeserializeObject(saved, prop.PropertyType));
+                try { prop.SetValue(null, JsonConvert.DeserializeObject(saved, prop.PropertyType)); }
+                catch {
+                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", prop.Name), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                }
             }
 
             //parse custom commands
             CustomCommands = new ObservableCollection<ObservableObj>();
-            var iniCmd = iniData[nameof(ConfigSection.CustomCommands)];
-            if (iniCmd?.Count > 0) {
-                foreach (var row in iniCmd) {
-                    var cells = row.Value.Split('\t');
-                    if (cells.Length < 3) continue;
-                    CustomCommands.Add(new ObservableObj(cells[0], cells[1], cells[2]));
+            try {
+                var iniCmd = iniData[nameof(ConfigSection.CustomCommands)];
+                if (iniCmd?.Count > 0) {
+                    foreach (var row in iniCmd) {
+                        var ary = new string[3];
+                        row.Value.Split('\t').CopyTo(ary, 0);
+                        CustomCommands.Add(new ObservableObj(ary[0], ary[1], ary[2]));
+                    }
                 }
+            }
+            catch {
+                MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_CustomCommands")), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }
 
             //parse lists at last
-            //LibraryPaths = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
-            //    iniData[nameof(ConfigSection.LibraryPaths)].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
-            
-            FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item, null,
-                iniData[nameof(ConfigSection.FallbackPasswords)].Where(d => d.Value.Length == 0).Select(d => new Observable<string>(d.KeyName)));
-            
-            //MappedPasswords = new ObservableKeyedCollection<string, ObservablePair<string, string>>(p => p.Item1, "Item1",
-            //iniData["Saved Passwords"].Where(d => d.Value.Length > 0).Select(d => new ObservablePair<string, string>(d.KeyName, d.Value)));
+            FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item);
+            try {
+                FallbackPasswords.AddRange(iniData[nameof(ConfigSection.FallbackPasswords)]
+                    .Where(d => d.Value.Length == 0)
+                    .Select(d => new Observable<string>(d.KeyName)));
+            }
+            catch {
+                MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            }
 
             var mp = Tables[Table.MappedPasswords];
             MappedPasswords = new DataTable(mp.Name);
@@ -286,8 +295,8 @@ namespace ZipImageViewer
             MappedPasswords.PrimaryKey = new[] { MappedPasswords.Columns[nameof(Column.Path)] };
             if (File.Exists(mp.FullPath)) {
                 try { MappedPasswords.ReadXml(mp.FullPath); }
-                catch (Exception ex) {
-                    MessageBox.Show(GetRes("msg_ErrorLoadMapPwds") + "\r\n" + ex.Message, null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                catch {
+                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_MappedPasswords")), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
         }
@@ -311,7 +320,7 @@ $@"[{nameof(ConfigSection.AppConfig)}]
 
 [{nameof(ConfigSection.CustomCommands)}]
 {(CustomCommands?.Count > 0 ?
-    string.Join("\r\n", CustomCommands.Select(oo => $"{nameof(CustomCommands)}.{CustomCommands.IndexOf(oo)}={oo.Str1}\t{oo.Str2}\t{oo.Str3}")) :
+    string.Join("\r\n", CustomCommands.Select((oo, i) => $"{nameof(CustomCommands)}.{i}={oo.Str1}\t{oo.Str2}\t{oo.Str3}")) :
     null)}
 
 ;Fallback passwords for zipped files in the format:

@@ -43,7 +43,7 @@
 
             <Border Grid.Row="1">
                 <DockPanel LastChildFill="False">
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbSize}"/>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbnailSize}"/>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Top">
                         <ContentControl>
                             <TextBox MinWidth="32" VerticalAlignment="Top"
@@ -64,14 +64,14 @@
 
             <Border Grid.Row="2">
                 <DockPanel LastChildFill="False">
-                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbSwapDelayMulti}" Margin="0" VerticalAlignment="Center"/>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbSwapDelayMultiplier}" Margin="0" VerticalAlignment="Center"/>
                     <ContentControl DockPanel.Dock="Right">
                         <TextBox Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbSwapDelayMultiplier}"
                                  Width="40"/>
                     </ContentControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ThumbSwapDelayMultiTip}"/>
+            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ThumbSwapDelayMultiplierTip}"/>
 
             <Border Grid.Row="3">
                 <StackPanel>
@@ -151,7 +151,7 @@
                         </ContentControl>
                     </StackPanel>
                     <StackPanel Grid.Column="2">
-                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_TransitionSpeed}"/>
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ViewerTransitionSpeed}"/>
                         <ContentControl>
                             <ComboBox ItemsSource="{Binding Source={local:Enumeration {x:Type local:Setting+TransitionSpeed}}}"
                                       SelectedValue="{Binding Source={x:Static local:App.Setting}, Path=ViewerTransitionSpeed}"
@@ -195,13 +195,13 @@
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_CustomCommands}"/>
                     <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                        <DataGrid RowEditEnding="DataGrid_RowEditEnding" IsEnabled="False"
-                                  AutoGenerateColumns="False" EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                        <DataGrid AutoGenerateColumns="False" RowEditEnding="DataGrid_RowEditEnding"
+                                  EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                   ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=CustomCommands}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="{StaticResource ttl_Name}" Binding="{Binding Str1, TargetNullValue={StaticResource txt_TargetNullValue}}"/>
                                 <DataGridTextColumn Header="{StaticResource ttl_ProgramPath}" Binding="{Binding Str2, TargetNullValue={StaticResource txt_TargetNullValue}}"/>
-                                <DataGridTextColumn Header="{StaticResource ttl_Arguments}" Binding="{Binding Str3, TargetNullValue={StaticResource txt_TargetNullValue}}"/>
+                                <DataGridTextColumn Header="{StaticResource ttl_Arguments}" Binding="{Binding Str3}"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </ContentControl>

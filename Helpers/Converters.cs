@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -96,11 +97,14 @@ namespace ZipImageViewer
     public class CustomCmdArgsConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
-            var str = values[0] as string;
-            var tn = values[1] as Thumbnail;
-            if (string.IsNullOrWhiteSpace(str) || tn == null || tn.ObjectInfo == null)
-                return str;
-            return Helpers.CustomCmdArgsReplace(str, tn.ObjectInfo);
+            if (values.Length < 3) return Binding.DoNothing;
+            var path = values[0] as string;
+            var args = values[1] as string;
+            var objInfo = values[2] as ObjectInfo;
+            var realArgs = args;
+            if (!string.IsNullOrWhiteSpace(args) && objInfo != null)
+                realArgs = Helpers.CustomCmdArgsReplace(args, objInfo);
+            return $@"{path} {realArgs}";
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
@@ -170,6 +174,44 @@ namespace ZipImageViewer
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ExtractIconConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            ImageSource source = null;
+            if (value is string path) {
+                string realPath = null;
+                if (path.PathIsFile().HasValue)
+                    realPath = path;
+                else {
+                    foreach (var dir in Environment.GetEnvironmentVariable(@"PATH").Split(Path.PathSeparator)) {
+                        var c = Path.Combine(dir, path);
+                        if (c.PathIsFile() == null) continue;
+                        realPath = c;
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(realPath)) {
+                    source = NativeHelpers.GetIcon(realPath, false, realPath.PathIsFile() == false);
+                    //using (var icon = System.Drawing.Icon.ExtractAssociatedIcon(realPath)) {
+                    //    source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
+                    //        icon.Handle,
+                    //        Int32Rect.Empty,
+                    //        BitmapSizeOptions.FromEmptyOptions());
+                    //}
+                }
+            }
+            
+            if (source == null)
+                source = Helpers.GetFaIcon(FontAwesome5.EFontAwesomeIcon.Solid_ExternalLinkAlt);
+            return source;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
             throw new NotImplementedException();
         }
     }

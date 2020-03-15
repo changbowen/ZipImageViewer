@@ -11,21 +11,16 @@
     <Window.Resources>
         <local:FileSizeHumanConverter x:Key="FileSizeHumanConverter"/>
         <local:DrawingSizeStringConverter x:Key="DrawingSizeStringConverter"/>
-        <Style TargetType="fa:ImageAwesome">
-            <Setter Property="Width" Value="24"/>
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-        </Style>
+        <local:CustomCmdArgsConverter x:Key="CustomCmdArgsConverter"/>
+        <local:ExtractIconConverter x:Key="ExtractIconConverter"/>
+
+        <!--this hides the NewItemPlaceholder at the end-->
+        <CollectionViewSource x:Key="CustomCmdViewSource"
+                              Source="{Binding Source={x:Static local:App.Setting}, Path=CustomCommands, Mode=OneWay}"/>
     </Window.Resources>
-    <local:PaddedGrid Padding="2">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid.Resources>
-            <Style TargetType="Border" BasedOn="{StaticResource S_RiseOnHover}">
+    <StackPanel>
+        <StackPanel.Resources>
+            <Style x:Key="MenuItemStyle" TargetType="Border" BasedOn="{StaticResource S_RiseOnHover}">
                 <Setter Property="Padding" Value="5"/>
                 <Setter Property="CornerRadius" Value="4"/>
                 <Setter Property="Background" Value="Transparent"/>
@@ -36,8 +31,18 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
-        </Grid.Resources>
+            <Style x:Key="MenuItemTextStyle" TargetType="TextBlock">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="10 0 0 0"/>
+            </Style>
+            <Style x:Key="MenuItemIconStyle" TargetType="Image">
+                <Setter Property="Width" Value="24"/>
+                <Setter Property="Height" Value="24"/>
+            </Style>
+        </StackPanel.Resources>
 
+        <!--image info panel-->
         <StackPanel Margin="2 0">
             <StackPanel.Resources>
                 <Style TargetType="fa:ImageAwesome">
@@ -143,23 +148,88 @@
             </DockPanel>
         </StackPanel>
 
-        <Border Grid.Row="1" x:Name="B_OpenInExplorer">
-            <StackPanel Orientation="Horizontal">
-                <fa:ImageAwesome Icon="Regular_WindowMaximize"/>
-                <TextBlock Text="{StaticResource ttl_OpenInExplorer}" FontWeight="Bold" VerticalAlignment="Center" Margin="10 0 0 0"/>
-            </StackPanel>
-        </Border>
-        <Border Grid.Row="2" x:Name="B_OpenInNewWindow">
-            <StackPanel Orientation="Horizontal">
-                <fa:ImageAwesome Icon="Regular_WindowRestore"/>
-                <TextBlock Text="{StaticResource ttl_OpenInNewWindow}" FontWeight="Bold" VerticalAlignment="Center" Margin="10 0 0 0"/>
-            </StackPanel>
-        </Border>
-        <Border Grid.Row="3" x:Name="B_Slideshow">
-            <StackPanel Orientation="Horizontal">
-                <fa:ImageAwesome Icon="Regular_WindowRestore"/>
-                <TextBlock Text="{StaticResource ttl_StartSlideshow}" FontWeight="Bold" VerticalAlignment="Center" Margin="10 0 0 0"/>
-            </StackPanel>
-        </Border>
-    </local:PaddedGrid>
+        <!--menu items-->
+        <StackPanel Margin="2 2 2 0">
+            <StackPanel.Resources>
+                <Style TargetType="Border" BasedOn="{StaticResource MenuItemStyle}"/>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource MenuItemTextStyle}"/>
+                <Style TargetType="fa:ImageAwesome" BasedOn="{StaticResource MenuItemIconStyle}"/>
+            </StackPanel.Resources>
+            <Border x:Name="B_OpenWithDefaultApp">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Regular_WindowMaximize"
+                                     Foreground="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
+                    <TextBlock Text="{StaticResource ttl_OpenWithDefaultApp}"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="B_OpenInExplorer">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Solid_Columns"
+                                     Foreground="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
+                    <TextBlock Text="{StaticResource ttl_OpenInExplorer}"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="B_OpenInNewWindow">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Regular_WindowRestore"
+                                     Foreground="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
+                    <TextBlock Text="{StaticResource ttl_OpenInNewWindow}"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="B_Slideshow">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Solid_Film"
+                                     Foreground="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
+                    <TextBlock Text="{StaticResource ttl_StartSlideshow}"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <Separator Background="{StaticResource BackgroundHighlightBrush}" Margin="3"
+                   Visibility="{Binding Visibility, ElementName=IC_CustomCmds, Mode=OneWay}">
+        </Separator>
+
+        <!--custom commands-->
+        <ItemsControl x:Name="IC_CustomCmds" Background="{Binding Background, ElementName=CTMWin, Mode=OneTime}"
+                     Foreground="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"
+                     ItemsSource="{Binding Source={StaticResource CustomCmdViewSource}, Mode=OneTime}"
+                     BorderThickness="0">
+            <!--HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"-->
+            <ItemsControl.Style>
+                <Style TargetType="ItemsControl">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Source={x:Static local:App.Setting}, Path=CustomCommands.Count, Mode=OneWay}" Value="0">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ItemsControl.Style>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <EventSetter Event="PreviewMouseDown" Handler="Menu_PreviewMouseDown"/>
+                    <Setter Property="ToolTip">
+                        <Setter.Value>
+                            <MultiBinding Converter="{StaticResource CustomCmdArgsConverter}" Mode="OneWay">
+                                <Binding Path="Str2" Mode="OneWay"/>
+                                <Binding Path="Str3" Mode="OneWay"/>
+                                <Binding Path="ObjectInfo" ElementName="CTMWin" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type local:ObservableObj}">
+                    <Border Style="{StaticResource MenuItemStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <local:DpiImage Style="{StaticResource MenuItemIconStyle}"
+                                            Source="{Binding Str2, Converter={StaticResource ExtractIconConverter}, Mode=OneWay}"/>
+                            <TextBlock Style="{StaticResource MenuItemTextStyle}"
+                                       Text="{Binding Str1, Mode=OneWay}"/>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
 </local:RoundedWindow>

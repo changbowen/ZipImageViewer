@@ -170,6 +170,11 @@ namespace ZipImageViewer {
 
     public class ObservableCollection<T> : System.Collections.ObjectModel.ObservableCollection<T>
     {
+        public override event NotifyCollectionChangedEventHandler CollectionChanged;
+		protected override event PropertyChangedEventHandler PropertyChanged;
+
+		public new int Count => base.Count;
+
 		public ObservableCollection() { }
 
 		public ObservableCollection(IEnumerable<T> collection) {
@@ -183,19 +188,6 @@ namespace ZipImageViewer {
 			}
 		}
 
-		private void NotifyChanges(NotifyCollectionChangedEventArgs e) {
-            CollectionChanged?.Invoke(this, e);
-        }
-
-        public override event NotifyCollectionChangedEventHandler CollectionChanged;
-        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e) {
-			if (_deferNotifyCollectionChanged) return;
-
-			if (!Application.Current.Dispatcher.CheckAccess())
-                Application.Current.Dispatcher.Invoke(() => NotifyChanges(e));
-            else NotifyChanges(e);
-        }
-
 		private bool _deferNotifyCollectionChanged = false;
 		public void AddRange(IEnumerable<T> items) {
 			_deferNotifyCollectionChanged = true;
@@ -203,6 +195,26 @@ namespace ZipImageViewer {
 			_deferNotifyCollectionChanged = false;
 
 			OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+		}
+
+		protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e) {
+			if (_deferNotifyCollectionChanged) return;
+
+			if (!Application.Current.Dispatcher.CheckAccess())
+                Application.Current.Dispatcher.Invoke(() => NotifyCollectionChange(e));
+            else NotifyCollectionChange(e);
+        }
+
+		protected override void OnPropertyChanged(PropertyChangedEventArgs e) {
+			base.OnPropertyChanged(e);
+		}
+
+		private void NotifyCollectionChange(NotifyCollectionChangedEventArgs e) {
+			CollectionChanged?.Invoke(this, e);
+			if ((NotifyCollectionChangedAction.Add |
+				NotifyCollectionChangedAction.Remove |
+				NotifyCollectionChangedAction.Reset).HasFlag(e.Action))
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
 		}
 	}
 

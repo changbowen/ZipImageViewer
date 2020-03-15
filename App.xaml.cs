@@ -92,13 +92,13 @@ namespace ZipImageViewer
 
                 //create resources
                 var fa_brush = new SolidColorBrush(Color.FromArgb(40, 255, 255, 255));
-                fa_meh = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_Meh, fa_brush);
-                fa_spinner = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_Spinner, fa_brush);
-                fa_exclamation = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_ExclamationCircle, fa_brush);
-                fa_file = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_File, fa_brush);
-                fa_folder = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_Folder, fa_brush);
-                fa_archive = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_FileArchive, fa_brush);
-                fa_image = ImageAwesome.CreateImageSource(EFontAwesomeIcon.Solid_FileImage, fa_brush);
+                fa_meh = GetFaIcon(EFontAwesomeIcon.Solid_Meh, fa_brush);
+                fa_spinner = GetFaIcon(EFontAwesomeIcon.Solid_Spinner, fa_brush);
+                fa_exclamation = GetFaIcon(EFontAwesomeIcon.Solid_ExclamationCircle, fa_brush);
+                fa_file = GetFaIcon(EFontAwesomeIcon.Solid_File, fa_brush);
+                fa_folder = GetFaIcon(EFontAwesomeIcon.Solid_Folder, fa_brush);
+                fa_archive = GetFaIcon(EFontAwesomeIcon.Solid_FileArchive, fa_brush);
+                fa_image = GetFaIcon(EFontAwesomeIcon.Solid_FileImage, fa_brush);
 
                 //make sure thumbs db is correct
                 CheckThumbsDB();
