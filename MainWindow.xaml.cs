@@ -320,10 +320,10 @@ namespace ZipImageViewer
                     openFolderPrompt();
                     break;
                 case nameof(HY_CacheFirst):
-                    cacheView(true);
+                    CacheHelper.CacheView(CurrentPath, true, this, this);
                     break;
                 case nameof(HY_CacheAll):
-                    cacheView(false);
+                    CacheHelper.CacheView(CurrentPath, false, this, this);
                     break;
                 case nameof(HY_Options):
                     var win = new SettingsWindow(this);
@@ -361,37 +361,6 @@ namespace ZipImageViewer
                     Close();
                     break;
             }
-        }
-
-        private void cacheView(bool firstOnly) {
-            var bw = new BlockWindow(this) {
-                MessageTitle = GetRes("msg_Processing")
-            };
-            //callback used to update progress
-            Action<string, int, int> cb = (path, i, count) => {
-                var p = (int)Math.Floor((double)i / count * 100);
-                Dispatcher.Invoke(() => {
-                    bw.Percentage = p;
-                    bw.MessageBody = path;
-                    if (bw.Percentage == 100) bw.MessageTitle = GetRes("ttl_OperationComplete");
-                });
-            };
-
-            //work thread
-            bw.Work = () => {
-                tknSrc_LoadThumb?.Cancel();
-                while (tknSrc_LoadThumb != null) {
-                    Thread.Sleep(200);
-                }
-                //get list to work with
-                var infos = firstOnly ?
-                    GetAll(CurrentPath, false, FileFlags.Archive | FileFlags.Image | FileFlags.Directory) :
-                    GetAll(CurrentPath, true, FileFlags.Archive | FileFlags.Image);
-                preRefreshActions();
-                CacheHelper.CacheObjInfos(infos, ref bw.tknSrc_Work, bw.lock_Work, firstOnly, cb);
-                Task.Run(() => LoadPath(CurrentPath));
-            };
-            bw.FadeIn();
         }
 
         protected override void OnStateChanged(EventArgs e) {

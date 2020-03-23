@@ -96,6 +96,12 @@ namespace ZipImageViewer
                             win.Show();
                         }
                         break;
+                    case nameof(B_CacheFirst):
+                        CacheHelper.CacheView(ObjectInfo.FileSystemPath, true);
+                        break;
+                    case nameof(B_CacheAll):
+                        CacheHelper.CacheView(ObjectInfo.FileSystemPath, false);
+                        break;
                     case nameof(B_Slideshow):
                         var sldWin = new SlideshowWindow(ObjectInfo.ContainerPath);
                         sldWin.Show();

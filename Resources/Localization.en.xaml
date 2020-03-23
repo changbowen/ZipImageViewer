@@ -21,14 +21,16 @@
     <sys:String x:Key="ttl_ViewerTransition">Viewer Transition</sys:String>
     <sys:String x:Key="ttl_ViewerTransitionSpeed">Transition Speed</sys:String>
     <sys:String x:Key="msg_ViewerTransitionTip">The transition animation used in the viewer.</sys:String>
-    <sys:String x:Key="ttl_CacheFirstInView">Cache View (First Image)</sys:String>
-    <sys:String x:Key="ttl_CacheAllInView">Cache View (All Images)</sys:String>
+    <sys:String x:Key="ttl_CacheViewFirst">Cache View (First Images)</sys:String>
+    <sys:String x:Key="ttl_CacheViewAll">Cache View (All Images)</sys:String>
+    <sys:String x:Key="ttl_CacheThisFirst">Cache This (First Images)</sys:String>
+    <sys:String x:Key="ttl_CacheThisAll">Cache This (All Images)</sys:String>
     <Span x:Key="spn_CacheFirstTip">
-        <Bold><StaticResource ResourceKey="ttl_CacheFirstInView"/></Bold><LineBreak/>
+        <Bold><StaticResource ResourceKey="ttl_CacheViewFirst"/></Bold><LineBreak/>
         Caches images under the current view, as well as the first image in each folder or archive.
     </Span>
     <Span x:Key="spn_CacheAllTip">
-        <Bold><StaticResource ResourceKey="ttl_CacheAllInView"/></Bold><LineBreak/>
+        <Bold><StaticResource ResourceKey="ttl_CacheViewAll"/></Bold><LineBreak/>
         Caches every image found recursively under the current view.
     </Span>
     <sys:String x:Key="ttl_ReloadView">Reload View</sys:String>

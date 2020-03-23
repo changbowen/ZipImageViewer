@@ -9,11 +9,49 @@ using static ZipImageViewer.LoadHelper;
 using static ZipImageViewer.SQLiteHelper;
 using System.Windows.Media;
 using System.IO;
+using System.Windows;
 
 namespace ZipImageViewer
 {
     public static class CacheHelper
     {
+        /// <param name="mainWin">If not null, MainWindow will be halted before caching is finished.</param>
+        public static void CacheView(string cachePath, bool firstOnly, Window owner = null, MainWindow mainWin = null) {
+            var bw = new BlockWindow(owner) {
+                MessageTitle = GetRes("msg_Processing")
+            };
+            //callback used to update progress
+            Action<string, int, int> cb = (path, i, count) => {
+                var p = (int)Math.Floor((double)i / count * 100);
+                Application.Current.Dispatcher.Invoke(() => {
+                    bw.Percentage = p;
+                    bw.MessageBody = path;
+                    if (bw.Percentage == 100) bw.MessageTitle = GetRes("ttl_OperationComplete");
+                });
+            };
+
+            //work thread
+            bw.Work = () => {
+                if (mainWin != null) {
+                    mainWin.tknSrc_LoadThumb?.Cancel();
+                    while (mainWin.tknSrc_LoadThumb != null) {
+                        Thread.Sleep(200);
+                    }
+                    mainWin.preRefreshActions();
+                }
+
+                var infos = firstOnly ?
+                    GetAll(cachePath, false, FileFlags.Archive | FileFlags.Image | FileFlags.Directory) :
+                    GetAll(cachePath, true, FileFlags.Archive | FileFlags.Image);
+                CacheObjInfos(infos, ref bw.tknSrc_Work, bw.lock_Work, firstOnly, cb);
+
+                if (mainWin != null)
+                    Task.Run(() => mainWin.LoadPath(mainWin.CurrentPath));
+            };
+            bw.FadeIn();
+        }
+
+
         public static void CacheObjInfos(IEnumerable<ObjectInfo> infos, ref CancellationTokenSource tknSrc, object tknLock, bool firstOnly,
             Action<string, int, int> callback = null, int maxThreads = 0) {
 

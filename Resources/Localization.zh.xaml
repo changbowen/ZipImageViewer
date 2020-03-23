@@ -21,14 +21,16 @@
     <sys:String x:Key="ttl_ViewerTransition">查看器过渡效果</sys:String>
     <sys:String x:Key="ttl_ViewerTransitionSpeed">过渡效果速度</sys:String>
     <sys:String x:Key="msg_ViewerTransitionTip">查看器中使用的过渡效果。</sys:String>
-    <sys:String x:Key="ttl_CacheFirstInView">缓存视图（第一张）</sys:String>
-    <sys:String x:Key="ttl_CacheAllInView">缓存视图（所有）</sys:String>
+    <sys:String x:Key="ttl_CacheViewFirst">缓存视图（第一张）</sys:String>
+    <sys:String x:Key="ttl_CacheViewAll">缓存视图（所有）</sys:String>
+    <sys:String x:Key="ttl_CacheThisFirst">缓存此项（第一张）</sys:String>
+    <sys:String x:Key="ttl_CacheThisAll">缓存此项（所有）</sys:String>
     <Span x:Key="spn_CacheFirstTip">
-        <Bold><StaticResource ResourceKey="ttl_CacheFirstInView"/></Bold><LineBreak/>
+        <Bold><StaticResource ResourceKey="ttl_CacheViewFirst"/></Bold><LineBreak/>
         缓存当前视图下的图像，还有每个文件夹或压缩文件中的第一个图像。
     </Span>
     <Span x:Key="spn_CacheAllTip">
-        <Bold><StaticResource ResourceKey="ttl_CacheAllInView"/></Bold><LineBreak/>
+        <Bold><StaticResource ResourceKey="ttl_CacheViewAll"/></Bold><LineBreak/>
         缓存当前视图下的图像，还有所有目录和压缩文件内的图像。
     </Span>
     <sys:String x:Key="ttl_ReloadView">重新载入视图</sys:String>

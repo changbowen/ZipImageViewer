@@ -40,21 +40,15 @@ namespace ZipImageViewer
         internal readonly object lock_Work = new object();
 
         /// <summary>
-        /// <paramref name="owner"/> and its owned windows will be disabled until BlockWindow is closed.
+        /// If set, <paramref name="owner"/> and its owned windows will be disabled until BlockWindow is closed.
         /// </summary>
-        public BlockWindow(Window owner) {
+        public BlockWindow(Window owner = null) {
             Owner = owner;
             InitializeComponent();
         }
 
         private void BlockWin_Loaded(object sender, RoutedEventArgs e) {
-            foreach (Window win in Owner.OwnedWindows) {
-                if (win == this) continue;
-                win.IsEnabled = false;
-                win.IsHitTestVisible = false;
-            }
-            Owner.IsEnabled = false;
-            Owner.IsHitTestVisible = false;
+            setOwnerState(false);
 
             var thrd = new Thread(new ThreadStart(Work)) { IsBackground = true };
             thrd.Start();
@@ -66,13 +60,18 @@ namespace ZipImageViewer
                 await Task.Delay(200);
             }
 
+            setOwnerState(true);
+        }
+
+        private void setOwnerState(bool enable) {
+            if (Owner == null) return;
             foreach (Window win in Owner.OwnedWindows) {
                 if (win == this) continue;
-                win.IsEnabled = true;
-                win.IsHitTestVisible = true;
+                win.IsEnabled = enable;
+                win.IsHitTestVisible = enable;
             }
-            Owner.IsEnabled = true;
-            Owner.IsHitTestVisible = true;
+            Owner.IsEnabled = enable;
+            Owner.IsHitTestVisible = enable;
         }
     }
 }

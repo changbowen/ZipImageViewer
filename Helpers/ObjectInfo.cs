@@ -93,6 +93,16 @@ namespace ZipImageViewer
             }
         }
 
+        public bool IsContainer {
+            get {
+                if (Flags.HasFlag(FileFlags.Directory) ||
+                    Flags.HasFlag(FileFlags.Archive))
+                    return true;
+                else
+                    return false;
+            }
+        }
+
         private string[] sourcePaths;
         /// <summary>
         /// Contains the child items. Null indicates the children are not retrived yet.

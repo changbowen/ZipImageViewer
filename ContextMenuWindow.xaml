@@ -13,6 +13,7 @@
         <local:DrawingSizeStringConverter x:Key="DrawingSizeStringConverter"/>
         <local:CustomCmdArgsConverter x:Key="CustomCmdArgsConverter"/>
         <local:ExtractIconConverter x:Key="ExtractIconConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
         <!--this hides the NewItemPlaceholder at the end-->
         <CollectionViewSource x:Key="CustomCmdViewSource"
@@ -174,6 +175,22 @@
                     <fa:ImageAwesome Icon="Regular_WindowRestore"
                                      Foreground="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
                     <TextBlock Text="{StaticResource ttl_OpenInNewWindow}"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="B_CacheFirst"
+                    Visibility="{Binding ObjectInfo.IsContainer, ElementName=CTMWin, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Solid_AngleDown"
+                                     Foreground="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
+                    <TextBlock Text="{StaticResource ttl_CacheThisFirst}"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="B_CacheAll"
+                    Visibility="{Binding ObjectInfo.IsContainer, ElementName=CTMWin, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Solid_AngleDoubleDown"
+                                     Foreground="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
+                    <TextBlock Text="{StaticResource ttl_CacheThisAll}"/>
                 </StackPanel>
             </Border>
             <Border x:Name="B_Slideshow">
