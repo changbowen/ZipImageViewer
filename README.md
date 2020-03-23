@@ -8,6 +8,7 @@ Need 64bit Windows and .Net Framework 4.7.2 (included in Windows 10 April 2018 U
 ![Picture Wall](https://github.com/changbowen/Misc/raw/master/ZipImageViewer/picture_wall.gif)
 
 ## Features
+- Portable and no installation needed.
 - Works with all archives supported by 7z.
 - Tries a configured list of fallback passwords on any new encrypted archives.
 - Keeps a map of the password used for each archive to reduce unnecessary trials and errors.
@@ -18,6 +19,8 @@ Need 64bit Windows and .Net Framework 4.7.2 (included in Windows 10 April 2018 U
 - PerMonitor DPI awareness.
 - Thumbnail cache for instant loading.
 - "Picture Wall"
+- A slideshow feature with 3 transition effects.
+- English and Simplified Chinese UI language.
 
 #### Using Fallback Passwords
 ![Fallback Passwords](https://github.com/changbowen/Misc/raw/master/ZipImageViewer/fallback_passwords.gif)
