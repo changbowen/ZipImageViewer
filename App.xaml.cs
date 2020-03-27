@@ -20,7 +20,7 @@ namespace ZipImageViewer
         public static readonly string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         public static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] {
-                ".jpg", ".jpeg", ".png", ".tiff", ".gif", ".bmp", ".ico", ".dds", ".jxr", ".hdp", ".wdp"
+                ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".gif", ".bmp", ".ico", ".dds", ".jxr", ".hdp", ".wdp"
             });
         public static readonly HashSet<string> ZipExtensions =
             new HashSet<string>(new[] {

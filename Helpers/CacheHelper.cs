@@ -16,7 +16,7 @@ namespace ZipImageViewer
     public static class CacheHelper
     {
         /// <param name="mainWin">If not null, MainWindow will be halted before caching is finished.</param>
-        public static void CacheView(string cachePath, bool firstOnly, Window owner = null, MainWindow mainWin = null) {
+        public static void CachePath(string cachePath, bool firstOnly, Window owner = null, MainWindow mainWin = null) {
             var bw = new BlockWindow(owner) {
                 MessageTitle = GetRes("msg_Processing")
             };
@@ -112,9 +112,9 @@ namespace ZipImageViewer
             }
 
             //calculate max thread count
-            var threadCount = maxThreads > 0 ? MaxLoadThreads / 2 : maxThreads;
+            var threadCount = maxThreads > 0 ? maxThreads : MaxLoadThreads / 2;
             if (threadCount < 1) threadCount = 1;
-            //else if (threadCount > 6) threadCount = 6;
+            else if (threadCount > MaxLoadThreads) threadCount = MaxLoadThreads;
 
             //loop
             try {

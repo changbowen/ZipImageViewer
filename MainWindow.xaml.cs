@@ -320,10 +320,10 @@ namespace ZipImageViewer
                     openFolderPrompt();
                     break;
                 case nameof(HY_CacheFirst):
-                    CacheHelper.CacheView(CurrentPath, true, this, this);
+                    CacheHelper.CachePath(CurrentPath, true, this, this);
                     break;
                 case nameof(HY_CacheAll):
-                    CacheHelper.CacheView(CurrentPath, false, this, this);
+                    CacheHelper.CachePath(CurrentPath, false, this, this);
                     break;
                 case nameof(HY_Options):
                     var win = new SettingsWindow(this);
