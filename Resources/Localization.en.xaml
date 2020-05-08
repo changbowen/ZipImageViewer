@@ -110,4 +110,26 @@
     <sys:String x:Key="msg_ErrorOpenDbFile">Error opening database file {0}.</sys:String>
     <sys:String x:Key="msg_ErrorLoadConfig">There was an error loading {0}. Loading will be skipped.</sys:String>
     <sys:String x:Key="msg_ExtractFailed">Extraction failed. Bad password or not supported image formats.</sys:String>
+    <Span x:Key="spn_About">
+        <Bold>Thank you for using ZipImageViewer!</Bold>
+        <LineBreak/>
+        The application is brought to you by Carl Chang (changbowen@msn.cn). Complete source is available on <Hyperlink NavigateUri="https://github.com/changbowen/ZipImageViewer">GitHub</Hyperlink>.
+        <LineBreak/>
+        <LineBreak/>
+        Some instructions on mouse actions:<LineBreak/>
+        <Bold>On Thumbnails</Bold><LineBreak/>
+        <Bold xml:space="preserve">    Left click</Bold> - Open folder or image<LineBreak/>
+        <Bold xml:space="preserve">    Right click</Bold> - Show context menu<LineBreak/>
+        <Bold xml:space="preserve">    Middle click</Bold> - Open folder or image in new window<LineBreak/>
+        <Bold>On Browser Blank Space</Bold><LineBreak/>
+        <Bold xml:space="preserve">    Double click</Bold> - Show open folder dialog (P.S. you can directly drop file / folder to the browser window as well)<LineBreak/>
+        <Bold xml:space="preserve">    Right click</Bold> - Navigate to the parent folder<LineBreak/>
+        <Bold xml:space="preserve">    Middle click</Bold> - Close the current window<LineBreak/>
+        <Bold>On Viewer</Bold><LineBreak/>
+        <Bold xml:space="preserve">    Double click</Bold> - Toggle zooming<LineBreak/>
+        <Bold xml:space="preserve">    Right click</Bold> - Close the current window<LineBreak/>
+        <Bold xml:space="preserve">    Middle click</Bold> - Close the current window<LineBreak/>
+        <Bold xml:space="preserve">    Wheel</Bold> - Cursor-centered zoom<LineBreak/>
+        <Bold xml:space="preserve">    Drag</Bold> - Pan
+    </Span>
 </ResourceDictionary>

@@ -56,7 +56,7 @@
 
     <Canvas x:Name="CA" Background="Transparent"
             PreviewMouseWheel="CA_PreviewMouseWheel"
-            PreviewMouseUp="CA_PreviewMouseUp">
+            PreviewMouseDown="CA_PreviewMouseDown">
         <DockPanel x:Name="DP_NavLeft" Style="{StaticResource NavPanelStyle}"
                    Width="{Binding ActualWidth, ElementName=CA, Converter={StaticResource MathMultiplyConverter}, ConverterParameter=0.1, Mode=OneWay}"
                    Height="{Binding ActualHeight,ElementName=CA, Mode=OneWay}"

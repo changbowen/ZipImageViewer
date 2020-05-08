@@ -174,10 +174,11 @@ namespace ZipImageViewer
                 scaleToCanvas(0);
         }
 
-        private void CA_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton != MouseButton.Right) return;
-            Close();
-            e.Handled = true;
+        private void CA_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton == MouseButton.Right || e.ChangedButton == MouseButton.Middle) {
+                Close();
+                e.Handled = true;
+            }
         }
 
         /// <param name="altAnim">Set this to true or false to override alternate zoom & move animation.</param>
@@ -293,15 +294,14 @@ namespace ZipImageViewer
         }
 
         private void IM_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton != MouseButton.Left) return;
-            switch (e.ClickCount) {
-                case 1:
+            switch (e.ChangedButton) {
+                case MouseButton.Left when e.ClickCount == 1:
                     mouseCapturePoint = e.GetPosition(CA);
                     existingTranslate = IM_TT.Value;
                     IM.CaptureMouse();
                     e.Handled = true;
                     break;
-                case 2:
+                case MouseButton.Left when e.ClickCount == 2:
                     if (!IM.IsRealSize)
                         scaleCenterMouse(e.GetPosition(IM), IM.RealSize);
                     else
@@ -334,6 +334,9 @@ namespace ZipImageViewer
                 case Key.Right:
                 case Key.Space:
                     navigate(1);
+                    break;
+                case Key.Escape:
+                    Close();
                     break;
             }
         }

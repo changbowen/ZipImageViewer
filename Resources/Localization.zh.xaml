@@ -110,4 +110,26 @@
     <sys:String x:Key="msg_ErrorOpenDbFile">打开数据库文件{0}时发生错误。</sys:String>
     <sys:String x:Key="msg_ErrorLoadConfig">载入{0}时发生错误。已跳过加载该项。</sys:String>
     <sys:String x:Key="msg_ExtractFailed">解压失败。密码错误或者图像格式不支持。</sys:String>
+    <Span x:Key="spn_About">
+        <Bold>感谢使用ZipImageViewer！</Bold>
+        <LineBreak/>
+        此软件由Carl Chang (changbowen@msn.cn)编写。完整源代码在<Hyperlink NavigateUri="https://github.com/changbowen/ZipImageViewer">GitHub</Hyperlink>。
+        <LineBreak/>
+        <LineBreak/>
+        鼠标操作说明：<LineBreak/>
+        <Bold>在缩略图上</Bold><LineBreak/>
+        <Bold xml:space="preserve">    左键</Bold> - 打开文件夹或图片<LineBreak/>
+        <Bold xml:space="preserve">    右键</Bold> - 显示上下文菜单<LineBreak/>
+        <Bold xml:space="preserve">    中键</Bold> - 在新窗口打开文件夹或图片<LineBreak/>
+        <Bold>在浏览界面的空白区域</Bold><LineBreak/>
+        <Bold xml:space="preserve">    双击</Bold> - 显示打开文件夹对话框 (P.S. 也可以直接拖动文件或文件夹到浏览窗口)<LineBreak/>
+        <Bold xml:space="preserve">    右键</Bold> - 转到父目录<LineBreak/>
+        <Bold xml:space="preserve">    中键</Bold> - 关闭当前窗口<LineBreak/>
+        <Bold>在查看器里</Bold><LineBreak/>
+        <Bold xml:space="preserve">    双击</Bold> - 切换缩放<LineBreak/>
+        <Bold xml:space="preserve">    右键</Bold> - 关闭当前窗口<LineBreak/>
+        <Bold xml:space="preserve">    中键</Bold> - 关闭当前窗口<LineBreak/>
+        <Bold xml:space="preserve">    滚轮</Bold> - 以鼠标位置为中心缩放<LineBreak/>
+        <Bold xml:space="preserve">    拖动</Bold> - 平移
+    </Span>
 </ResourceDictionary>

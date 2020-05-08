@@ -147,13 +147,18 @@ namespace ZipImageViewer
 
         private void TV1_MouseDown(object sender, MouseButtonEventArgs e) {
             if (!e.Source.Equals(sender)) return;
-            if (e.ClickCount == 1 && e.ChangedButton == MouseButton.Right) {
-                Nav_Up(null, null);
-                e.Handled = true;
-            }
-            else if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left) {
-                openFolderPrompt();
-                e.Handled = true;
+            switch (e.ChangedButton) {
+                case MouseButton.Left when e.ClickCount == 2:
+                    openFolderPrompt();
+                    e.Handled = true;
+                    break;
+                case MouseButton.Right when e.ClickCount == 1:
+                    Nav_Up(null, null);
+                    e.Handled = true;
+                    break;
+                case MouseButton.Middle when e.ClickCount == 1:
+                    Close();
+                    break;
             }
         }
 
@@ -291,22 +296,24 @@ namespace ZipImageViewer
         #region Misc Event Handlers
 
         private void TN1_Click(object sender, MouseButtonEventArgs e) {
-            if (e.Source.Equals(sender)) {
-                e.Handled = true;
-                var tn = (Thumbnail)sender;
-                var objInfo = tn.ObjectInfo;
-                if (e.ClickCount != 1) return;
-                switch (e.ChangedButton) {
-                    case MouseButton.Left:
-                        Task.Run(() => LoadPath(objInfo));
-                        break;
-                    case MouseButton.Right:
-                        App.ContextMenuWin.MainWin = this;
-                        App.ContextMenuWin.ParentWindow = this;
-                        App.ContextMenuWin.ObjectInfo = objInfo;
-                        App.ContextMenuWin.FadeIn();
-                        break;
-                }
+            e.Handled = true;
+            if (!e.Source.Equals(sender) || e.ClickCount != 1) return;
+
+            var tn = (Thumbnail)sender;
+            var objInfo = tn.ObjectInfo;
+            switch (e.ChangedButton) {
+                case MouseButton.Left:
+                    Task.Run(() => LoadPath(objInfo));
+                    break;
+                case MouseButton.Right:
+                    App.ContextMenuWin.MainWin = this;
+                    App.ContextMenuWin.ParentWindow = this;
+                    App.ContextMenuWin.ObjectInfo = objInfo;
+                    App.ContextMenuWin.FadeIn();
+                    break;
+                case MouseButton.Middle:
+                    ContextMenuWindow.Cmd_OpenInNewWindow(objInfo, this);
+                    break;
             }
         }
 

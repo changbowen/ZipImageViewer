@@ -79,22 +79,13 @@ namespace ZipImageViewer
             if (sender is Border border) {
                 switch (border.Name) {
                     case nameof(B_OpenWithDefaultApp):
-                        Run("explorer", ObjectInfo.FileSystemPath);
+                        Cmd_OpenWithDefaultApp(ObjectInfo.FileSystemPath);
                         break;
                     case nameof(B_OpenInExplorer):
-                        Run("explorer", $"/select, \"{ObjectInfo.FileSystemPath}\"");
+                        Cmd_OpenInExplorer(ObjectInfo.FileSystemPath);
                         break;
                     case nameof(B_OpenInNewWindow):
-                        if (ObjectInfo.Flags.HasFlag(FileFlags.Image)) {
-                            MainWin?.LoadPath(ObjectInfo);
-                        }
-                        else if (ObjectInfo.Flags.HasFlag(FileFlags.Directory) ||
-                                 ObjectInfo.Flags.HasFlag(FileFlags.Archive)) {
-                            var win = new MainWindow {
-                                InitialPath = ObjectInfo.FileSystemPath
-                            };
-                            win.Show();
-                        }
+                        Cmd_OpenInNewWindow(ObjectInfo, MainWin);
                         break;
                     case nameof(B_CacheFirst):
                         CacheHelper.CachePath(ObjectInfo.FileSystemPath, true);
@@ -121,5 +112,29 @@ namespace ZipImageViewer
             ImageInfo = null;
             MainWin = null;
         }
+
+        #region Context Menu Commands
+        internal static void Cmd_OpenWithDefaultApp(string fsPath) {
+            Run("explorer", fsPath);
+        }
+
+        internal static void Cmd_OpenInExplorer(string fsPath) {
+            Run("explorer", $"/select, \"{fsPath}\"");
+        }
+
+        internal static void Cmd_OpenInNewWindow(ObjectInfo objInfo, MainWindow mainWin = null) {
+            if (objInfo.Flags.HasFlag(FileFlags.Image)) {
+                mainWin?.LoadPath(objInfo);
+            }
+            else if (objInfo.Flags.HasFlag(FileFlags.Directory) ||
+                     objInfo.Flags.HasFlag(FileFlags.Archive)) {
+                var win = new MainWindow {
+                    InitialPath = objInfo.FileSystemPath
+                };
+                win.Show();
+            }
+        }
+
+        #endregion
     }
 }
