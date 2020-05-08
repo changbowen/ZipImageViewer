@@ -113,7 +113,7 @@
     <Span x:Key="spn_About">
         <Bold>感谢使用ZipImageViewer！</Bold>
         <LineBreak/>
-        此软件由Carl Chang (changbowen@msn.cn)编写。完整源代码在<Hyperlink NavigateUri="https://github.com/changbowen/ZipImageViewer">GitHub</Hyperlink>。
+        此软件由Carl Chang (changbowen@msn.cn)编写。完整源代码在GitHub [https://github.com/changbowen/ZipImageViewer]。
         <LineBreak/>
         <LineBreak/>
         鼠标操作说明：<LineBreak/>

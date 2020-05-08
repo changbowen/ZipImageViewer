@@ -113,7 +113,7 @@
     <Span x:Key="spn_About">
         <Bold>Thank you for using ZipImageViewer!</Bold>
         <LineBreak/>
-        The application is brought to you by Carl Chang (changbowen@msn.cn). Complete source is available on <Hyperlink NavigateUri="https://github.com/changbowen/ZipImageViewer">GitHub</Hyperlink>.
+        The application is brought to you by Carl Chang (changbowen@msn.cn). Complete source is available on GitHub [https://github.com/changbowen/ZipImageViewer].
         <LineBreak/>
         <LineBreak/>
         Some instructions on mouse actions:<LineBreak/>
