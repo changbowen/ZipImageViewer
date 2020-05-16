@@ -214,7 +214,7 @@ namespace ZipImageViewer
         }
 
         private static bool immersionMode;
-        //this one is not saved
+        //not saved
         public static bool ImmersionMode {
             get => immersionMode;
             set {
@@ -223,6 +223,9 @@ namespace ZipImageViewer
                 OnStaticPropertyChanged(nameof(ImmersionMode));
             }
         }
+
+        //not saved
+        public static Rect LastViewWindowRect;
 
         private static SlideAnimConfig slideAnimConfig = new SlideAnimConfig();
         [AppConfig]

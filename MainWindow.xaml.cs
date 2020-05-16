@@ -49,7 +49,6 @@ namespace ZipImageViewer
 
         private VirtualizingWrapPanel virWrapPanel;
         private Rect lastWindowRect;
-        internal Rect lastViewWindowRect;
 
         public MainWindow()
         {
@@ -261,7 +260,7 @@ namespace ZipImageViewer
                 //using a new ObjectInfo to avoid confusion and reduce chance of holding ImageSource
                 Dispatcher.Invoke(() => {
                     if (viewWin == null)
-                        new ViewWindow(objInfo.ContainerPath, objInfo.FileName, this).Show();
+                        new ViewWindow(objInfo.ContainerPath, objInfo.FileName).Show();
                     else
                         viewWin.ViewPath = (objInfo.ContainerPath, objInfo.FileName);
                 });

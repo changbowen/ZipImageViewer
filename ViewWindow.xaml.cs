@@ -16,8 +16,6 @@ namespace ZipImageViewer
     public partial class ViewWindow : BorderlessWindow, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        private readonly MainWindow mainWin;
-
 
         private (string BasePath, string SubPath) viewPath;
         /// <summary>
@@ -118,32 +116,29 @@ namespace ZipImageViewer
         private Setting.Transition LastTransition = Setting.Transition.None;
 
 
-        public ViewWindow(string basePath, string subPath, MainWindow win = null)
+        public ViewWindow(string basePath, string subPath)
         {
             InitializeComponent();
             Opacity = 0d;
-            mainWin = win;
 
             ViewPath = (basePath, subPath);
         }
 
         private void ViewWindow_Loaded(object sender, RoutedEventArgs e) {
             //restore last state
-            if (mainWin != null) {
-                if (mainWin.lastViewWindowRect != default) {
-                    Top = mainWin.lastViewWindowRect.Top;
-                    Left = mainWin.lastViewWindowRect.Left;
-                    if (mainWin.lastViewWindowRect.Size != default) {
-                        Width = mainWin.lastViewWindowRect.Width;
-                        Height = mainWin.lastViewWindowRect.Height;
-                    }
-                    else {
-                        WindowState = WindowState.Maximized;
-                    }
+            if (Setting.LastViewWindowRect != default) {
+                Top = Setting.LastViewWindowRect.Top;
+                Left = Setting.LastViewWindowRect.Left;
+                if (Setting.LastViewWindowRect.Size != default) {
+                    Width = Setting.LastViewWindowRect.Width;
+                    Height = Setting.LastViewWindowRect.Height;
                 }
-                if (Setting.ImmersionMode)
-                    SwitchFullScreen(this, ref mainWin.lastViewWindowRect, true);
+                else {
+                    WindowState = WindowState.Maximized;
+                }
             }
+            if (Setting.ImmersionMode)
+                SwitchFullScreen(this, ref Setting.LastViewWindowRect, true);
 
             //fade in window content
             this.AnimateDoubleCubicEase(OpacityProperty, 1d, 100, EasingMode.EaseOut);
@@ -155,12 +150,10 @@ namespace ZipImageViewer
 
         private void ViewWin_Closing(object sender, CancelEventArgs e) {
             //save window state
-            if (mainWin != null) {
-                if (WindowState == WindowState.Maximized || IsFullScreen(this))
-                    mainWin.lastViewWindowRect = new Rect(Left, Top, 0d, 0d);
-                else
-                    mainWin.lastViewWindowRect = new Rect(Left, Top, ActualWidth, ActualHeight);
-            }
+            if (WindowState == WindowState.Maximized || IsFullScreen(this))
+                Setting.LastViewWindowRect = new Rect(Left, Top, 0d, 0d);
+            else
+                Setting.LastViewWindowRect = new Rect(Left, Top, ActualWidth, ActualHeight);
 
             IM.Source = null;
             IM = null;
