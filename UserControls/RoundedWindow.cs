@@ -131,6 +131,7 @@ namespace ZipImageViewer
         internal Grid BackgroundGrid { get; set; }
         public Window ParentWindow { get; set; }
         private bool? dialogResult;
+        private CloseBehaviors nextCloseBehavior;
 
         public RoundedWindow() {
             SetResourceReference(StyleProperty, typeof(RoundedWindow));
@@ -199,30 +200,32 @@ namespace ZipImageViewer
         }
 
         public new void Show() {
+            //subscribe parent window's mousedown event
             if (MenuMode) {
                 if (ParentWindow == null)
                     throw new ArgumentNullException($"{nameof(ParentWindow)} cannot be null when {nameof(MenuMode)} is true.");
                 Topmost = true;
                 subParentMouseDown();
             }
+
+            //init nextCloseBehavior
+            nextCloseBehavior = CloseBehavior;
+
             base.Show();
         }
 
         protected override void OnClosing(CancelEventArgs e) {
             unsubParentMouseDown();
 
-            switch (CloseBehavior) {
+            switch (nextCloseBehavior) {
                 case CloseBehaviors.Close:
                     //really closing
                     ParentWindow = null;
                     base.OnClosing(e);
                     break;
                 case CloseBehaviors.FadeOutAndClose:
-                    dialogResult = DialogResult;
-                    e.Cancel = true;
-                    FadeOut(true);
-                    break;
                 case CloseBehaviors.FadeOutAndHide:
+                    dialogResult = DialogResult;
                     e.Cancel = true;
                     FadeOut();
                     break;
@@ -242,6 +245,9 @@ namespace ZipImageViewer
                 Opacity = 0d;
                 Show();//how to call something similar to initializecomponent?
             }
+
+            //reset nextCloseBehavior
+            nextCloseBehavior = CloseBehavior;
 
             //compute mouse position or set to existing values
             Point newpos, realpos = default;
@@ -283,7 +289,7 @@ namespace ZipImageViewer
                 }
             }
 
-            if (Opacity == 0) {
+            if (Opacity == 0d) {
                 if (realpos != default) {
                     Left = realpos.X;
                     Top = realpos.Y;
@@ -301,22 +307,28 @@ namespace ZipImageViewer
             }
         }
         /// <summary>
-        /// Fade out the window. This ignores the CloseBehavior setting.
+        /// Fade out the window.
         /// </summary>
-        /// <param name="closeafterfade">Set to true to close the window after. Otherwise it is only hidden.</param>
-        public async Task FadeOut(bool closeafterfade = false) {
+        public void FadeOut() {
             if (!IsLoaded) return;//without this it will crash at the below line.
             RaiseEvent(new RoutedEventArgs(FadingOutEvent));
-            //need to be longer than the fading animation otherwise the window will flash when Show() is called.
-            await Task.Delay(250);
-            if (closeafterfade) {
-                CloseBehavior = CloseBehaviors.Close;
+
+            Action action;
+            if (CloseBehavior == CloseBehaviors.FadeOutAndClose) {
+                nextCloseBehavior = CloseBehaviors.Close;
                 if (IsModal == true)
                     DialogResult = dialogResult;
-                Close();
+                action = () => Close();
             }
-            else Hide();
-            RaiseEvent(new RoutedEventArgs(FadedOutEvent));
+            else
+                action = () => Hide();
+
+            Task.Delay(250).ContinueWith(t => {
+                Dispatcher.Invoke(() => {
+                    action();
+                    RaiseEvent(new RoutedEventArgs(FadedOutEvent));
+                });
+            });
         }
 
         protected override void OnMouseDown(MouseButtonEventArgs e) {

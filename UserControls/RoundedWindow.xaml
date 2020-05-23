@@ -11,7 +11,7 @@
                             <ScaleTransform/>
                         </Grid.RenderTransform>
 
-                        <!--挖空shadow layer-->
+                        <!--hollow shadow layer-->
                         <Rectangle Margin="10" RadiusX="{TemplateBinding CornerRadius}" RadiusY="{TemplateBinding CornerRadius}" Fill="Black">
                             <Rectangle.Effect>
                                 <DropShadowEffect ShadowDepth="0" BlurRadius="8"/>
@@ -81,7 +81,7 @@
                             <Setter TargetName="minimizeButton" Property="Visibility" Value="Visible"/>
                             <Setter TargetName="WindowContent" Property="Margin" Value="20,30,20,20"/>
                         </Trigger>
-                        <EventTrigger RoutedEvent="local:RoundedWindow.FadingIn">
+                        <EventTrigger RoutedEvent="FadingIn">
                             <BeginStoryboard>
                                 <Storyboard>
                                     <DoubleAnimation Storyboard.TargetProperty="(Window.Opacity)" From="0" To="1" Duration="0:0:0.3"/>
@@ -94,7 +94,7 @@
                                 </Storyboard>
                             </BeginStoryboard>
                         </EventTrigger>
-                        <EventTrigger RoutedEvent="local:RoundedWindow.FadingOut">
+                        <EventTrigger RoutedEvent="FadingOut">
                             <BeginStoryboard>
                                 <Storyboard>
                                     <DoubleAnimation Storyboard.TargetProperty="(Window.Opacity)" To="0" Duration="0:0:0.2"/>
