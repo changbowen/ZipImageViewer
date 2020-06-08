@@ -260,7 +260,7 @@ namespace ZipImageViewer
                 if (saved == null) continue;
                 try { prop.SetValue(null, JsonConvert.DeserializeObject(saved, prop.PropertyType)); }
                 catch {
-                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", prop.Name), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", prop.Name), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
 
@@ -277,7 +277,7 @@ namespace ZipImageViewer
                 }
             }
             catch {
-                MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_CustomCommands")), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_CustomCommands")), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }
 
             //parse lists at last
@@ -288,7 +288,7 @@ namespace ZipImageViewer
                     .Select(d => new Observable<string>(d.KeyName)));
             }
             catch {
-                MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }
 
             var mp = Tables[Table.MappedPasswords];
@@ -299,7 +299,7 @@ namespace ZipImageViewer
             if (File.Exists(mp.FullPath)) {
                 try { MappedPasswords.ReadXml(mp.FullPath); }
                 catch {
-                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_MappedPasswords")), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_MappedPasswords")), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
         }

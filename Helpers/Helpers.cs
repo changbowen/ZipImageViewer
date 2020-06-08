@@ -338,7 +338,7 @@ namespace ZipImageViewer
                 Process.Start(path, args);
             }
             catch (Exception ex) {
-                MessageBox.Show(ex.Message, null, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, string.Empty, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

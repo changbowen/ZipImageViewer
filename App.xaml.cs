@@ -11,7 +11,7 @@ using System.Windows.Media.Animation;
 using static ZipImageViewer.SQLiteHelper;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.Helpers;
-using System.Threading;
+using System.Net;
 
 namespace ZipImageViewer
 {
@@ -145,6 +145,31 @@ namespace ZipImageViewer
 
                 //show mainwindow if no cmdline args
                 new MainWindow().Show();
+
+                //check for updates
+                Task.Run(() => {
+                    var _ = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                    var localVer = new Version(_.Major, _.Minor, _.Build);
+                    var req = (HttpWebRequest)WebRequest.Create(@"https://api.github.com/repos/changbowen/zipimageviewer/releases/latest");
+                    req.ContentType = @"application/json; charset=utf-8";
+                    req.UserAgent = nameof(ZipImageViewer);
+                    try {
+                        using (var res = req.GetResponse() as HttpWebResponse)
+                        using (var stream = res.GetResponseStream())
+                        using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8)) {
+                            var jObj = Newtonsoft.Json.Linq.JObject.Parse(reader.ReadToEnd());
+                            string tag_name = @"tag_name";
+                            if (!jObj.ContainsKey(tag_name)) return;
+                            _ = Version.Parse(jObj[tag_name].ToString().TrimStart('v'));
+                            var remoteVer = new Version(_.Major, _.Minor, _.Build);
+                            if (localVer < remoteVer && MessageBox.Show(GetRes(@"msg_NewVersionPrompt", localVer.ToString(3), remoteVer.ToString(3)), string.Empty,
+                                MessageBoxButton.OKCancel, MessageBoxImage.Information) == MessageBoxResult.OK) {
+                                Helpers.Run(@"explorer", @"https://github.com/changbowen/ZipImageViewer/releases");
+                            }
+                        }
+                    }
+                    catch { }
+                });
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message, GetRes("ttl_AppStartError"), MessageBoxButton.OK, MessageBoxImage.Error);

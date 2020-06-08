@@ -67,7 +67,7 @@ namespace ZipImageViewer
             objectList = GetAll(basePath)?.ToArray();
 
             if (objectList?.Length == 0) {
-                MessageBox.Show(GetRes("msg_NoImageFound", basePath), null, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show(GetRes("msg_NoImageFound", basePath), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 Close();
                 return;
             }

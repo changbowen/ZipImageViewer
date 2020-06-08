@@ -132,4 +132,8 @@
         <Bold xml:space="preserve">    滚轮</Bold> - 以鼠标位置为中心缩放<LineBreak/>
         <Bold xml:space="preserve">    拖动</Bold> - 平移
     </Span>
+    <sys:String x:Key="msg_NewVersionPrompt">有新版本可用。
+当前版本: {0}
+新版本: {1}
+点击确定以打开发布页面。</sys:String>
 </ResourceDictionary>

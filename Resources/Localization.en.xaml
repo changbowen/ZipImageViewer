@@ -132,4 +132,8 @@
         <Bold xml:space="preserve">    Wheel</Bold> - Cursor-centered zoom<LineBreak/>
         <Bold xml:space="preserve">    Drag</Bold> - Pan
     </Span>
+    <sys:String x:Key="msg_NewVersionPrompt" xml:space="preserve">A new version is available.
+Current version: {0}
+New version: {1}
+Click OK to open the release page.</sys:String>
 </ResourceDictionary>

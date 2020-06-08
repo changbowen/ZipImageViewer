@@ -42,7 +42,7 @@ namespace ZipImageViewer
                 }
             }
             catch (Exception ex) {
-                MessageBox.Show(GetRes("msg_ErrorOpenDbFile", table.FullPath) + $"\r\n{ex.Message}", null, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(GetRes("msg_ErrorOpenDbFile", table.FullPath) + $"\r\n{ex.Message}", string.Empty, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally {
                 if (con != null) {
