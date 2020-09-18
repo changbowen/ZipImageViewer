@@ -160,6 +160,17 @@ namespace ZipImageViewer
                 }
             }
 
+            private bool randomOrder = false;
+            public bool RandomOrder {
+                get => randomOrder;
+                set {
+                    if (randomOrder == value) return;
+                    randomOrder = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RandomOrder)));
+                }
+            }
+
+
             /// <summary>
             /// Status store used by animations
             /// </summary>

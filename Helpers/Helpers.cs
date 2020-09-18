@@ -454,6 +454,20 @@ namespace ZipImageViewer
         public static ImageSource GetFaIcon(FontAwesome5.EFontAwesomeIcon icon, Brush brush = null) {
             return FontAwesome5.ImageAwesome.CreateImageSource(icon, brush ?? GetRes<Brush>(@"ForegroundBrush"));
         }
+
+        /// <summary>
+        /// Fisher-Yates shuffle implementation from https://stackoverflow.com/questions/273313/randomize-a-listt
+        /// </summary>
+        public static void Shuffle<T>(this IList<T> list) {
+            int n = list.Count;
+            while (n > 1) {
+                n--;
+                int k = App.Random.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+        }
     }
 
     [AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = false)]

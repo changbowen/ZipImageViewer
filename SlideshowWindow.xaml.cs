@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,6 +10,7 @@ using SizeInt = System.Drawing.Size;
 using static ZipImageViewer.Helpers;
 using static ZipImageViewer.SlideshowHelper;
 using static ZipImageViewer.LoadHelper;
+using System.Threading.Tasks;
 
 namespace ZipImageViewer
 {
@@ -33,7 +33,6 @@ namespace ZipImageViewer
             InitializeComponent();
 
             basePath = path;
-
             animConfig = Setting.SlideAnimConfig;
             animTimer = new DispatcherTimer(DispatcherPriority.Normal, Application.Current.Dispatcher);
             animTimer.Tick += AnimTick;
@@ -62,6 +61,23 @@ namespace ZipImageViewer
         private (int objIdx, int subIdx) index = (0, 0);
         private ObjectInfo[] objectList;
 
+
+        private async void AnimConfig_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
+            if (e.PropertyName != nameof(animConfig.RandomOrder)) return;
+            if (objectList == null || objectList.Length == 0) return;
+
+            //wait for AnimTick
+            while (!animTimer.IsEnabled) await Task.Delay(50);
+
+            //restart slideshow
+            animTimer.Stop();
+            index.subIdx = 0;
+            index.objIdx = 0;
+            objectList = GetAll(basePath)?.ToArray();
+            if (animConfig.RandomOrder && objectList.Length > 1) objectList.Shuffle();
+            animTimer.Start();
+        }
+
         private void SlideWin_Loaded(object sender, RoutedEventArgs e) {
             //get image to use
             objectList = GetAll(basePath)?.ToArray();
@@ -71,6 +87,13 @@ namespace ZipImageViewer
                 Close();
                 return;
             }
+
+            //subscribing to RandomOrder property change
+            animConfig.PropertyChanged += AnimConfig_PropertyChanged;
+
+            //all first shuffle. This only shuffles on the first level (images within archives are not shuffled)
+            if (animConfig.RandomOrder && objectList.Length > 1) objectList.Shuffle();
+
             //minimize other app windows
             foreach (var win in Application.Current.Windows.Cast<Window>()) {
                 if (win is MainWindow || win is ViewWindow) win.WindowState = WindowState.Minimized;
@@ -79,12 +102,17 @@ namespace ZipImageViewer
             //fullscreen
             SwitchFullScreen(this, ref lastRect, true);
             Topmost = true;
+#if DEBUG
+            Width = 400d;
+            Height = 300d;
+#endif
 
             //start
             AnimTick(null, null);
         }
 
         private void SlideWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+            animConfig.PropertyChanged -= AnimConfig_PropertyChanged;
             animTimer.Stop();
             Topmost = false;
         }
@@ -136,7 +164,8 @@ namespace ZipImageViewer
             var dpi = VisualTreeHelper.GetDpi(this);
             var decodeSize = new SizeInt(Convert.ToInt32(canvas.ActualWidth * dpi.DpiScaleX * animConfig.ResolutionScale),
                                          Convert.ToInt32(canvas.ActualHeight * dpi.DpiScaleY * animConfig.ResolutionScale));
-            //calculate index
+
+            //calculate index and shuffle in the end
             var currObj = objectList[index.objIdx];
             switch (currObj.Flags) {
                 case FileFlags.Image:
@@ -144,16 +173,24 @@ namespace ZipImageViewer
                     index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
                     break;
                 case FileFlags.Archive:
-                    if (currObj.SourcePaths == null)
+                    if (currObj.SourcePaths == null) {
                         currObj.SourcePaths = await GetSourcePathsAsync(currObj);
+                        if (currObj.SourcePaths == null) break;
+                        //archive first shuffle
+                        if (animConfig.RandomOrder && currObj.SourcePaths.Length > 1) currObj.SourcePaths.Shuffle();
+                    }
                     nextSrc = await GetImageSourceAsync(currObj, sourcePathIdx: index.subIdx, decodeSize: decodeSize);
                     index.subIdx++;
-                    if (index.subIdx >= currObj.SourcePaths?.Length) {
+                    if (index.subIdx >= currObj.SourcePaths.Length) {
                         index.subIdx = 0;
+                        //archive end shuffle
+                        if (animConfig.RandomOrder && currObj.SourcePaths.Length > 1) currObj.SourcePaths.Shuffle();
                         index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
                     }
                     break;
             }
+            if (animConfig.RandomOrder && index.objIdx == 0 && index.subIdx == 0 && objectList.Length > 1)
+                objectList.Shuffle();//all end shuffle
 
             if (nextSrc != null) {
                 //switch target

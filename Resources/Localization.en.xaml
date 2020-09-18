@@ -93,6 +93,7 @@
     <sys:String x:Key="msg_FallbackPwdTip">Fallback passwords will be tried on any new encrypted archives.</sys:String>
     <sys:String x:Key="ttl_OK">OK</sys:String>
     <sys:String x:Key="ttl_Cancel">Cancel</sys:String>
+    <sys:String x:Key="ttl_RandomOrder">Random Order</sys:String>
     <sys:String x:Key="ttl_Transition">Transition</sys:String>
     <sys:String x:Key="ttl_ResolutionScale">Resolution Scale</sys:String>
     <sys:String x:Key="ttl_ImageDuration">Image Duration</sys:String>

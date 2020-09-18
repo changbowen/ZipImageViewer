@@ -61,7 +61,13 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                
+
+                <Border>
+                    <DockPanel>
+                        <TextBlock Text="{StaticResource ttl_RandomOrder}" Style="{StaticResource HeaderStyle}"/>
+                        <CheckBox IsChecked="{Binding SlideAnimConfig.RandomOrder, Source={x:Static local:App.Setting}}"/>
+                    </DockPanel>
+                </Border>
                 <Border>
                     <DockPanel>
                         <TextBlock Text="{StaticResource ttl_Transition}" Style="{StaticResource HeaderStyle}"/>

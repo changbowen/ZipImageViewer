@@ -93,6 +93,7 @@
     <sys:String x:Key="msg_FallbackPwdTip">对陌生加密压缩文件会尝试备用密码用来解压。</sys:String>
     <sys:String x:Key="ttl_OK">确定</sys:String>
     <sys:String x:Key="ttl_Cancel">取消</sys:String>
+    <sys:String x:Key="ttl_RandomOrder">随机顺序</sys:String>
     <sys:String x:Key="ttl_Transition">过渡效果</sys:String>
     <sys:String x:Key="ttl_ResolutionScale">分辨率比例</sys:String>
     <sys:String x:Key="ttl_ImageDuration">图像时长</sys:String>
