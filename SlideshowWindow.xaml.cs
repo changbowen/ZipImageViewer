@@ -11,6 +11,7 @@ using static ZipImageViewer.Helpers;
 using static ZipImageViewer.SlideshowHelper;
 using static ZipImageViewer.LoadHelper;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace ZipImageViewer
 {
@@ -19,20 +20,21 @@ namespace ZipImageViewer
         private readonly string basePath;
         private readonly DispatcherTimer animTimer;
         private readonly SlideAnimConfig animConfig;
-        //public SlideAnimConfig AnimConfig {
-        //    get { return (SlideAnimConfig)GetValue(AnimConfigProperty); }
-        //    set { SetValue(AnimConfigProperty, value); }
-        //}
-        //public static readonly DependencyProperty AnimConfigProperty =
-        //    DependencyProperty.Register("AnimConfig", typeof(SlideAnimConfig), typeof(SlideshowWindow), new PropertyMetadata(null));
+
+        private DpiImage currImage;
+        private Rect lastRect;
+
+        private (int objIdx, int subIdx) index = (0, 0);
+        private ObjectInfo[] objectList;
+
 
         /// <summary>
         /// path will be used to get images from.
         /// </summary>
-        public SlideshowWindow(string dirPath) {
+        public SlideshowWindow(string path) {
             InitializeComponent();
 
-            basePath = dirPath;
+            basePath = path;
             animConfig = Setting.SlideAnimConfig;
             animTimer = new DispatcherTimer(DispatcherPriority.Normal, Application.Current.Dispatcher);
             animTimer.Tick += AnimTick;
@@ -55,13 +57,6 @@ namespace ZipImageViewer
             b.BeginAnimation(OpacityProperty, a);
         }
 
-        private DpiImage currImage;
-        private Rect lastRect;
-
-        private (int objIdx, int subIdx) index = (0, 0);
-        private ObjectInfo[] objectList;
-
-
         private async void AnimConfig_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
             if (e.PropertyName != nameof(animConfig.RandomOrder)) return;
             if (objectList == null || objectList.Length == 0) return;
@@ -73,16 +68,18 @@ namespace ZipImageViewer
             animTimer.Stop();
             index.subIdx = 0;
             index.objIdx = 0;
-            objectList = EnumerateContainers(basePath, false, true).ToArray();
+            objectList = GetContainers(basePath)?.ToArray();
+            if (objectList == null || objectList.Length == 0) return;
+
             if (animConfig.RandomOrder && objectList.Length > 1) objectList.Shuffle();
             animTimer.Start();
         }
 
         private void SlideWin_Loaded(object sender, RoutedEventArgs e) {
             //get image to use
-            objectList = EnumerateContainers(basePath, false, true).ToArray();
+            objectList = GetContainers(basePath)?.ToArray();
 
-            if (objectList?.Length == 0) {
+            if (objectList == null || objectList.Length == 0) {
                 MessageBox.Show(GetRes("msg_NoImageFound", basePath), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 Close();
                 return;
@@ -103,8 +100,8 @@ namespace ZipImageViewer
             SwitchFullScreen(this, ref lastRect, true);
             Topmost = true;
 #if DEBUG
-            Width = 400d;
-            Height = 300d;
+            Width = 640d;
+            Height = 400d;
 #endif
 
             //start
@@ -180,6 +177,7 @@ namespace ZipImageViewer
                         if (animConfig.RandomOrder && currObj.SourcePaths.Length > 1) currObj.SourcePaths.Shuffle();
                     }
                     nextSrc = await GetImageSourceAsync(currObj, sourcePathIdx: index.subIdx, decodeSize: decodeSize);
+                    Title = Path.Combine(currObj.ContainerPath, currObj.SourcePaths[index.subIdx]);
                     index.subIdx++;
                     if (index.subIdx >= currObj.SourcePaths.Length) {
                         index.subIdx = 0;
@@ -188,10 +186,11 @@ namespace ZipImageViewer
                         index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
                     }
                     break;
-                case FileFlags.Image:
-                    nextSrc = await GetImageSourceAsync(currObj.FileSystemPath, decodeSize);
-                    index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
-                    break;
+                //case FileFlags.Image:
+                //    nextSrc = await GetImageSourceAsync(currObj.FileSystemPath, decodeSize);
+                //    Title = Path.Combine(currObj.ContainerPath, currObj.SourcePaths[index.subIdx]);
+                //    index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
+                //    break;
             }
             if (animConfig.RandomOrder && index.objIdx == 0 && index.subIdx == 0 && objectList.Length > 1)
                 objectList.Shuffle();//all end shuffle

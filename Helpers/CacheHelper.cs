@@ -40,9 +40,21 @@ namespace ZipImageViewer
                     mainWin.preRefreshActions();
                 }
 
-                var infos = firstOnly ?
-                    GetAll(cachePath, false, FileFlags.Archive | FileFlags.Image | FileFlags.Directory) :
-                    GetAll(cachePath, true, FileFlags.Archive | FileFlags.Image);
+                //because cache always needs to cache all images under current view, we need to get containers plus images under root
+                IEnumerable<ObjectInfo> infos = null;
+                var dirInfo = new DirectoryInfo(cachePath);
+                switch (GetPathType(dirInfo)) {
+                    case FileFlags.Directory:
+                        infos = dirInfo.EnumerateFiles()
+                            .Where(fi => GetPathType(fi) == FileFlags.Image)
+                            .Select(fi => new ObjectInfo(fi.FullName, FileFlags.Image, fi.Name));
+                        infos = infos.Concatenate(EnumerateContainers(cachePath, inclRoot: false));
+                        break;
+                    case FileFlags.Archive:
+                        infos = new[] { new ObjectInfo(cachePath, FileFlags.Archive) };
+                        break;
+                }
+                
                 CacheObjInfos(infos, ref bw.tknSrc_Work, bw.lock_Work, firstOnly, cb);
 
                 if (mainWin != null)
@@ -66,43 +78,49 @@ namespace ZipImageViewer
 
             void cacheObjInfo(ObjectInfo objInfo) {
                 try {
-                    objInfo.SourcePaths = GetSourcePaths(objInfo);
-                    if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0) return;
-
-                    if (objInfo.Flags == FileFlags.Archive) {
-                        ExtractZip(new LoadOptions(objInfo.FileSystemPath) {
-                            Flags = FileFlags.Archive,
-                            LoadImage = false,
-                            DecodeSize = decodeSize,
-                            ExtractorCallback = (ext, fileName, options) => {
-                                try {
-                                    if (ThumbExistInDB(ext.FileName, fileName, decodeSize)) {
-                                        if (firstOnly) options.Continue = false;
-                                        return null;
-                                    }
-                                    ImageSource source = null;
-                                    using (var ms = new MemoryStream()) {
-                                        ext.ExtractFile(fileName, ms);
-                                        if (ms.Length > 0)
-                                            source = GetImageSource(ms, decodeSize);
-                                    }
-                                    if (source != null) {
-                                        AddToThumbDB(source, objInfo.FileSystemPath, fileName, decodeSize);
-                                        if (firstOnly) options.Continue = false;
-                                    }
+                    switch (objInfo.Flags) {
+                        case FileFlags.Directory:
+                        case FileFlags.Image:
+                            objInfo.SourcePaths = GetSourcePaths(objInfo);
+                            if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0) break;
+                            if (objInfo.Flags == FileFlags.Directory && firstOnly)
+                                objInfo.SourcePaths = new[] { objInfo.SourcePaths[0] };
+                            foreach (var srcPath in objInfo.SourcePaths) {
+                                if (!ThumbExistInDB(objInfo.ContainerPath, srcPath, decodeSize)) {
+                                    GetImageSource(objInfo, srcPath, decodeSize, false);
                                 }
-                                catch { }
-                                finally {
-                                    callback?.Invoke(fileName, count, total);
-                                }
-                                return null;
-                            },
-                        }, tknSrcLocal);
-                    }
-                    else {//flag can be Image or Directory
-                        if (!ThumbExistInDB(objInfo.ContainerPath, objInfo.SourcePaths[0], decodeSize)) {
-                            GetImageSource(objInfo, 0, decodeSize, false);
-                        }
+                            }
+                            break;
+                        case FileFlags.Archive:
+                            ExtractZip(new LoadOptions(objInfo.FileSystemPath) {
+                                Flags = FileFlags.Archive,
+                                LoadImage = false,
+                                DecodeSize = decodeSize,
+                                ExtractorCallback = (ext, fileName, options) => {
+                                    try {
+                                        if (ThumbExistInDB(ext.FileName, fileName, decodeSize)) {
+                                            if (firstOnly) options.Continue = false;
+                                            return null;
+                                        }
+                                        ImageSource source = null;
+                                        using (var ms = new MemoryStream()) {
+                                            ext.ExtractFile(fileName, ms);
+                                            if (ms.Length > 0)
+                                                source = GetImageSource(ms, decodeSize);
+                                        }
+                                        if (source != null) {
+                                            AddToThumbDB(source, objInfo.FileSystemPath, fileName, decodeSize);
+                                            if (firstOnly) options.Continue = false;
+                                        }
+                                    }
+                                    catch { }
+                                    finally {
+                                        callback?.Invoke(fileName, count, total);
+                                    }
+                                    return null;
+                                },
+                            }, tknSrcLocal);
+                            break;
                     }
                 }
                 catch { }
