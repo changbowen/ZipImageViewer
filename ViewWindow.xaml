@@ -6,10 +6,15 @@
         xmlns:fa="http://schemas.fontawesome.com/icons/"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
         Icon="Resources/ZipImageViewer.ico" Padding="0"
-        Title="{Binding ElementName=ViewWin, Path=ObjectInfo.VirtualPath, Mode=OneWay}"
         Width="1280" Height="960" Foreground="{StaticResource ForegroundBrush}"
         UseLayoutRounding="True" SizeChanged="ViewWin_SizeChanged"
         Loaded="ViewWindow_Loaded" Closing="ViewWin_Closing" Closed="ViewWin_Closed" PreviewKeyUp="ViewWin_PreviewKeyUp">
+    <Window.Title>
+        <MultiBinding Mode="OneWay" StringFormat="{}{0}\{1}">
+            <Binding ElementName="ViewWin" Path="ViewPath.Item1" Mode="OneWay"/>
+            <Binding ElementName="ViewWin" Path="ViewPath.Item2" Mode="OneWay"/>
+        </MultiBinding>
+    </Window.Title>
     <Window.Resources>
         <local:CenterConverter x:Key="CenterConverter"/>
         <local:MathMultiplyConverter x:Key="MathMultiplyConverter"/>

@@ -80,7 +80,7 @@ namespace ZipImageViewer
                 Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
 
                 //get supported extensions
-                foreach (var ext in NativeHelpers.GetWICDecoders().Select(s => s.ToLowerInvariant())) {
+                foreach (var ext in RegistryHelpers.GetWICDecoders().Select(s => s.ToLowerInvariant())) {
                     if (!ImageExtensions.Contains(ext)) ImageExtensions.Add(ext);
                 }
 

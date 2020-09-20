@@ -67,7 +67,7 @@ namespace ZipImageViewer
             void cacheObjInfo(ObjectInfo objInfo) {
                 try {
                     objInfo.SourcePaths = GetSourcePaths(objInfo);
-                    if (objInfo.SourcePaths.IsNullOrEmpty()) return;
+                    if (objInfo.SourcePaths == null || objInfo.SourcePaths.Length == 0) return;
 
                     if (objInfo.Flags == FileFlags.Archive) {
                         ExtractZip(new LoadOptions(objInfo.FileSystemPath) {

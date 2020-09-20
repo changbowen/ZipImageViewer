@@ -23,11 +23,10 @@ namespace ZipImageViewer
                 if (fileName == value) return;
                 fileName = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FileName)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
                 if (Flags.HasFlag(FileFlags.Archive))
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
-                if (Flags.HasFlag(FileFlags.Image) && Flags.HasFlag(FileFlags.Archive))
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
             }
         }
 
@@ -48,9 +47,9 @@ namespace ZipImageViewer
                 if (flags == value) return;
                 flags = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Flags)));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VirtualPath)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ContainerPath)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsContainer)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DebugInfo)));
             }
         }
@@ -61,23 +60,15 @@ namespace ZipImageViewer
         /// </summary>
         public string VirtualPath {
             get {
-                if (Flags.HasFlag(FileFlags.Archive) && Flags.HasFlag(FileFlags.Image))
+                if ((Flags.HasFlag(FileFlags.Archive) && Flags.HasFlag(FileFlags.Image)) ||
+                    (Flags.HasFlag(FileFlags.Directory) && Flags.HasFlag(FileFlags.Image)))
                     return Path.Combine(FileSystemPath, FileName);
                 return FileSystemPath;
             }
         }
 
-        /// <summary>
-        /// For directory and archive, the parent folder name of FilePath. Otherwise FileName.
-        /// </summary>
         public string DisplayName {
-            get {
-                if (Flags.HasFlag(FileFlags.Directory))
-                    return Path.GetFileName(FileSystemPath);
-                if (Flags.HasFlag(FileFlags.Image) && Flags.HasFlag(FileFlags.Archive))
-                    return FileName;
-                return FileName;
-            }
+            get => FileName;
         }
 
         /// <summary>
@@ -106,6 +97,8 @@ namespace ZipImageViewer
         private string[] sourcePaths;
         /// <summary>
         /// Contains the child items. Null indicates the children are not retrived yet.
+        /// For containers, the paths relative to the container's path.
+        /// For images, this should be a single-element array with the image's FileName in it.
         /// </summary>
         public string[] SourcePaths {
             get => sourcePaths;

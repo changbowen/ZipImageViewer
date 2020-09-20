@@ -29,10 +29,10 @@ namespace ZipImageViewer
         /// <summary>
         /// path will be used to get images from.
         /// </summary>
-        public SlideshowWindow(string path) {
+        public SlideshowWindow(string dirPath) {
             InitializeComponent();
 
-            basePath = path;
+            basePath = dirPath;
             animConfig = Setting.SlideAnimConfig;
             animTimer = new DispatcherTimer(DispatcherPriority.Normal, Application.Current.Dispatcher);
             animTimer.Tick += AnimTick;
@@ -73,14 +73,14 @@ namespace ZipImageViewer
             animTimer.Stop();
             index.subIdx = 0;
             index.objIdx = 0;
-            objectList = GetAll(basePath)?.ToArray();
+            objectList = EnumerateContainers(basePath, false, true).ToArray();
             if (animConfig.RandomOrder && objectList.Length > 1) objectList.Shuffle();
             animTimer.Start();
         }
 
         private void SlideWin_Loaded(object sender, RoutedEventArgs e) {
             //get image to use
-            objectList = GetAll(basePath)?.ToArray();
+            objectList = EnumerateContainers(basePath, false, true).ToArray();
 
             if (objectList?.Length == 0) {
                 MessageBox.Show(GetRes("msg_NoImageFound", basePath), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
@@ -168,25 +168,29 @@ namespace ZipImageViewer
             //calculate index and shuffle in the end
             var currObj = objectList[index.objIdx];
             switch (currObj.Flags) {
-                case FileFlags.Image:
-                    nextSrc = await GetImageSourceAsync(currObj.FileSystemPath, decodeSize);
-                    index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
-                    break;
                 case FileFlags.Archive:
-                    if (currObj.SourcePaths == null) {
+                case FileFlags.Directory:
+                    if (currObj.SourcePaths == null || currObj.SourcePaths.Length == 0) {
                         currObj.SourcePaths = await GetSourcePathsAsync(currObj);
-                        if (currObj.SourcePaths == null) break;
-                        //archive first shuffle
+                        if (currObj.SourcePaths == null || currObj.SourcePaths.Length == 0) {
+                            index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
+                            break;
+                        }
+                        //container first shuffle
                         if (animConfig.RandomOrder && currObj.SourcePaths.Length > 1) currObj.SourcePaths.Shuffle();
                     }
                     nextSrc = await GetImageSourceAsync(currObj, sourcePathIdx: index.subIdx, decodeSize: decodeSize);
                     index.subIdx++;
                     if (index.subIdx >= currObj.SourcePaths.Length) {
                         index.subIdx = 0;
-                        //archive end shuffle
+                        //container end shuffle
                         if (animConfig.RandomOrder && currObj.SourcePaths.Length > 1) currObj.SourcePaths.Shuffle();
                         index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
                     }
+                    break;
+                case FileFlags.Image:
+                    nextSrc = await GetImageSourceAsync(currObj.FileSystemPath, decodeSize);
+                    index.objIdx = index.objIdx == objectList.Length - 1 ? 0 : index.objIdx + 1;
                     break;
             }
             if (animConfig.RandomOrder && index.objIdx == 0 && index.subIdx == 0 && objectList.Length > 1)

@@ -213,20 +213,6 @@ namespace ZipImageViewer
             }
         }
 
-        private static bool immersionMode;
-        //not saved
-        public static bool ImmersionMode {
-            get => immersionMode;
-            set {
-                if (immersionMode == value) return;
-                immersionMode = value;
-                OnStaticPropertyChanged(nameof(ImmersionMode));
-            }
-        }
-
-        //not saved
-        public static Rect LastViewWindowRect;
-
         private static SlideAnimConfig slideAnimConfig = new SlideAnimConfig();
         [AppConfig]
         public static SlideAnimConfig SlideAnimConfig {
@@ -237,6 +223,38 @@ namespace ZipImageViewer
                 OnStaticPropertyChanged(nameof(SlideAnimConfig));
             }
         }
+
+
+        #region non-saved settings
+
+        private static bool immersionMode;
+        public static bool ImmersionMode {
+            get => immersionMode;
+            set {
+                if (immersionMode == value) return;
+                immersionMode = value;
+                OnStaticPropertyChanged(nameof(ImmersionMode));
+            }
+        }
+
+        public bool ExpMenuSlideshow {
+            get => RegistryHelpers.CheckExplorerMenuItem(@"ZIV_PlaySlideshow", @"*", @"Directory");
+            set {
+                if (value) {
+                    RegistryHelpers.SetExplorerMenuItem(@"ZIV_PlaySlideshow", GetRes(@"ttl_PlaySlideshowWithZIV"),
+                        $@"""{Assembly.GetExecutingAssembly().Location}"" -slideshow ""%1""", @"*", @"Directory");
+                }
+                else {
+                    RegistryHelpers.ClearExplorerMenuItem(@"ZIV_PlaySlideshow", @"*", @"Directory");
+                }
+                OnStaticPropertyChanged(nameof(ExpMenuSlideshow));
+            }
+        }
+
+        public static Rect LastViewWindowRect;
+
+        #endregion
+
 
         private static IEnumerable<PropertyInfo> appConfigs => typeof(Setting).GetProperties(BindingFlags.Public | BindingFlags.Static)
                 .Where(p => p.GetCustomAttributes(typeof(AppConfigAttribute), false).Length > 0);

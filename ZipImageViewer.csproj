@@ -130,6 +130,7 @@
     <Compile Include="Helpers\LoadHelper.cs" />
     <Compile Include="Helpers\NativeHelpers.cs" />
     <Compile Include="Helpers\ObjectInfo.cs" />
+    <Compile Include="Helpers\RegistryHelpers.cs" />
     <Compile Include="Helpers\Setting.cs" />
     <Compile Include="Helpers\SlideshowHelper.cs" />
     <Compile Include="Helpers\SQLiteHelper.cs" />

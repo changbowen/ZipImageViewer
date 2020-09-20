@@ -15,6 +15,10 @@
     <sys:String x:Key="ttl_ThumbDbSize">Thumbnail Cache Size (Current: {0})</sys:String>
     <sys:String x:Key="ttl_Unlimited">Unlimited</sys:String>
     <sys:String x:Key="msg_ThumbDbSizeTip">Maximum size limit of the thumbnail database. Setting to Unlimited removes the limit on the application level.</sys:String>
+    <sys:String x:Key="ttl_ExpMenuSlideshow">"Play Slideshow" in Explorer Menu</sys:String>
+    <sys:String x:Key="msg_ExpMenuSlideshow">Add "Play Slideshow" option to Windows Explorer right-click menu.
+        Note that if this is enabled and the application is moved, you need to toggle this setting otherwise the menu item will point to the old location.</sys:String>
+    <sys:String x:Key="ttl_PlaySlideshowWithZIV">Play Slideshow with ZipImageViewer</sys:String>
     <sys:String x:Key="ttl_LiteMode">Lite Mode</sys:String>
     <sys:String x:Key="msg_LiteModeTip">Disables most effects that affect UI performance.</sys:String>
     <sys:String x:Key="ttl_ViewerBackground">Viewer Background</sys:String>
@@ -114,7 +118,9 @@
     <Span x:Key="spn_About">
         <Bold>Thank you for using ZipImageViewer!</Bold>
         <LineBreak/>
-        The application is brought to you by Carl Chang (changbowen@msn.cn). Complete source is available on GitHub [https://github.com/changbowen/ZipImageViewer].
+        The application is brought to you by Carl Chang (changbowen@msn.cn).
+        <LineBreak/>
+        Complete source is available on GitHub [https://github.com/changbowen/ZipImageViewer].
         <LineBreak/>
         <LineBreak/>
         Some instructions on mouse actions:<LineBreak/>

@@ -17,20 +17,25 @@ namespace ZipImageViewer
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private (string BasePath, string SubPath) viewPath;
+        private ObservablePair<string, string> viewPath;
         /// <summary>
+        /// Item1 is BasePath and Item2 is SubPath.
         /// Update this to trigger change to view content.
-        /// Leave BasePath to null will use the current BasePath and SourcePaths will also be inherited.
+        /// Leave Item1 (BasePath) to null will use the current value and SourcePaths will also be inherited when BasePaths are the same.
         /// </summary>
-        public (string BasePath, string SubPath) ViewPath {
+        public ObservablePair<string, string> ViewPath {
             get => viewPath;
             set {
-                if (viewPath == value) return;
+                if (value == null || viewPath == value) return;
+                if (value.Item2 == null || (value.Item1 == null && viewPath?.Item1 == null))
+                    throw new ArgumentException(@"SubPath is null or BasePath and old BasePath are both null.");
+
                 //update ObjectInfo
-                if (value.BasePath == null) value.BasePath = viewPath.BasePath;
-                var newInfo = new ObjectInfo(value.BasePath, GetPathType(value.BasePath), value.SubPath);
-                //carry over SourcePaths when BasePath is the same
-                if (value.BasePath == viewPath.BasePath)
+                //use existing BasePath when it's not set
+                if (value.Item1 == null) value.Item1 = viewPath.Item1;
+                var newInfo = new ObjectInfo(value.Item1, GetPathType(value.Item1), value.Item2);
+                //carry over SourcePaths when Item1 (BasePath) is the same
+                if (value.Item1 == viewPath?.Item1)
                     newInfo.SourcePaths = ObjectInfo.SourcePaths;
 
                 viewPath = value;

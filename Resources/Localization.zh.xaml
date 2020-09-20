@@ -15,6 +15,10 @@
     <sys:String x:Key="ttl_ThumbDbSize">缩略图缓存大小 （当前: {0}）</sys:String>
     <sys:String x:Key="ttl_Unlimited">无限制</sys:String>
     <sys:String x:Key="msg_ThumbDbSizeTip">缩略图缓存的最大文件尺寸。设置为无限制会解除软件层面的限制。</sys:String>
+    <sys:String x:Key="ttl_ExpMenuSlideshow">添加“播放幻灯片”选项到资源管理器菜单</sys:String>
+    <sys:String x:Key="msg_ExpMenuSlideshow">在Windows资源管理器右键菜单中添加“播放幻灯片”选项。
+        注意如果开启此项之后移动了程序文件，你需要关闭再开启此项，否则菜单项会指向旧的位置。</sys:String> 
+    <sys:String x:Key="ttl_PlaySlideshowWithZIV">用ZipImageViewer播放幻灯片</sys:String>
     <sys:String x:Key="ttl_LiteMode">简洁模式</sys:String>
     <sys:String x:Key="msg_LiteModeTip">禁用多数影响界面性能的特效。</sys:String>
     <sys:String x:Key="ttl_ViewerBackground">查看器背景</sys:String>
@@ -114,7 +118,9 @@
     <Span x:Key="spn_About">
         <Bold>感谢使用ZipImageViewer！</Bold>
         <LineBreak/>
-        此软件由Carl Chang (changbowen@msn.cn)编写。完整源代码在GitHub [https://github.com/changbowen/ZipImageViewer]。
+        此软件由Carl Chang (changbowen@msn.cn)编写。
+        <LineBreak/>
+        完整源代码在GitHub [https://github.com/changbowen/ZipImageViewer]。
         <LineBreak/>
         <LineBreak/>
         鼠标操作说明：<LineBreak/>

@@ -94,9 +94,10 @@ namespace ZipImageViewer
             return ran.NextDouble() * (max - min) + min;
         }
 
-        public static bool IsNullOrEmpty(this Array array) {
-            return array == null || array.Length == 0;
-        }
+        //almost never used...
+        //public static bool IsNullOrEmpty(this Array array) {
+        //    return array == null || array.Length == 0;
+        //}
 
         /// <summary>
         /// Return true for file, false for directory, or null if the target <paramref name="path"/> points to does not exist.

@@ -311,8 +311,7 @@ namespace ZipImageViewer
                         fsInfos = new DirectoryInfo(objInfo.FileSystemPath).EnumerateFileSystemInfos();
                         var srcPaths = new List<string>();
                         foreach (var fsInfo in fsInfos) {
-                            var fType = GetPathType(fsInfo);
-                            if (fType != FileFlags.Image) continue;
+                            if (GetPathType(fsInfo) != FileFlags.Image) continue;
                             srcPaths.Add(fsInfo.Name);
                         }
                         srcPaths.Sort(new NativeHelpers.NaturalStringComparer());
@@ -340,7 +339,7 @@ namespace ZipImageViewer
                     break;
                 case FileFlags.Image:
                 //FileFlags.Archive | FileFlags.Image should have SourcePaths[1] set when loaded the first time.
-                //this is only included for completeness and should never be reached unless something's wrong with the code.
+                //and the case below is only included for completeness and should never be reached unless something's wrong with the code.
                 case FileFlags.Archive | FileFlags.Image:
                     paths = new[] { objInfo.FileName };
                     break;
@@ -594,15 +593,13 @@ namespace ZipImageViewer
         /// Get a list of path contents with specified flags.
         /// <paramref name="flags"/> = Image | Archive means the child can be either Image or Archive.
         /// </summary>
-        public static IEnumerable<ObjectInfo> GetAll(string path, bool recursive = true, FileFlags flags = FileFlags.Image | FileFlags.Archive) {
+        public static IEnumerable<ObjectInfo> GetAll(string path, bool recurse = true, FileFlags flags = FileFlags.Image | FileFlags.Archive) {
             IEnumerable<ObjectInfo> infos = null;
 
             switch (GetPathType(path)) {
                 case FileFlags.Directory:
                     try {
-                        var fsInfos = recursive ?
-                            new DirectoryInfo(path).EnumerateFileSystemInfos(@"*", SearchOption.AllDirectories) :
-                            new DirectoryInfo(path).EnumerateFileSystemInfos();
+                        var fsInfos = EnumerateFileSystemInfos(path, @"*", recurse);
                         infos = from fsInfo in fsInfos
                                 let fType = GetPathType(fsInfo)
                                 where flags.HasFlag(fType)
@@ -616,6 +613,79 @@ namespace ZipImageViewer
             }
 
             return infos?.OrderBy(i => i.FileSystemPath, new NativeHelpers.NaturalStringComparer());
+        }
+
+        /// <summary>
+        /// Improved version of <see cref="DirectoryInfo.EnumerateFileSystemInfos"/> that will not fail upon access exceptions.
+        /// </summary>
+        public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(string root, string searchPattern = @"*", bool recurse = true) {
+            var pending = new Queue<string>();
+            pending.Enqueue(root);
+            while (pending.Count > 0) {
+                var path = pending.Dequeue();
+                FileSystemInfo[] next = null;
+                try { next = new DirectoryInfo(path).GetFiles(searchPattern); }
+                catch { }
+                if (next != null && next.Length != 0)
+                    foreach (var file in next) yield return file;
+
+                try { next = new DirectoryInfo(path).GetDirectories(searchPattern); }
+                catch { }
+                if (next != null && next.Length != 0) {
+                    foreach (var subdir in next) {
+                        if (recurse) pending.Enqueue(subdir.FullName);
+                        yield return subdir;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all containers as <see cref="ObjectInfo"/> with images in <see cref="ObjectInfo.SourcePaths"/>. Useful for container-based shuffle.
+        /// <param name="getImages">Whether fill <see cref="ObjectInfo.SourcePaths"/> with image paths.</param>
+        /// </summary>
+        public static IEnumerable<ObjectInfo> EnumerateContainers(string rootDir, bool getImages = false, bool recurse = true) {
+            if (!Directory.Exists(rootDir)) yield break;
+
+            var pending = new Queue<string>();
+            pending.Enqueue(rootDir);
+            while (pending.Count > 0) {
+                var path = pending.Dequeue();
+                ObjectInfo dirObj = null;
+
+                //process child files
+                string[] zips = null;
+                try {
+                    dirObj = new ObjectInfo(path, FileFlags.Directory);
+                    var files = Directory.GetFiles(path);
+                    //get images
+                    if (getImages)
+                        dirObj.SourcePaths = files.Where(p => GetFileType(p) == FileFlags.Image).Select(p => Path.GetFileName(p)).ToArray();
+                    //get zips
+                    zips = files.Where(p => GetFileType(p) == FileFlags.Archive).ToArray();
+                }
+                catch { }
+                if (dirObj != null) {
+                    //return folder with images as container
+                    yield return dirObj;
+                    if (zips?.Length > 0) {
+                        //return all zips in folder as containers
+                        foreach (var zip in zips) yield return new ObjectInfo(zip, FileFlags.Archive);
+                    }
+                }
+
+                if (recurse) {
+                    //process child folders
+                    string[] dirs = null;
+                    try {
+                        dirs = Directory.GetDirectories(path);
+                    }
+                    catch { }
+                    if (dirs?.Length > 0) {
+                        foreach (var dir in dirs) pending.Enqueue(dir);
+                    }
+                }
+            }
         }
 
     }

@@ -24,6 +24,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="3*"/>
                 <RowDefinition Height="2*"/>
                 <RowDefinition Height="Auto"/>
@@ -163,6 +164,16 @@
             <TextBlock Grid.Row="6" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ViewerTransitionTip}"/>
 
             <Border Grid.Row="7">
+                <DockPanel LastChildFill="False">
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ExpMenuSlideshow}" Margin="0" VerticalAlignment="Center"/>
+                    <CheckBox Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
+                              Foreground="{Binding Foreground, ElementName=SettingsWin, Mode=OneTime}"
+                              IsChecked="{Binding Source={x:Static local:App.Setting}, Path=ExpMenuSlideshow}"/>
+                </DockPanel>
+            </Border>
+            <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ExpMenuSlideshow}"/>
+
+            <Border Grid.Row="8">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_SavedPasswords}"/>
                     <TabControl>
@@ -187,11 +198,11 @@
                     </TabControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_SavedPasswordsTip"/>
             </TextBlock>
 
-            <Border Grid.Row="8" Margin="8 4 8 8">
+            <Border Grid.Row="9" Margin="8 4 8 8">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_CustomCommands}"/>
                     <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
@@ -207,11 +218,11 @@
                     </ContentControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="9" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_CustomCommandsTip"/>
             </TextBlock>
 
-            <TextBlock Grid.Row="9" Grid.ColumnSpan="2">
+            <TextBlock Grid.Row="10" Grid.ColumnSpan="2">
                 <StaticResource ResourceKey="spn_About"/>
             </TextBlock>
         </local:PaddedGrid>

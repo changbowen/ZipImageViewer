@@ -313,16 +313,35 @@ namespace ZipImageViewer {
 			return hashCode;
 		}
 
+		//conversion to Drawing.Size
 		public static explicit operator System.Drawing.Size(ObservablePair<T1, T2> pair) {
 			return new System.Drawing.Size(Convert.ToInt32(pair.item1), Convert.ToInt32(pair.item2));
 		}
 
+		//coversion to Size
 		public static explicit operator Size(ObservablePair<T1, T2> pair) {
 			return new Size(Convert.ToDouble(pair.item1), Convert.ToDouble(pair.item2));
 		}
 
+		//conversion to Point
 		public static explicit operator Point(ObservablePair<T1, T2> pair) {
 			return new Point(Convert.ToDouble(pair.item1), Convert.ToDouble(pair.item2));
+		}
+
+		//conversion between ValueTuple
+		public static implicit operator ObservablePair<T1, T2>((T1, T2) pair) {
+			return new ObservablePair<T1, T2>(pair.Item1, pair.Item2);
+		}
+		public static implicit operator (T1, T2)(ObservablePair<T1, T2> pair) {
+			return (pair.Item1, pair.Item2);
+		}
+
+		//conversion between Tuple
+		public static implicit operator ObservablePair<T1, T2>(Tuple<T1, T2> pair) {
+			return new ObservablePair<T1, T2>(pair.Item1, pair.Item2);
+		}
+		public static implicit operator Tuple<T1, T2>(ObservablePair<T1, T2> pair) {
+			return new Tuple<T1, T2>(pair.Item1, pair.Item2);
 		}
 
 		//for DataGrid to have a new row placeholder
