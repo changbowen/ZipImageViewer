@@ -19,6 +19,7 @@
     <sys:String x:Key="msg_ExpMenuSlideshow">在Windows资源管理器右键菜单中添加“播放幻灯片”选项。
         注意如果开启此项之后移动了程序文件，你需要关闭再开启此项，否则菜单项会指向旧的位置。</sys:String> 
     <sys:String x:Key="ttl_PlaySlideshowWithZIV">用ZipImageViewer播放幻灯片</sys:String>
+    <sys:String x:Key="ttl_OpenWithZIV">用ZipImageViewer打开</sys:String>
     <sys:String x:Key="ttl_LiteMode">简洁模式</sys:String>
     <sys:String x:Key="msg_LiteModeTip">禁用多数影响界面性能的特效。</sys:String>
     <sys:String x:Key="ttl_ViewerBackground">查看器背景</sys:String>
@@ -108,7 +109,7 @@
     <sys:String x:Key="ttl_YAxisPanReduction">垂直平移缩减</sys:String>
     <sys:String x:Key="ttl_YAxisPanDownOnly">垂直平移仅向下</sys:String>
     <sys:String x:Key="ttl_ResetTransDefault">重置效果默认值</sys:String>
-    <sys:String x:Key="msg_NoImageFound">在{0}下没有找到可用图像。</sys:String>
+    <sys:String x:Key="msg_NoImgAndCtnrFound">在{0}下没有找到可用图像、文件夹或压缩文件。</sys:String>
     <sys:String x:Key="msg_NoMore">没有了！</sys:String>
     <sys:String x:Key="ttl_ParamStartError">参数启动错误</sys:String>
     <sys:String x:Key="ttl_AppStartError">程序启动错误</sys:String>

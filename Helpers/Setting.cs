@@ -238,15 +238,13 @@ namespace ZipImageViewer
         }
 
         public bool ExpMenuSlideshow {
-            get => RegistryHelpers.CheckExplorerMenuItem(@"ZIV_PlaySlideshow", @"*", @"Directory");
+            get => RegistryHelpers.CheckExplorerMenuItem(@"*", @"Directory");
             set {
-                if (value) {
-                    RegistryHelpers.SetExplorerMenuItem(@"ZIV_PlaySlideshow", GetRes(@"ttl_PlaySlideshowWithZIV"),
-                        $@"""{Assembly.GetExecutingAssembly().Location}"" -slideshow ""%1""", @"*", @"Directory");
-                }
-                else {
-                    RegistryHelpers.ClearExplorerMenuItem(@"ZIV_PlaySlideshow", @"*", @"Directory");
-                }
+                if (value)
+                    RegistryHelpers.SetExplorerMenuItem(@"*", @"Directory");
+                else
+                    RegistryHelpers.ClearExplorerMenuItem(@"*", @"Directory");
+
                 OnStaticPropertyChanged(nameof(ExpMenuSlideshow));
             }
         }

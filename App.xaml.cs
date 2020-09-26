@@ -17,7 +17,8 @@ namespace ZipImageViewer
 {
     public partial class App : Application
     {
-        public static readonly string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        public static readonly string ExePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        public static readonly string ExeDir = Path.GetDirectoryName(ExePath);
         public static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] {
                 ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".gif", ".bmp", ".ico", ".dds", ".jxr", ".hdp", ".wdp"

@@ -47,8 +47,8 @@ namespace ZipImageViewer
                     case FileFlags.Directory:
                         infos = dirInfo.EnumerateFiles()
                             .Where(fi => GetPathType(fi) == FileFlags.Image)
-                            .Select(fi => new ObjectInfo(fi.FullName, FileFlags.Image, fi.Name));
-                        infos = infos.Concatenate(EnumerateContainers(cachePath, inclRoot: false));
+                            .Select(fi => new ObjectInfo(fi.FullName, FileFlags.Image, fi.Name))
+                            .Concatenate(EnumerateContainers(cachePath, inclRoot: false));
                         break;
                     case FileFlags.Archive:
                         infos = new[] { new ObjectInfo(cachePath, FileFlags.Archive) };

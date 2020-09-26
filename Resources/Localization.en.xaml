@@ -19,6 +19,7 @@
     <sys:String x:Key="msg_ExpMenuSlideshow">Add "Play Slideshow" option to Windows Explorer right-click menu.
         Note that if this is enabled and the application is moved, you need to toggle this setting otherwise the menu item will point to the old location.</sys:String>
     <sys:String x:Key="ttl_PlaySlideshowWithZIV">Play Slideshow with ZipImageViewer</sys:String>
+    <sys:String x:Key="ttl_OpenWithZIV">Open with ZipImageViewer</sys:String>
     <sys:String x:Key="ttl_LiteMode">Lite Mode</sys:String>
     <sys:String x:Key="msg_LiteModeTip">Disables most effects that affect UI performance.</sys:String>
     <sys:String x:Key="ttl_ViewerBackground">Viewer Background</sys:String>
@@ -108,7 +109,7 @@
     <sys:String x:Key="ttl_YAxisPanReduction">Vertical Pan Reduction</sys:String>
     <sys:String x:Key="ttl_YAxisPanDownOnly">Vertical Pan Down Only</sys:String>
     <sys:String x:Key="ttl_ResetTransDefault">Reset Transition Default</sys:String>
-    <sys:String x:Key="msg_NoImageFound">No images found under {0}.</sys:String>
+    <sys:String x:Key="msg_NoImgAndCtnrFound">No images, folders or archives found under {0}.</sys:String>
     <sys:String x:Key="msg_NoMore">No more!</sys:String>
     <sys:String x:Key="ttl_ParamStartError">Parametered Start Error</sys:String>
     <sys:String x:Key="ttl_AppStartError">Application Start Error</sys:String>

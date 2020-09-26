@@ -123,13 +123,15 @@
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
+                        <RowDefinition/>
                     </Grid.RowDefinitions>
                     <fa:FontAwesome Grid.Row="0" Name="HY_Open" ToolTip="{StaticResource ttl_OpenFolder}" Icon="Solid_FolderOpen"/>
                     <fa:FontAwesome Grid.Row="1" Name="HY_CacheFirst" ToolTip="{StaticResource spn_CacheFirstTip}" Icon="Solid_AngleDown"/>
                     <fa:FontAwesome Grid.Row="2" Name="HY_CacheAll" ToolTip="{StaticResource spn_CacheAllTip}" Icon="Solid_AngleDoubleDown"/>
                     <fa:FontAwesome Grid.Row="3" Name="HY_Options" ToolTip="{StaticResource ttl_Options}" Icon="Solid_Cog"/>
-                    <fa:FontAwesome Grid.Row="4" Name="HY_ImmersionMode" ToolTip="{StaticResource ttl_ImmsersionMode}" Icon="Solid_Film"/>
-                    <fa:FontAwesome Grid.Row="5" Name="HY_Close" ToolTip="{StaticResource ttl_CloseWindow}" Icon="Solid_TimesCircle"/>
+                    <fa:FontAwesome Grid.Row="4" Name="HY_Slideshow" ToolTip="{StaticResource ttl_StartSlideshow}" Icon="Solid_Film"/>
+                    <fa:FontAwesome Grid.Row="5" Name="HY_ImmersionMode" ToolTip="{StaticResource ttl_ImmsersionMode}" Icon="Solid_Headphones"/>
+                    <fa:FontAwesome Grid.Row="6" Name="HY_Close" ToolTip="{StaticResource ttl_CloseWindow}" Icon="Solid_TimesCircle"/>
                 </local:PaddedGrid>
             </Border>
         </Border>

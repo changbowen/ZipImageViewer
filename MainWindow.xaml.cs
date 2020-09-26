@@ -336,6 +336,9 @@ namespace ZipImageViewer
                     win.ShowDialog();
                     win.Close();
                     break;
+                case nameof(HY_Slideshow):
+                    new SlideshowWindow(CurrentPath).Show();
+                    break;
                 case nameof(HY_ImmersionMode):
                     Setting.ImmersionMode = !Setting.ImmersionMode;
                     if (Setting.ImmersionMode)
