@@ -19,8 +19,9 @@ namespace ZipImageViewer
     {
         internal static readonly Dictionary<Table, TableInfo> Tables =
             new Dictionary<Table, TableInfo>() {
-                { Table.Thumbs,          new TableInfo(Table.Thumbs) },
-                { Table.MappedPasswords, new TableInfo(Table.MappedPasswords) },
+                { Table.Thumbs,            new TableInfo(Table.Thumbs) },
+                { Table.MappedPasswords,   new TableInfo(Table.MappedPasswords) },
+                { Table.FallbackPasswords, new TableInfo(Table.FallbackPasswords) },
             };
 
         /// <summary>

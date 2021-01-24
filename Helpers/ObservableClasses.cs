@@ -116,10 +116,11 @@ namespace ZipImageViewer {
 
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e) {
             if (_deferNotifyCollectionChanged) return;
-
-            //if you get InvalidOperation here and the collection is on the UI thread,
-            //verify if there is any reference to the item to be deleted.
-            if (!Application.Current.Dispatcher.CheckAccess())
+			if (Application.Current?.Dispatcher == null) return;
+		
+			//if you get InvalidOperation here and the collection is on the UI thread,
+			//verify if there is any reference to the item to be deleted.
+			if (!Application.Current.Dispatcher.CheckAccess())
                 Application.Current.Dispatcher.Invoke(() => NotifyChanges(e));
             else NotifyChanges(e);
         }

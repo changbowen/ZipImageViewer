@@ -200,12 +200,8 @@
                     <TabControl>
                         <TabItem Header="{StaticResource ttl_FallbackPasswords}">
                             <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                                <DataGrid AutoGenerateColumns="False" RowEditEnding="DataGrid_RowEditEnding"
-                                          EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                                <DataGrid AutoGenerateColumns="True" EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                           ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=FallbackPasswords}">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="{StaticResource ttl_Password}" Binding="{Binding Item, TargetNullValue={StaticResource txt_TargetNullValue}}"/>
-                                    </DataGrid.Columns>
                                 </DataGrid>
                             </ContentControl>
                         </TabItem>

@@ -11,12 +11,12 @@ namespace ZipImageViewer
     public static class TableHelper
     {
         public enum Table
-        { Thumbs, MappedPasswords }
+        { Thumbs, MappedPasswords, FallbackPasswords }
 
         public enum Column
         {
             BasePath, SubPath, DecodeWidth, DecodeHeight, ThumbData,//Thumbs table
-            Path, Password,//MappedPasswords table
+            Path, Password,//MappedPasswords and FallbackPasswords table
         }
 
         public class TableInfo
@@ -45,6 +45,14 @@ namespace ZipImageViewer
             else {
                 row[columnName] = newData;
             }
+        }
+
+        public static void RowChangeHandler(object sender, DataRowChangeEventArgs e) {
+            if (!(DataRowAction.Add | DataRowAction.Change | DataRowAction.ChangeCurrentAndOriginal | DataRowAction.ChangeOriginal).HasFlag(e.Action)) return;
+
+            var rawPwd = (string)e.Row[nameof(Column.Password)];
+            if (!EncryptionHelper.IsEncrypted(rawPwd))
+                e.Row[nameof(Column.Password)] = EncryptionHelper.Encrypt(rawPwd);
         }
     }
 }

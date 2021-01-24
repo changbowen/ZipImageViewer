@@ -200,6 +200,16 @@ namespace ZipImageViewer
             }
         }
 
+        private static string masterPassword = "";
+        [AppConfig]
+        public static string MasterPassword {
+            get => masterPassword;
+            set {
+                if (masterPassword == value) return;
+                masterPassword = value;
+                OnStaticPropertyChanged(nameof(MasterPassword));
+            }
+        }
 
         private static ObservableCollection<ObservableObj> customCommands;
         public static ObservableCollection<ObservableObj> CustomCommands {
@@ -211,8 +221,8 @@ namespace ZipImageViewer
             }
         }
 
-        private static ObservableKeyedCollection<string, Observable<string>> fallbackPasswords;
-        public static ObservableKeyedCollection<string, Observable<string>> FallbackPasswords {
+        private static DataTable fallbackPasswords;
+        public static DataTable FallbackPasswords {
             get => fallbackPasswords;
             set {
                 if (fallbackPasswords == value) return;
@@ -315,15 +325,34 @@ namespace ZipImageViewer
             }
 
             //parse lists at last
-            FallbackPasswords = new ObservableKeyedCollection<string, Observable<string>>(o => o.Item);
-            try {
-                FallbackPasswords.AddRange(iniData[nameof(ConfigSection.FallbackPasswords)]
-                    .Where(d => d.Value.Length == 0)
-                    .Select(d => new Observable<string>(d.KeyName)));
+            var fp = Tables[Table.FallbackPasswords];
+            FallbackPasswords = new DataTable(fp.Name);//ObservableKeyedCollection<string, Observable<string>>(o => o.Item);
+            FallbackPasswords.Columns.Add(nameof(Column.Password), typeof(string));
+            FallbackPasswords.PrimaryKey = new[] { FallbackPasswords.Columns[nameof(Column.Password)] };
+            FallbackPasswords.RowChanged += RowChangeHandler;
+            if (File.Exists(fp.FullPath)) {
+                try { FallbackPasswords.ReadXml(fp.FullPath); }
+                catch {
+                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                }
             }
-            catch {
-                MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            //load fallback passwords from ini if exist, then remove them
+            if (iniData.Sections.ContainsSection(nameof(ConfigSection.FallbackPasswords))) {
+                try {
+                    iniData[nameof(ConfigSection.FallbackPasswords)]
+                        .Where(d => d.Value.Length == 0)
+                        .Select(d => new Observable<string>(d.KeyName)).ToList()
+                        .ForEach(p => {
+                            var encPwd = new EncryptionHelper.Password(p);
+                            FallbackPasswords.UpdateDataTable(encPwd.Hash, nameof(Column.Password), encPwd.Encrypted);
+                        });
+                    iniData.Sections.RemoveSection(nameof(ConfigSection.FallbackPasswords));
+                }
+                catch {
+                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                }
             }
+     
 
             var mp = Tables[Table.MappedPasswords];
             MappedPasswords = new DataTable(mp.Name);
@@ -341,14 +370,7 @@ namespace ZipImageViewer
         public static void SaveConfigToFile(string path = null) {
             if (path == null) path = FilePath;
 
-            var fallbackPwds = "";
-            if (FallbackPasswords != null && FallbackPasswords.Count > 0) {
-                foreach (var s in FallbackPasswords) {
-                    if (string.IsNullOrWhiteSpace(s.Item)) continue;
-                    fallbackPwds += s.Item + "=\r\n";
-                }
-            }
-
+            FallbackPasswords?.WriteXml(Tables[Table.FallbackPasswords].FullPath, XmlWriteMode.WriteSchema);
             MappedPasswords?.WriteXml(Tables[Table.MappedPasswords].FullPath, XmlWriteMode.WriteSchema);
 
             File.WriteAllText(path, 
@@ -360,10 +382,8 @@ $@"[{nameof(ConfigSection.AppConfig)}]
     string.Join("\r\n", CustomCommands.Select((oo, i) => $"{nameof(CustomCommands)}.{i}={oo.Str1}\t{oo.Str2}\t{oo.Str3}")) :
     null)}
 
-;Fallback passwords for zipped files in the format:
+;(Deprecated) Fallback passwords for zipped files in the format:
 ;password=
-[{nameof(ConfigSection.FallbackPasswords)}]
-{fallbackPwds.Trim()}
 ");
         }
     }
