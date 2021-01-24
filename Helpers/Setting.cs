@@ -63,6 +63,13 @@ namespace ZipImageViewer
             [Description("ttl_" + nameof(White), true)]
             White
         }
+        public enum ThumbnailFormats
+        {
+            [Description("JPEG")]
+            Jpeg,
+            [Description("PNG")]
+            Png
+        }
 
         private enum ConfigSection
         { AppConfig, CustomCommands, FallbackPasswords }
@@ -91,6 +98,17 @@ namespace ZipImageViewer
                 if (thumbnailSize == value) return;
                 thumbnailSize = value;
                 OnStaticPropertyChanged(nameof(ThumbnailSize));
+            }
+        }
+
+        private static ThumbnailFormats thumbnailFormat = ThumbnailFormats.Jpeg;
+        [AppConfig]
+        public static ThumbnailFormats ThumbnailFormat {
+            get => thumbnailFormat;
+            set {
+                if (thumbnailFormat == value) return;
+                thumbnailFormat = value;
+                OnStaticPropertyChanged(nameof(ThumbnailFormat));
             }
         }
 

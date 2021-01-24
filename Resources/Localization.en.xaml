@@ -6,8 +6,10 @@
     <sys:String x:Key="ttl_ThumbnailSize">Thumbnail Size</sys:String>
     <Span x:Key="spn_ThumbSizeTip">
         <Bold>Width</Bold> x <Bold>Height</Bold> in pixels.<LineBreak/>
-        <Bold>Changing this value invalidates the entire thumbnail cache.</Bold>
+        <Bold>Changing the size invalidates the entire thumbnail cache.</Bold><LineBreak/>
+        Use <Bold>JPEG</Bold> thumbnail format results in a much smaller database file at the cost of the quality of the thumbnail. Changing the format will not refresh existing thumbnails in the cache.
     </Span>
+    <sys:String x:Key="ttl_ThumbnailFormat">Thumbnail Format</sys:String>
     <sys:String x:Key="ttl_ThumbSwapDelayMultiplier">Thumbnail Swap Delay Multiplier</sys:String>
     <sys:String x:Key="msg_ThumbSwapDelayMultiplierTip">The delay of thumbnail change on folders and archives. Higher value results in longer delay.</sys:String>
     <sys:String x:Key="ttl_DatabaseDir">Database Directory</sys:String>

@@ -7,7 +7,9 @@
     <Span x:Key="spn_ThumbSizeTip">
         <Bold>宽</Bold> x <Bold>高</Bold>（像素）。<LineBreak/>
         <Bold>更改此值会使所有当前尺寸的缩略图失效。</Bold>
+        使用<Bold>JPEG</Bold>缩略图格式可大幅减少数据库文件大小，但质量会有所降低。更改格式不会刷新缓存中已有的缩略图。
     </Span>
+    <sys:String x:Key="ttl_ThumbnailFormat">缩略图格式</sys:String>
     <sys:String x:Key="ttl_ThumbSwapDelayMultiplier">缩略图切换延迟速率</sys:String>
     <sys:String x:Key="msg_ThumbSwapDelayMultiplierTip">目录和压缩文件缩略图的切换延迟。数值越高延迟越高。</sys:String>
     <sys:String x:Key="ttl_DatabaseDir">数据库目录</sys:String>

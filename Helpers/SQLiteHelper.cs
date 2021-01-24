@@ -109,14 +109,23 @@ $@"create table if not exists [{table.Name}] (
             if (!(source is BitmapSource bs)) throw new NotSupportedException();
 
             object[] affected = null;
-            byte[] png;
-            var enc = new PngBitmapEncoder();
+            byte[] bytes;
+            BitmapEncoder enc;
+            switch (Setting.ThumbnailFormat) {
+                case Setting.ThumbnailFormats.Jpeg:
+                default:
+                    enc = new JpegBitmapEncoder() { QualityLevel = 85 };
+                    break;
+                case Setting.ThumbnailFormats.Png:
+                    enc = new PngBitmapEncoder();
+                    break;
+            }
             enc.Frames.Add(BitmapFrame.Create(bs));
             using (var ms = new MemoryStream()) {
                 enc.Save(ms);
-                png = ms.ToArray();
+                bytes = ms.ToArray();
             }
-            if (png.Length == 0) return 0;
+            if (bytes.Length == 0) return 0;
 
             affected = Execute(Table.Thumbs, (table, con) => {
                 using (var cmd = new SQLiteCommand(con)) {
@@ -132,8 +141,8 @@ $@"delete from {table.Name} where
                     cmd.CommandText = 
 $@"insert into {table.Name}
 ({Column.BasePath}, {Column.SubPath}, {Column.DecodeWidth}, {Column.DecodeHeight}, {Column.ThumbData}) values
-(@basePath, @subPath, {decodeSize.Width}, {decodeSize.Height}, @png)";
-                    cmd.Parameters.Add(new SQLiteParameter("@png", DbType.Binary) { Value = png });
+(@basePath, @subPath, {decodeSize.Width}, {decodeSize.Height}, @bytes)";
+                    cmd.Parameters.Add(new SQLiteParameter("@bytes", DbType.Binary) { Value = bytes });
                     return cmd.ExecuteNonQuery();
                 }
             });

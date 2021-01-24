@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
-        Width="800" Height="600" Icon="Resources/ZipImageViewer.ico"
+        Width="850" Height="600" Icon="Resources/ZipImageViewer.ico"
         Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource ForegroundBrush}" WindowStartupLocation="CenterOwner"
         Title="{StaticResource ttl_Settings}" UseLayoutRounding="True" Loaded="SettingsWin_Loaded" Closing="SettingsWin_Closing" PreviewKeyDown="SettingsWin_PreviewKeyDown">
     <ScrollViewer>
@@ -43,21 +43,39 @@
             </local:PaddedGrid.Resources>
 
             <Border Grid.Row="0">
-                <DockPanel LastChildFill="False">
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbnailSize}"/>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Top">
-                        <ContentControl>
-                            <TextBox MinWidth="32" VerticalAlignment="Top"
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <DockPanel LastChildFill="False" Grid.Column="0">
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbnailSize}"/>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Top">
+                            <ContentControl>
+                                <TextBox MinWidth="32" VerticalAlignment="Top"
                                      Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item1}"/>
-                        </ContentControl>
-                        <TextBlock Text=" x " VerticalAlignment="Center"/>
-                        <ContentControl>
-                            <TextBox MinWidth="32" VerticalAlignment="Top"
+                            </ContentControl>
+                            <TextBlock Text=" x " VerticalAlignment="Center"/>
+                            <ContentControl>
+                                <TextBox MinWidth="32" VerticalAlignment="Top"
                                      Text="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailSize.Item2}"/>
+                            </ContentControl>
+                        </StackPanel>
+                        <Button DockPanel.Dock="Right" Content="{StaticResource ttl_ReloadView}" VerticalAlignment="Center" Click="Btn_Reload_Click"/>
+                    </DockPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8 0">
+                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ThumbnailFormat}"/>
+                        <ContentControl>
+                            <ComboBox ItemsSource="{Binding Source={local:Enumeration {x:Type local:Setting+ThumbnailFormats}}}"
+                                      SelectedValue="{Binding Source={x:Static local:App.Setting}, Path=ThumbnailFormat}"
+                                      DisplayMemberPath="Description" SelectedValuePath="Value"/>
                         </ContentControl>
                     </StackPanel>
-                    <Button DockPanel.Dock="Right" Content="{StaticResource ttl_ReloadView}" VerticalAlignment="Center" Click="Btn_Reload_Click"/>
-                </DockPanel>
+                </Grid>
             </Border>
             <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_ThumbSizeTip"/>
@@ -140,7 +158,7 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
-                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
@@ -150,6 +168,9 @@
                                       SelectedValue="{Binding Source={x:Static local:App.Setting}, Path=ViewerTransition}"
                                       DisplayMemberPath="Description" SelectedValuePath="Value"/>
                         </ContentControl>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8 0">
+                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ViewerTransitionSpeed}"/>
