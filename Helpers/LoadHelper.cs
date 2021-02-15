@@ -14,6 +14,7 @@ using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
 using System.Data;
 using SevenZip;
+using System.Windows.Controls;
 
 namespace ZipImageViewer
 {
@@ -99,18 +100,18 @@ namespace ZipImageViewer
             switch (trial) {
                 //first check if there is a match in saved passwords
                 case 0 when Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow row:
-                    options.Password = (string)row[nameof(Column.Password)];
+                    options.Password = new EncryptionHelper.Password((string)row[nameof(Column.Password)]);
                     success = extractZip(options, objInfo, done, tknSrc);
                     break;
                 //then try no password
                 case 1:
-                    options.Password = null;
+                    options.Password = default;
                     success = extractZip(options, objInfo, done, tknSrc);
                     break;
                 //then try all saved passwords with no filename
                 case 2:
                     foreach (DataRow fp in Setting.FallbackPasswords.Rows) {
-                        options.Password = (string)fp[nameof(Column.Password)];
+                        options.Password = new EncryptionHelper.Password((string)fp[nameof(Column.Password)]);
                         success = extractZip(options, objInfo, done, tknSrc);
                         if (success) break;
                     }
@@ -124,12 +125,7 @@ namespace ZipImageViewer
                             string pwd = null;
                             bool isFb = true;
                             Application.Current.Dispatcher.Invoke(() => {
-                                var win = new InputWindow();
-                                if (win.ShowDialog() == true) {
-                                    pwd = win.TB_Password.Text;
-                                    isFb = win.CB_Fallback.IsChecked == true;
-                                }
-                                win.Close();
+                                (_, pwd, isFb) = InputWindow.PromptForArchivePassword();
                             });
 
                             if (!string.IsNullOrEmpty(pwd)) {

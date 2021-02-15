@@ -2,6 +2,10 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:local="clr-namespace:ZipImageViewer">
+    <sys:String x:Key="ttl_AppStarting">Application Starting</sys:String>
+    <sys:String x:Key="ttl_Initializing">Initializing</sys:String>
+    <sys:String x:Key="ttl_Loading">Loading</sys:String>
+    <sys:String x:Key="ttl_Checking">Checking</sys:String>
     <sys:String x:Key="ttl_Settings">Settings</sys:String>
     <sys:String x:Key="ttl_ThumbnailSize">Thumbnail Size</sys:String>
     <Span x:Key="spn_ThumbSizeTip">
@@ -60,7 +64,14 @@
     <sys:String x:Key="ttl_KenBurns">Ken Burns</sys:String>
     <sys:String x:Key="ttl_Breath">Breath</sys:String>
     <sys:String x:Key="ttl_Emerge">Emerge</sys:String>
-    
+
+    <sys:String x:Key="ttl_MasterPassword">Master Password</sys:String>
+    <sys:String x:Key="ttl_Update_0">Update {0}</sys:String>
+    <sys:String x:Key="ttl_Current_0">Current {0}</sys:String>
+    <sys:String x:Key="ttl_New_0">New {0}</sys:String>
+    <sys:String x:Key="ttl_Confirm_0">Confirm {0}</sys:String>
+    <sys:String x:Key="ttl_Change_0">Change {0}</sys:String>
+    <Span x:Key="spn_MasterPasswordTip">The master password is used for encrypting saved passwords.</Span>
     <sys:String x:Key="ttl_SavedPasswords">Saved Passwords</sys:String>
     <sys:String x:Key="ttl_FallbackPasswords">Fallback Passwords</sys:String>
     <sys:String x:Key="ttl_MappedPasswords">Mapped Passwords</sys:String>
@@ -75,6 +86,7 @@
     <sys:String x:Key="ttl_Arguments">Arguments</sys:String>
     <sys:String x:Key="txt_TargetNullValue">(Enter value)</sys:String>
     <sys:String x:Key="ttl_Password">Password</sys:String>
+    <sys:String x:Key="ttl_Path">Path</sys:String>
     <Span x:Key="spn_CustomCommandsTip">
         Commands used in right-click menu. One in each line.<LineBreak/>
         <Bold>%FileSystemPath%</Bold> - Path to the current file or folder.

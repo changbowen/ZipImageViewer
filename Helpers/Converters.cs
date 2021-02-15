@@ -9,6 +9,29 @@ using System.Windows.Media;
 
 namespace ZipImageViewer
 {
+    public class EncryptionConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            if (!(value is string input)) return null;
+            if (!Setting.EncryptPasswords) return value;
+
+            if (((string)parameter)?.ToLowerInvariant() == "encrypt")
+                return EncryptionHelper.TryEncrypt(input, out _);
+            else
+                return EncryptionHelper.TryDecrypt(input, out _);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            if (!(value is string input)) return null;
+            if (!Setting.EncryptPasswords) return value;
+
+            if (((string)parameter)?.ToLowerInvariant() == "encrypt")
+                return EncryptionHelper.TryDecrypt(input, out _);
+            else
+                return EncryptionHelper.TryEncrypt(input, out _);
+        }
+    }
+
     public class CenterConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {

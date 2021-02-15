@@ -8,29 +8,26 @@
         Background="{StaticResource BackgroundLightBrush}"
         Foreground="{StaticResource ForegroundBrush}"
         Width="400" WindowStartupLocation="CenterScreen">
-    <StackPanel>
-        <StackPanel.Resources>
+    <DockPanel Margin="10" LastChildFill="True">
+        <DockPanel.Resources>
             <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
                 <Setter Property="Height" Value="30"/>
                 <Setter Property="Width" Value="60"/>
             </Style>
             <Style TargetType="ContentControl" BasedOn="{StaticResource RoundContentControlBaseStyle}"/>
-        </StackPanel.Resources>
-        
-        <TextBlock Margin="10" FontSize="16"
-                   Text="{StaticResource txt_PasswordForArchive}"/>
-        <ContentControl Margin="10 0">
-            <TextBox x:Name="TB_Password" BorderThickness="0" FontSize="18" Padding="4"/>
-        </ContentControl>
-        <CheckBox x:Name="CB_Fallback" HorizontalAlignment="Right" Margin="10 5" Foreground="{Binding Foreground, ElementName=InputWin, Mode=OneTime}"
-                  Content="{StaticResource txt_AddToFallbackPwdLst}" IsChecked="True"/>
-        <TextBlock HorizontalAlignment="Right" Margin="10 0" FontSize="10" FontStyle="Italic"
-                   Text="{StaticResource msg_FallbackPwdTip}"/>
-        
-        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="10">
+            <Style TargetType="TextBox" BasedOn="{StaticResource BorderlessStyle}"/>
+            <Style TargetType="PasswordBox" BasedOn="{StaticResource BorderlessStyle}"/>
+            <Style TargetType="CheckBox" BasedOn="{StaticResource SlideSwitchStyle}"/>
+        </DockPanel.Resources>
+
+        <StackPanel x:Name="SP_OkCancel" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0 10 0 0">
             <Button x:Name="Btn_OK" Content="{StaticResource ttl_OK}" IsDefault="True" Margin="0 0 5 0" Click="Btn_OK_Click"/>
             <Button x:Name="Btn_Cancel" Content="{StaticResource ttl_Cancel}" IsCancel="True"/>
         </StackPanel>
         
-    </StackPanel>
+        <StackPanel x:Name="ContentPanel">
+
+        </StackPanel>
+        
+    </DockPanel>
 </local:RoundedWindow>

@@ -10,6 +10,8 @@
     <ScrollViewer>
         <ScrollViewer.Resources>
             <Style TargetType="ScrollBar" BasedOn="{StaticResource AppleStyleScrollBar}"/>
+            <local:EncryptionConverter x:Key="EncryptionConverter"/>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         </ScrollViewer.Resources>
         <local:PaddedGrid Padding="4" VerticalChildrenAlignment="Stretch" HorizontalChildrenAlignment="Stretch">
             <local:PaddedGrid.ColumnDefinitions>
@@ -17,6 +19,7 @@
                 <ColumnDefinition Width="1.6*"/>
             </local:PaddedGrid.ColumnDefinitions>
             <local:PaddedGrid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -37,6 +40,7 @@
                     <Setter Property="Height" Value="220"/>
                 </Style>
                 <Style TargetType="TextBox" BasedOn="{StaticResource BorderlessStyle}"/>
+                <Style TargetType="PasswordBox" BasedOn="{StaticResource BorderlessStyle}"/>
                 <Style TargetType="ContentControl" BasedOn="{StaticResource RoundContentControlBaseStyle}"/>
                 <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}"/>
                 <Style TargetType="CheckBox" BasedOn="{StaticResource SlideSwitchStyle}"/>
@@ -137,7 +141,6 @@
                 <DockPanel LastChildFill="False">
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_LiteMode}" Margin="0" VerticalAlignment="Center"/>
                     <CheckBox Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
-                              Foreground="{Binding Foreground, ElementName=SettingsWin, Mode=OneTime}"
                               IsChecked="{Binding Source={x:Static local:App.Setting}, Path=LiteMode}"/>
                 </DockPanel>
             </Border>
@@ -188,38 +191,57 @@
                 <DockPanel LastChildFill="False">
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ExpMenuSlideshow}" Margin="0" VerticalAlignment="Center"/>
                     <CheckBox Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
-                              Foreground="{Binding Foreground, ElementName=SettingsWin, Mode=OneTime}"
                               IsChecked="{Binding Source={x:Static local:App.Setting}, Path=ExpMenuSlideshow}"/>
                 </DockPanel>
             </Border>
             <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ExpMenuSlideshow}"/>
 
             <Border Grid.Row="8">
+                <DockPanel LastChildFill="False">
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_MasterPassword}" Margin="0" VerticalAlignment="Center"/>
+                    <Button DockPanel.Dock="Left" Margin="8 0 0 0" Content="{StaticResource ttl_Password}" ContentStringFormat="{StaticResource ttl_Update_0}" VerticalAlignment="Center" Click="Btn_ChgMstPwd_Click"
+                            Visibility="{Binding Source={x:Static local:App.Setting}, Path=EncryptPasswords, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <CheckBox Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
+                              IsChecked="{Binding Source={x:Static local:App.Setting}, Path=EncryptPasswords}"/>
+                </DockPanel>
+            </Border>
+            <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+                <StaticResource ResourceKey="spn_MasterPasswordTip"/>
+            </TextBlock>
+
+            <Border Grid.Row="9">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_SavedPasswords}"/>
                     <TabControl>
                         <TabItem Header="{StaticResource ttl_FallbackPasswords}">
                             <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                                <DataGrid AutoGenerateColumns="True" EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                                <DataGrid AutoGenerateColumns="False" EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                           ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=FallbackPasswords}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="{StaticResource ttl_Password}" Binding="{Binding Password, Converter={StaticResource EncryptionConverter}}"/>
+                                    </DataGrid.Columns>
                                 </DataGrid>
                             </ContentControl>
                         </TabItem>
                         <TabItem Header="{StaticResource ttl_MappedPasswords}">
                             <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                                <DataGrid AutoGenerateColumns="True" EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                                <DataGrid AutoGenerateColumns="False" EnableRowVirtualization="True" EnableColumnVirtualization="True"
                                           ItemsSource="{Binding Source={x:Static local:App.Setting}, Path=MappedPasswords}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="{StaticResource ttl_Path}" Binding="{Binding Path}"/>
+                                        <DataGridTextColumn Header="{StaticResource ttl_Password}" Binding="{Binding Password, Converter={StaticResource EncryptionConverter}}"/>
+                                    </DataGrid.Columns>
                                 </DataGrid>
                             </ContentControl>
                         </TabItem>
                     </TabControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="9" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_SavedPasswordsTip"/>
             </TextBlock>
 
-            <Border Grid.Row="9" Margin="8 4 8 8">
+            <Border Grid.Row="10" Margin="8 4 8 8">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_CustomCommands}"/>
                     <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
@@ -235,11 +257,11 @@
                     </ContentControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="9" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="10" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_CustomCommandsTip"/>
             </TextBlock>
 
-            <TextBlock Grid.Row="10" Grid.ColumnSpan="2">
+            <TextBlock Grid.Row="11" Grid.ColumnSpan="2">
                 <StaticResource ResourceKey="spn_About"/>
             </TextBlock>
         </local:PaddedGrid>

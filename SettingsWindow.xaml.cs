@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using static ZipImageViewer.Helpers;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
+using System.Data;
 
 namespace ZipImageViewer
 {
@@ -39,6 +40,22 @@ namespace ZipImageViewer
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void Btn_ChgMstPwd_Click(object sender, RoutedEventArgs e) {
+            var (answer, curPwd, newPwd, cfmPwd) = InputWindow.PromptForPasswordChange();
+            if (!answer) return;
+            if (curPwd != Setting.MasterPassword) {
+                MessageBox.Show("Incorrect password!");
+                return;
+            }
+            if (newPwd != cfmPwd) {
+                MessageBox.Show("Mismatch passwords!");
+                return;
+            }
+            foreach (DataRow row in Setting.FallbackPasswords.Rows) {
+                row[nameof(Column.Password)] = EncryptionHelper.TryDecrypt((string)row[nameof(Column.Password)])
             }
         }
 
@@ -116,8 +133,10 @@ namespace ZipImageViewer
                     if (string.IsNullOrWhiteSpace(o.Item))
                         ((Collection<Observable<string>>)dg.ItemsSource).Remove(o);
                     return;
+
             }
         }
+
     }
 
     //public class ObservablesValidationRule : ValidationRule

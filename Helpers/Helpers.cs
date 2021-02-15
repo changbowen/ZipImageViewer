@@ -443,6 +443,7 @@ namespace ZipImageViewer
         public static string GetRes(string key, params string[] args) {
             var result = (string)Application.Current.Resources[key];
             if (result == null) return key;
+            result = result.Trim();
             if (args.Length == 0)
                 return result;
             return string.Format(result, args);
@@ -539,5 +540,19 @@ namespace ZipImageViewer
         public int TotalRowCount => rowCount;
         public int RowItemCount => itemsPerRowCount;
         public new int VisualChildrenCount => base.VisualChildrenCount;
+    }
+
+    public class KeyedCol<TKey, TItem> : System.Collections.ObjectModel.KeyedCollection<TKey, TItem> {
+        private readonly Func<TItem, TKey> KeyFunc;
+
+        protected override TKey GetKeyForItem(TItem item) {
+            if (KeyFunc != null) return KeyFunc(item);
+            throw new ArgumentNullException(@"getKeyForItem cannot be null.");
+        }
+
+        public KeyedCol(Func<TItem, TKey> keyFunc) {
+            if (keyFunc == null) throw new ArgumentNullException(nameof(keyFunc));
+            KeyFunc = keyFunc;
+        }
     }
 }

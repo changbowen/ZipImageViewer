@@ -56,126 +56,146 @@ namespace ZipImageViewer
         public static ContextMenuWindow ContextMenuWin;
 
         private void App_Startup(object sender, StartupEventArgs e) {
-            try {
-                //localization
-                var culture = System.Globalization.CultureInfo.CurrentCulture;
-                if (culture.TwoLetterISOLanguageName != @"en") {
-                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                    var resourceName = assembly.GetName().Name + ".g";
-                    var resourceManager = new System.Resources.ResourceManager(resourceName, assembly);
-                    try {
-                        var resourceSet = resourceManager.GetResourceSet(culture, true, true);
-                        if (resourceSet.Cast<System.Collections.DictionaryEntry>()
-                            .Any(entry => (string)entry.Key == $@"resources/localization.{culture.TwoLetterISOLanguageName}.baml")) {
-                            Resources.MergedDictionaries.Add(new ResourceDictionary {
-                                Source = new Uri($@"Resources\Localization.{culture.TwoLetterISOLanguageName}.xaml", UriKind.Relative)
-                            });
+
+            var bw = new BlockWindow(autoClose: true) { MessageTitle = $"{GetRes("ttl_AppStarting")}..." };
+            bw.TB_Message.HorizontalAlignment = HorizontalAlignment.Center;
+            bw.TB_Message.VerticalAlignment = VerticalAlignment.Center;
+            bw.Work = () => {
+                try {
+                    Dispatcher.Invoke(() => {
+                        bw.MessageBody = GetRes("ttl_Initializing");
+
+                        //localization
+                        var culture = System.Globalization.CultureInfo.CurrentCulture;
+                        if (culture.TwoLetterISOLanguageName != @"en") {
+                            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                            var resourceName = assembly.GetName().Name + ".g";
+                            var resourceManager = new System.Resources.ResourceManager(resourceName, assembly);
+                            try {
+                                var resourceSet = resourceManager.GetResourceSet(culture, true, true);
+                                if (resourceSet.Cast<System.Collections.DictionaryEntry>()
+                                    .Any(entry => (string)entry.Key == $@"resources/localization.{culture.TwoLetterISOLanguageName}.baml")) {
+                                    Resources.MergedDictionaries.Add(new ResourceDictionary {
+                                        Source = new Uri($@"Resources\Localization.{culture.TwoLetterISOLanguageName}.xaml", UriKind.Relative)
+                                    });
+                                }
+                            }
+                            finally {
+                                resourceManager.ReleaseAllResources();
+                            }
                         }
+
+                        //handle immersion mode change
+                        Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
+
+                        //get supported extensions
+                        foreach (var ext in RegistryHelpers.GetWICDecoders().Select(s => s.ToLowerInvariant())) {
+                            if (!ImageExtensions.Contains(ext)) ImageExtensions.Add(ext);
+                        }
+
+                        //set working directory
+                        Directory.SetCurrentDirectory(ExeDir);
+
+                        //create resources
+                        var fa_brush = new SolidColorBrush(Color.FromArgb(40, 255, 255, 255));
+                        fa_meh = GetFaIcon(EFontAwesomeIcon.Solid_Meh, fa_brush);
+                        fa_spinner = GetFaIcon(EFontAwesomeIcon.Solid_Spinner, fa_brush);
+                        fa_exclamation = GetFaIcon(EFontAwesomeIcon.Solid_ExclamationCircle, fa_brush);
+                        fa_file = GetFaIcon(EFontAwesomeIcon.Solid_File, fa_brush);
+                        fa_folder = GetFaIcon(EFontAwesomeIcon.Solid_Folder, fa_brush);
+                        fa_archive = GetFaIcon(EFontAwesomeIcon.Solid_FileArchive, fa_brush);
+                        fa_image = GetFaIcon(EFontAwesomeIcon.Solid_FileImage, fa_brush);
+                    });
+
+                    //load config
+                    Dispatcher.Invoke(() => bw.MessageBody = $"{GetRes("ttl_Loading")} configurations...");
+                    if (!Setting.LoadConfigFromFile()) {
+                        Current.Dispatcher.Invoke(Current.Shutdown);
+                        return;
                     }
-                    finally {
-                        resourceManager.ReleaseAllResources();
-                    }
-                }
 
-                //handle immersion mode change
-                Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
+                    //make sure thumbs db is correct
+                    Dispatcher.Invoke(() => bw.MessageBody = $"{GetRes("ttl_Checking")} database...");
+                    CheckThumbsDB();
 
-                //get supported extensions
-                foreach (var ext in RegistryHelpers.GetWICDecoders().Select(s => s.ToLowerInvariant())) {
-                    if (!ImageExtensions.Contains(ext)) ImageExtensions.Add(ext);
-                }
-
-                //set working directory
-                Directory.SetCurrentDirectory(ExeDir);
-
-                //load config
-                Setting.LoadConfigFromFile();
-
-                //create resources
-                var fa_brush = new SolidColorBrush(Color.FromArgb(40, 255, 255, 255));
-                fa_meh = GetFaIcon(EFontAwesomeIcon.Solid_Meh, fa_brush);
-                fa_spinner = GetFaIcon(EFontAwesomeIcon.Solid_Spinner, fa_brush);
-                fa_exclamation = GetFaIcon(EFontAwesomeIcon.Solid_ExclamationCircle, fa_brush);
-                fa_file = GetFaIcon(EFontAwesomeIcon.Solid_File, fa_brush);
-                fa_folder = GetFaIcon(EFontAwesomeIcon.Solid_Folder, fa_brush);
-                fa_archive = GetFaIcon(EFontAwesomeIcon.Solid_FileArchive, fa_brush);
-                fa_image = GetFaIcon(EFontAwesomeIcon.Solid_FileImage, fa_brush);
-
-                //make sure thumbs db is correct
-                CheckThumbsDB();
-
-                //check args
-                if (e.Args?.Length > 0) {
+                    Dispatcher.Invoke(() => {
+                        //check args
+                        if (e.Args?.Length > 0) {
 #if DEBUG
-                    if (e.Args.Contains("-cleandb")) {
-                        Execute(Table.Thumbs, (table, con) => {
-                            using (var cmd = new SQLiteCommand(con)) {
-                                cmd.CommandText = $@"delete from {table.Name}";
-                                cmd.ExecuteNonQuery();
-                                cmd.CommandText = @"vacuum";
-                                cmd.ExecuteNonQuery();
+                            if (e.Args.Contains("-cleandb")) {
+                                Execute(Table.Thumbs, (table, con) => {
+                                    using (var cmd = new SQLiteCommand(con)) {
+                                        cmd.CommandText = $@"delete from {table.Name}";
+                                        cmd.ExecuteNonQuery();
+                                        cmd.CommandText = @"vacuum";
+                                        cmd.ExecuteNonQuery();
+                                    }
+                                    return 0;
+                                });
                             }
-                            return 0;
-                        });
-                    }
 #endif
-                    try {
-                        //use the last arg as path
-                        var path = e.Args[e.Args.Length - 1];
-                        var objInfo = new ObjectInfo(path, GetPathType(path));
+                            try {
+                                //use the last arg as path
+                                var path = e.Args[e.Args.Length - 1];
+                                var objInfo = new ObjectInfo(path, GetPathType(path));
 
-                        if (e.Args.Contains("-slideshow")) {
-                            new SlideshowWindow(objInfo.ContainerPath).Show();
-                            return;
-                        }
-                        else {
-                            switch (objInfo.Flags) {
-                                case FileFlags.Image:
-                                    new ViewWindow(objInfo.ContainerPath, objInfo.FileName).Show();
+                                if (e.Args.Contains("-slideshow")) {
+                                    new SlideshowWindow(objInfo.ContainerPath).Show();
                                     return;
-                                default:
-                                    new MainWindow() { InitialPath = objInfo.ContainerPath }.Show();
-                                    return;
+                                }
+                                else {
+                                    switch (objInfo.Flags) {
+                                        case FileFlags.Image:
+                                            new ViewWindow(objInfo.ContainerPath, objInfo.FileName).Show();
+                                            return;
+                                        default:
+                                            new MainWindow() { InitialPath = objInfo.ContainerPath }.Show();
+                                            return;
+                                    }
+                                }
+                            }
+                            catch (Exception ex) {
+                                MessageBox.Show(ex.Message, GetRes("ttl_ParamStartError"), MessageBoxButton.OK, MessageBoxImage.Error);
                             }
                         }
-                    }
-                    catch (Exception ex) {
-                        MessageBox.Show(ex.Message, GetRes("ttl_ParamStartError"), MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
+
+                        //show mainwindow if no cmdline args
+                        new MainWindow().Show();
+                    });
+
+                    Task.Run(() => {
+                        //check for updates
+                        var _ = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                        var localVer = new Version(_.Major, _.Minor, _.Build);
+                        var req = (HttpWebRequest)WebRequest.Create(@"https://api.github.com/repos/changbowen/zipimageviewer/releases/latest");
+                        req.ContentType = @"application/json; charset=utf-8";
+                        req.UserAgent = nameof(ZipImageViewer);
+                        try {
+                            using (var res = req.GetResponse() as HttpWebResponse)
+                            using (var stream = res.GetResponseStream())
+                            using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8)) {
+                                var jObj = Newtonsoft.Json.Linq.JObject.Parse(reader.ReadToEnd());
+                                string tag_name = @"tag_name";
+                                if (!jObj.ContainsKey(tag_name)) return;
+                                _ = Version.Parse(jObj[tag_name].ToString().TrimStart('v'));
+                                var remoteVer = new Version(_.Major, _.Minor, _.Build);
+                                if (localVer < remoteVer && MessageBox.Show(GetRes(@"msg_NewVersionPrompt", localVer.ToString(3), remoteVer.ToString(3)), string.Empty,
+                                    MessageBoxButton.OKCancel, MessageBoxImage.Information) == MessageBoxResult.OK) {
+                                    Helpers.Run(@"explorer", @"https://github.com/changbowen/ZipImageViewer/releases");
+                                }
+                            }
+                        }
+                        catch { }
+                    });
                 }
+                catch (Exception ex) {
+                    MessageBox.Show(string.Join("\r\n", new[] { ex.Message, ex.InnerException?.Message }.Where(s => !string.IsNullOrEmpty(s))),
+                        GetRes("ttl_AppStartError"), MessageBoxButton.OK, MessageBoxImage.Error);
+                    Dispatcher.Invoke(Current.Shutdown);
+                }
+            };
 
-                //show mainwindow if no cmdline args
-                new MainWindow().Show();
-
-                //check for updates
-                Task.Run(() => {
-                    var _ = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                    var localVer = new Version(_.Major, _.Minor, _.Build);
-                    var req = (HttpWebRequest)WebRequest.Create(@"https://api.github.com/repos/changbowen/zipimageviewer/releases/latest");
-                    req.ContentType = @"application/json; charset=utf-8";
-                    req.UserAgent = nameof(ZipImageViewer);
-                    try {
-                        using (var res = req.GetResponse() as HttpWebResponse)
-                        using (var stream = res.GetResponseStream())
-                        using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8)) {
-                            var jObj = Newtonsoft.Json.Linq.JObject.Parse(reader.ReadToEnd());
-                            string tag_name = @"tag_name";
-                            if (!jObj.ContainsKey(tag_name)) return;
-                            _ = Version.Parse(jObj[tag_name].ToString().TrimStart('v'));
-                            var remoteVer = new Version(_.Major, _.Minor, _.Build);
-                            if (localVer < remoteVer && MessageBox.Show(GetRes(@"msg_NewVersionPrompt", localVer.ToString(3), remoteVer.ToString(3)), string.Empty,
-                                MessageBoxButton.OKCancel, MessageBoxImage.Information) == MessageBoxResult.OK) {
-                                Helpers.Run(@"explorer", @"https://github.com/changbowen/ZipImageViewer/releases");
-                            }
-                        }
-                    }
-                    catch { }
-                });
-            }
-            catch (Exception ex) {
-                MessageBox.Show(ex.Message, GetRes("ttl_AppStartError"), MessageBoxButton.OK, MessageBoxImage.Error);
-                Current.Shutdown();
-            }
+            bw.Show();
         }
 
         private void Setting_StaticPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
@@ -214,7 +234,7 @@ namespace ZipImageViewer
                             using (var reader = cmd.ExecuteReader()) { reader.Read(); pageCount = (long)reader["page_count"]; }
                             cmd.CommandText = @"pragma page_size";
                             using (var reader = cmd.ExecuteReader()) { reader.Read(); pageSize = (long)reader["page_size"]; }
-                            
+
                             var dbSize = pageCount * pageSize;
                             if (dbSize < targetSize) break;
 
@@ -222,7 +242,7 @@ namespace ZipImageViewer
                             var delCount = (dbSize - targetSize) / (dbSize / rowCount) * 2;
                             if (delCount < 50) delCount = 50L;
 
-                            cmd.CommandText = 
+                            cmd.CommandText =
 $@"delete from {table.Name} where rowid in
 (select rowid from {table.Name} order by rowid asc limit {delCount})";
                             cmd.ExecuteNonQuery();

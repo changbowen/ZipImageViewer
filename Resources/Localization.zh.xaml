@@ -2,6 +2,10 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:local="clr-namespace:ZipImageViewer">
+    <sys:String x:Key="ttl_AppStarting">应用启动中</sys:String>
+    <sys:String x:Key="ttl_Initializing">初始化</sys:String>
+    <sys:String x:Key="ttl_Loading">正在载入</sys:String>
+    <sys:String x:Key="ttl_Checking">正在检查</sys:String>
     <sys:String x:Key="ttl_Settings">设置</sys:String>
     <sys:String x:Key="ttl_ThumbnailSize">缩略图尺寸</sys:String>
     <Span x:Key="spn_ThumbSizeTip">
@@ -60,7 +64,14 @@
     <sys:String x:Key="ttl_KenBurns">Ken Burns</sys:String>
     <sys:String x:Key="ttl_Breath">呼吸</sys:String>
     <sys:String x:Key="ttl_Emerge">浮现</sys:String>
-    
+
+    <sys:String x:Key="ttl_MasterPassword">主密码</sys:String>
+    <sys:String x:Key="ttl_Update_0">更新{0}</sys:String>
+    <sys:String x:Key="ttl_Current_0">当前{0}</sys:String>
+    <sys:String x:Key="ttl_New_0">新{0}</sys:String>
+    <sys:String x:Key="ttl_Confirm_0">确认{0}</sys:String>
+    <sys:String x:Key="ttl_Change_0">更改{0}</sys:String>
+    <Span x:Key="spn_MasterPasswordTip">主密码用于加密保存的密码。</Span>
     <sys:String x:Key="ttl_SavedPasswords">保存的密码</sys:String>
     <sys:String x:Key="ttl_FallbackPasswords">备用密码</sys:String>
     <sys:String x:Key="ttl_MappedPasswords">密码字典</sys:String>
@@ -75,6 +86,7 @@
     <sys:String x:Key="ttl_Arguments">参数</sys:String>
     <sys:String x:Key="txt_TargetNullValue">(输入数据)</sys:String>
     <sys:String x:Key="ttl_Password">密码</sys:String>
+    <sys:String x:Key="ttl_Path">路径</sys:String>
     <Span x:Key="spn_CustomCommandsTip">
         右键菜单中使用的自定义命令，每行一个。<LineBreak/>
         <Bold>%FileSystemPath%</Bold> - 当前文件或目录的路径

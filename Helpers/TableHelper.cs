@@ -16,7 +16,7 @@ namespace ZipImageViewer
         public enum Column
         {
             BasePath, SubPath, DecodeWidth, DecodeHeight, ThumbData,//Thumbs table
-            Path, Password,//MappedPasswords and FallbackPasswords table
+            Path, Password, PasswordHash,//MappedPasswords and FallbackPasswords table
         }
 
         public class TableInfo
@@ -47,12 +47,19 @@ namespace ZipImageViewer
             }
         }
 
-        public static void RowChangeHandler(object sender, DataRowChangeEventArgs e) {
-            if (!(DataRowAction.Add | DataRowAction.Change | DataRowAction.ChangeCurrentAndOriginal | DataRowAction.ChangeOriginal).HasFlag(e.Action)) return;
+        /// <summary>
+        /// Encrypt password values if not already.
+        /// </summary>
+        public static void EncryptPassword(object sender, DataColumnChangeEventArgs e) {
+            //if (!(DataRowAction.Add | DataRowAction.Change | DataRowAction.ChangeCurrentAndOriginal | DataRowAction.ChangeOriginal).HasFlag(e.Action)) return;
+            if (e.Column.ColumnName != nameof(Column.Password)) return;
 
-            var rawPwd = (string)e.Row[nameof(Column.Password)];
-            if (!EncryptionHelper.IsEncrypted(rawPwd))
-                e.Row[nameof(Column.Password)] = EncryptionHelper.Encrypt(rawPwd);
+            var pwd = new EncryptionHelper.Password(e.ProposedValue as string);
+            if (!pwd.WasEncrypted) //encrypt if not already by changing proposedvalue
+                e.ProposedValue = pwd.Encrypted;
+            if (e.Row.Table.Columns.Contains(nameof(Column.PasswordHash)) &&
+                e.Row[nameof(Column.PasswordHash)].ToString() != pwd.Hash) //update hash in case of password changes
+                e.Row[nameof(Column.PasswordHash)] = pwd.Hash;
         }
     }
 }
