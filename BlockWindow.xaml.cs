@@ -36,7 +36,7 @@ namespace ZipImageViewer
         /// Need to set the CancellationTokenSource to null in Work for window to close properly.
         /// </summary>
         public Action Work { get; set; }
-        public bool AutoClose { get; set; } = false;
+        public bool AutoClose { get; private set; } = false;
         internal CancellationTokenSource tknSrc_Work;
         internal readonly object lock_Work = new object();
 
@@ -44,9 +44,11 @@ namespace ZipImageViewer
         /// If set, <paramref name="owner"/> and its owned windows will be disabled until BlockWindow is closed.
         /// </summary>
         public BlockWindow(Window owner = null, bool autoClose = false) {
+            InitializeComponent();
+
             Owner = owner;
             AutoClose = autoClose;
-            InitializeComponent();
+            ButtonCloseVisible = !autoClose;
         }
 
         private void BlockWin_Loaded(object sender, RoutedEventArgs e) {

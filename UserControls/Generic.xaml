@@ -1,11 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:ZipImageViewer"
-                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
-                    xmlns:math="http://hexinnovation.com/math">
-    <local:RectConverter x:Key="RectConverter"/>
-    <local:MathMultiplyConverter x:Key="MathMultiplyConverter"/>
-    <math:MathConverter x:Key="MathConverter"/>
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!--rounded content control base-->
     <Style x:Key="RoundContentControlBaseStyle" TargetType="{x:Type ContentControl}">
@@ -65,16 +61,11 @@
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="Margin" Value="0 0 0 8"/>
     </Style>
-    <Style x:Key="BorderBlockStyle" TargetType="{x:Type Border}">
+    <Style x:Key="BorderBlockStyle" TargetType="{x:Type Border}" BasedOn="{StaticResource S_DropShadow}">
         <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
         <Setter Property="Margin" Value="8 4"/>
         <Setter Property="Padding" Value="8"/>
         <Setter Property="CornerRadius" Value="4"/>
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect ShadowDepth="2" Direction="270" Opacity="0.5" BlurRadius="8"/>
-            </Setter.Value>
-        </Setter>
     </Style>
     <Style x:Key="BorderlessStyle" TargetType="Control">
         <Setter Property="BorderThickness" Value="0"/>

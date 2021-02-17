@@ -1,6 +1,12 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:ZipImageViewer">
+                    xmlns:local="clr-namespace:ZipImageViewer"
+                    xmlns:math="http://hexinnovation.com/math">
+    
+    <local:RectConverter x:Key="RectConverter"/>
+    <local:MathMultiplyConverter x:Key="MathMultiplyConverter"/>
+    <math:MathConverter x:Key="MathConverter"/>
+    
     <CubicEase x:Key="CE_EaseIn" EasingMode="EaseIn"/>
     <CubicEase x:Key="CE_EaseOut" EasingMode="EaseOut"/>
     <CubicEase x:Key="CE_EaseInOut" EasingMode="EaseInOut"/>
@@ -43,7 +49,8 @@
         <DoubleAnimation To="0.2" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseInOut}" />
     </Storyboard>
 
-    <DropShadowEffect x:Key="DS_Below" Direction="270" Opacity="0.8" ShadowDepth="2" BlurRadius="5" />
+    <DropShadowEffect x:Key="DS_Below" Direction="270" ShadowDepth="2" BlurRadius="5"
+                      Opacity="{Binding LiteMode, Source={x:Static local:App.Setting}, Mode=OneWay, Converter={StaticResource MathConverter}, ConverterParameter='x ? 0 : 0.8'}" />
 
     <Style x:Key="S_DropShadow" TargetType="FrameworkElement">
         <Style.Triggers>

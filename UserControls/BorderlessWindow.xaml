@@ -3,6 +3,13 @@
                     xmlns:local="clr-namespace:ZipImageViewer">
     <!--borderless window-->
     <Style TargetType="local:BorderlessWindow">
+        <!--<Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="0"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="AllowsTransparency" Value="True"/>
+        <Setter Property="WindowStyle" Value="None"/>-->
         <Setter Property="Padding" Value="5"/>
         <Setter Property="Template">
             <Setter.Value>

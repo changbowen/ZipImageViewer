@@ -13,22 +13,36 @@ namespace ZipImageViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             if (!(value is string input)) return null;
-            if (!Setting.EncryptPasswords) return value;
+            if (Setting.EncryptPasswords == null || Setting.EncryptPasswords == false) return value;
 
             if (((string)parameter)?.ToLowerInvariant() == "encrypt")
-                return EncryptionHelper.TryEncrypt(input, out _);
+                return EncryptionHelper.TryEncrypt(input).Output;
             else
-                return EncryptionHelper.TryDecrypt(input, out _);
+                return EncryptionHelper.TryDecrypt(input).Output;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
             if (!(value is string input)) return null;
-            if (!Setting.EncryptPasswords) return value;
+            if (Setting.EncryptPasswords == null || Setting.EncryptPasswords == false) return value;
 
             if (((string)parameter)?.ToLowerInvariant() == "encrypt")
-                return EncryptionHelper.TryDecrypt(input, out _);
+                return EncryptionHelper.TryDecrypt(input).Output;
             else
-                return EncryptionHelper.TryEncrypt(input, out _);
+                return EncryptionHelper.TryEncrypt(input).Output;
+        }
+    }
+
+    /// <summary>
+    /// Convert null to false. Return non-null values as-is.
+    /// </summary>
+    public class NullableBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            return value ?? false;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            return value;
         }
     }
 

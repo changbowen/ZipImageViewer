@@ -370,6 +370,7 @@ namespace ZipImageViewer
                         break;
                 }
                 switch (LastTransition) {
+                    case Setting.Transition.ZoomFade:
                     case Setting.Transition.ZoomFadeBlur:
                         TransParams = new ObservablePair<DependencyProps, DependencyProps>(
                             new DependencyProps(1 - 0.05 * increment, dur1: 200 * multi),

@@ -7,7 +7,6 @@ using System.Linq;
 using System.Windows;
 using IniParser;
 using SevenZip;
-using SizeInt = System.Drawing.Size;
 using static ZipImageViewer.Helpers;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.SQLiteHelper;
@@ -18,12 +17,28 @@ using System.Text;
 
 namespace ZipImageViewer
 {
+    public class PropertyChangedWithValueEventArgs : PropertyChangedEventArgs
+    {
+        public virtual object OldValue { get; private set; }
+        public virtual object NewValue { get; private set; }
+
+        public PropertyChangedWithValueEventArgs(string propName, object oldValue, object newValue) : base(propName) {
+            OldValue = oldValue;
+            NewValue = newValue;
+        }
+    }
+
     public class Setting : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void NotifyPropertyChanged(string propName, object oldValue = null, object newValue = null) {
+            PropertyChanged?.Invoke(this, new PropertyChangedWithValueEventArgs(propName, oldValue, newValue));
+        }
+
         public static event EventHandler<PropertyChangedEventArgs> StaticPropertyChanged;
-        private static void OnStaticPropertyChanged(string propName) {
-            StaticPropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propName));
+        protected static void OnStaticPropertyChanged(string propName, object oldValue = null, object newValue = null) {
+            StaticPropertyChanged?.Invoke(null, new PropertyChangedWithValueEventArgs(propName, oldValue, newValue));
         }
 
         [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
@@ -35,6 +50,8 @@ namespace ZipImageViewer
             None,
             [Description("ttl_" + nameof(Random), true)]
             Random,
+            [Description("ttl_" + nameof(ZoomFade), true)]
+            ZoomFade,
             [Description("ttl_" + nameof(ZoomFadeBlur), true)]
             ZoomFadeBlur,
             [Description("ttl_" + nameof(Fade), true)]
@@ -201,9 +218,12 @@ namespace ZipImageViewer
             }
         }
 
-        private static bool encryptPasswords = false;
+        private static bool? encryptPasswords = false;
+        /// <summary>
+        /// Setting to true or false will trigger encryption or decryption of all saved passwords. Setting to null will not trigger.
+        /// </summary>
         [AppConfig]
-        public static bool EncryptPasswords {
+        public static bool? EncryptPasswords {
             get => encryptPasswords;
             set {
                 if (encryptPasswords == value) return;
@@ -253,6 +273,8 @@ namespace ZipImageViewer
             }
         }
 
+        [AppConfig]
+        public static string MasterPasswordHash { get; private set; }
 
         #region non-saved settings
 
@@ -280,13 +302,36 @@ namespace ZipImageViewer
 
         public static Rect LastViewWindowRect;
 
-        private static string masterPassword = string.Empty;
-        public static string MasterPassword {
-            get => masterPassword == null ? null : Encoding.UTF8.GetString(Convert.FromBase64String(masterPassword));
-            set => masterPassword = value == null ? null : Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
-        }
 
+        private static string masterPassword = string.Empty;
+        public static string MasterPassword => string.IsNullOrEmpty(masterPassword) ? string.Empty : Encoding.UTF8.GetString(Convert.FromBase64String(masterPassword));
+        
         #endregion
+
+        /// <summary>
+        /// Set or change master password and update <see cref="MasterPasswordHash"/>. When <paramref name="oldPwd"/> is not null, re-encrypt all saved passwords.
+        /// </summary>
+        public static void ChangeMasterPassword(string newPwd, string oldPwd = null) {
+            if (newPwd == null) return;
+
+            masterPassword = Convert.ToBase64String(Encoding.UTF8.GetBytes(newPwd));
+            MasterPasswordHash = EncryptionHelper.GetHash(newPwd);
+
+            if (oldPwd != null) {//re-encrypt all passwords
+                new BlockWindow(autoClose: true) {
+                    MessageBody = GetRes("ttl_Processing_0", GetRes("ttl_SavedPasswords")),
+                    Work = () => {
+                        foreach (DataRow row in FallbackPasswords.Rows) {
+                            row[nameof(Column.Password)] = EncryptionHelper.TryReEncrypt(row[nameof(Column.Password)].ToStr(), oldPwd, newPwd).Output;
+                        }
+                        foreach (DataRow row in MappedPasswords.Rows) {
+                            row[nameof(Column.Password)] = EncryptionHelper.TryReEncrypt(row[nameof(Column.Password)].ToStr(), oldPwd, newPwd).Output;
+                        }
+                        SaveConfigs();
+                    }
+                }.ShowDialog();
+            }
+        }
 
 
         private static IEnumerable<PropertyInfo> appConfigs => typeof(Setting).GetProperties(BindingFlags.Public | BindingFlags.Static)
@@ -295,20 +340,18 @@ namespace ZipImageViewer
         /// <summary>
         /// Returns true if load is considered successful.
         /// </summary>
-        public static bool LoadConfigFromFile(string path = null) {
-            if (path == null) path = FilePath;
-
+        public static bool LoadConfigs() {
             //load config
-            if (!File.Exists(path)) {
+            if (!File.Exists(FilePath)) {
                 //initialize default config
-                SaveConfigToFile();
+                SaveConfigs();
             }
 
             //apply dll path
             SevenZipBase.SetLibraryPath(sevenZipDllPath);
 
             //parse config file
-            var iniData = new FileIniDataParser().ReadFile(path, Encoding.UTF8);
+            var iniData = new FileIniDataParser().ReadFile(FilePath, Encoding.UTF8);
             foreach (var prop in appConfigs) {
                 var saved = iniData[nameof(ConfigSection.AppConfig)][prop.Name];
                 if (saved == null) continue;
@@ -319,10 +362,16 @@ namespace ZipImageViewer
             }
 
             //ask for master password if enabled
-            if (EncryptPasswords) {
-                var (answer, masterPwd) = App.Current.Dispatcher.Invoke(InputWindow.PromptForMasterPassword);
-                if (!answer) return false;
-                MasterPassword = masterPwd;
+            if (EncryptPasswords == true) {
+                for (int i = 0; i < 10; i++) {
+                    var (answer, masterPwd) = App.Current.Dispatcher.Invoke(() => InputWindow.PromptForMasterPassword(i != 0));
+                    if (!answer) return false;
+                    if (EncryptionHelper.GetHash(masterPwd) == MasterPasswordHash) {
+                        ChangeMasterPassword(masterPwd);
+                        break;
+                    }
+                    if (i >= 9) return false;
+                }
             }
 
             //parse custom commands
@@ -347,11 +396,10 @@ namespace ZipImageViewer
             FallbackPasswords.Columns.Add(nameof(Column.PasswordHash), typeof(string));
             FallbackPasswords.Columns.Add(nameof(Column.Password), typeof(string));
             FallbackPasswords.PrimaryKey = new[] { FallbackPasswords.Columns[nameof(Column.PasswordHash)] };
-            FallbackPasswords.ColumnChanging += EncryptPassword;
             if (File.Exists(fp.FullPath)) {
                 try { FallbackPasswords.ReadXml(fp.FullPath); }
-                catch {
-                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                catch (Exception ex) {
+                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")) + "\r\n" + ex.Message, string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
             //load fallback passwords from ini if exist, then remove them
@@ -362,38 +410,36 @@ namespace ZipImageViewer
                         .Select(d => new Observable<string>(d.KeyName)).ToList()
                         .ForEach(p => {
                             var encPwd = new EncryptionHelper.Password(p);
-                            FallbackPasswords.UpdateDataTable(encPwd.Hash, nameof(Column.Password), encPwd.Encrypted);
+                            FallbackPasswords.UpdateDataTable(encPwd.Hash, nameof(Column.Password), encPwd.SafeValue);
                         });
                     iniData.Sections.RemoveSection(nameof(ConfigSection.FallbackPasswords));
                 }
-                catch {
-                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                catch (Exception ex) {
+                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_FallbackPasswords")) + "\r\n" + ex.Message, string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
-     
+            FallbackPasswords.ColumnChanging += UpdatePasswordHash;
+
             var mp = Tables[Table.MappedPasswords];
             MappedPasswords = new DataTable(mp.Name);
             MappedPasswords.Columns.Add(nameof(Column.Path), typeof(string));
             MappedPasswords.Columns.Add(nameof(Column.Password), typeof(string));
             MappedPasswords.PrimaryKey = new[] { MappedPasswords.Columns[nameof(Column.Path)] };
-            MappedPasswords.ColumnChanging += EncryptPassword;
             if (File.Exists(mp.FullPath)) {
                 try { MappedPasswords.ReadXml(mp.FullPath); }
-                catch {
-                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_MappedPasswords")), string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                catch (Exception ex) {
+                    MessageBox.Show(GetRes(@"msg_ErrorLoadConfig", GetRes(@"ttl_MappedPasswords")) + "\r\n" + ex.Message, string.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
 
             return true;
         }
 
-        public static void SaveConfigToFile(string path = null) {
-            if (path == null) path = FilePath;
-
+        public static void SaveConfigs() {
             FallbackPasswords?.WriteXml(Tables[Table.FallbackPasswords].FullPath, XmlWriteMode.WriteSchema);
             MappedPasswords?.WriteXml(Tables[Table.MappedPasswords].FullPath, XmlWriteMode.WriteSchema);
 
-            File.WriteAllText(path, 
+            File.WriteAllText(FilePath, 
 $@"[{nameof(ConfigSection.AppConfig)}]
 {string.Join("\r\n", appConfigs.Select(p => $"{p.Name}={JsonConvert.SerializeObject(p.GetValue(null))}"))}
 

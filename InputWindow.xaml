@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" ResizeMode="NoResize" SizeToContent="Height"
         xmlns:local="clr-namespace:ZipImageViewer" mc:Ignorable="d"
-        ShowInTaskbar="False" Topmost="True"
+        ShowInTaskbar="False" Topmost="True" Loaded="InputWin_Loaded"
         Background="{StaticResource BackgroundLightBrush}"
         Foreground="{StaticResource ForegroundBrush}"
         Width="400" WindowStartupLocation="CenterScreen">

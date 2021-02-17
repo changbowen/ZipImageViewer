@@ -50,6 +50,7 @@
 
     <sys:String x:Key="ttl_None">无</sys:String>
     <sys:String x:Key="ttl_Random">随机</sys:String>
+    <sys:String x:Key="ttl_ZoomFade">缩放 + 淡入淡出</sys:String>
     <sys:String x:Key="ttl_ZoomFadeBlur">缩放 + 淡入淡出 + 模糊</sys:String>
     <sys:String x:Key="ttl_Fade">淡入淡出</sys:String>
     <sys:String x:Key="ttl_HorizontalSwipe">水平滑动</sys:String>
@@ -71,14 +72,19 @@
     <sys:String x:Key="ttl_New_0">新{0}</sys:String>
     <sys:String x:Key="ttl_Confirm_0">确认{0}</sys:String>
     <sys:String x:Key="ttl_Change_0">更改{0}</sys:String>
-    <Span x:Key="spn_MasterPasswordTip">主密码用于加密保存的密码。</Span>
+    <sys:String x:Key="ttl_Processing_0">正在处理{0}...</sys:String>
+    <sys:String x:Key="msg_IncorrectPassword">密码不正确。</sys:String>
+    <sys:String x:Key="msg_MismatchPassword">密码不一致。</sys:String>
+    <Span x:Key="spn_MasterPasswordTip">
+        主密码用于加密保存的密码。<LineBreak/>
+        <Bold>如果主密码丢失，已保存的密码将无法恢复！</Bold>
+    </Span>
     <sys:String x:Key="ttl_SavedPasswords">保存的密码</sys:String>
     <sys:String x:Key="ttl_FallbackPasswords">备用密码</sys:String>
     <sys:String x:Key="ttl_MappedPasswords">密码字典</sys:String>
     <Span x:Key="spn_SavedPasswordsTip">
         压缩文件使用的密码。<LineBreak/>
-        在配置文件中，备用密码每行一个，采用如下格式存储：<LineBreak/>
-        <Bold>密码</Bold> =
+        备用密码用于读取密码保护的压缩文件。匹配过的密码会保存在密码字典里。
     </Span>
     <sys:String x:Key="ttl_CustomCommands">自定义命令</sys:String>
     <sys:String x:Key="ttl_Name">名称</sys:String>

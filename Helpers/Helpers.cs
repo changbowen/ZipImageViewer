@@ -17,11 +17,9 @@ using System.Windows.Markup;
 
 namespace ZipImageViewer
 {
-    public static class ExtentionMethods
-    {
+    public static class ExtentionMethods {
         public static void AnimateDoubleCubicEase(this UIElement target, DependencyProperty propdp, double toVal, int ms, EasingMode ease,
-            HandoffBehavior handOff = HandoffBehavior.Compose, int begin = 0, EventHandler completed = null)
-        {
+            HandoffBehavior handOff = HandoffBehavior.Compose, int begin = 0, EventHandler completed = null) {
             var anim = new DoubleAnimation(toVal, new Duration(TimeSpan.FromMilliseconds(ms)));
             switch (ease) {
                 case EasingMode.EaseIn:
@@ -138,6 +136,10 @@ namespace ZipImageViewer
             if (a == null) return b;
             if (b == null) return a;
             return a.Concat(b);
+        }
+
+        public static string ToStr(this object obj) {
+            return obj is DBNull ? null : obj.ToString();
         }
     }
 
@@ -546,13 +548,16 @@ namespace ZipImageViewer
         private readonly Func<TItem, TKey> KeyFunc;
 
         protected override TKey GetKeyForItem(TItem item) {
-            if (KeyFunc != null) return KeyFunc(item);
-            throw new ArgumentNullException(@"getKeyForItem cannot be null.");
+            return KeyFunc(item);
         }
 
         public KeyedCol(Func<TItem, TKey> keyFunc) {
             if (keyFunc == null) throw new ArgumentNullException(nameof(keyFunc));
             KeyFunc = keyFunc;
+        }
+
+        public KeyedCol(Func<TItem, TKey> keyFunc, IEnumerable<TItem> items) : this(keyFunc) {
+            foreach (var item in items) Add(item);
         }
     }
 }

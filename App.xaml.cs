@@ -12,6 +12,7 @@ using static ZipImageViewer.SQLiteHelper;
 using static ZipImageViewer.TableHelper;
 using static ZipImageViewer.Helpers;
 using System.Net;
+using System.Data;
 
 namespace ZipImageViewer
 {
@@ -85,9 +86,6 @@ namespace ZipImageViewer
                             }
                         }
 
-                        //handle immersion mode change
-                        Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
-
                         //get supported extensions
                         foreach (var ext in RegistryHelpers.GetWICDecoders().Select(s => s.ToLowerInvariant())) {
                             if (!ImageExtensions.Contains(ext)) ImageExtensions.Add(ext);
@@ -109,7 +107,7 @@ namespace ZipImageViewer
 
                     //load config
                     Dispatcher.Invoke(() => bw.MessageBody = $"{GetRes("ttl_Loading")} configurations...");
-                    if (!Setting.LoadConfigFromFile()) {
+                    if (!Setting.LoadConfigs()) {
                         Current.Dispatcher.Invoke(Current.Shutdown);
                         return;
                     }
@@ -161,6 +159,9 @@ namespace ZipImageViewer
 
                         //show mainwindow if no cmdline args
                         new MainWindow().Show();
+
+                        //handle setting changes
+                        Setting.StaticPropertyChanged += Setting_StaticPropertyChanged;
                     });
 
                     Task.Run(() => {
@@ -200,12 +201,48 @@ namespace ZipImageViewer
 
         private void Setting_StaticPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
             switch (e.PropertyName) {
-                case nameof(Setting.ImmersionMode):
+                case nameof(Setting.ImmersionMode): {
                     foreach (var win in Windows) {
                         if (!(win is MainWindow mainWin)) continue;
                         Task.Run(() => mainWin.LoadPath(mainWin.CurrentPath));
                     }
-                    break;
+                }
+                break;
+                case nameof(Setting.EncryptPasswords): {
+                    if (Setting.EncryptPasswords == null) break;
+                    if (Setting.FallbackPasswords == null || Setting.MappedPasswords == null) break;
+                    var showMismatch = false;
+                    if (Setting.EncryptPasswords == true) {//set password when option is enabled
+                        for (int i = 0; i < 10; i++) {
+                            var (answer, _, newPwd, cfmPwd) = InputWindow.PromptForPasswordChange(false, false, showMismatch);
+                            if (!answer) { Setting.EncryptPasswords = null; return; }
+                            showMismatch = false;
+                            if (newPwd != cfmPwd) showMismatch = true;
+                            else {
+                                Setting.ChangeMasterPassword(newPwd);
+                                break;
+                            }
+                        }
+                    }
+                    new BlockWindow(autoClose: true) {
+                        MessageBody = GetRes("ttl_Processing_0", GetRes("ttl_SavedPasswords")),
+                        Work = () => {
+                            var enabled = Setting.EncryptPasswords == true;
+                            foreach (DataRow row in Setting.FallbackPasswords.Rows) {
+                                row[nameof(Column.Password)] = enabled ?
+                                    EncryptionHelper.TryEncrypt(row[nameof(Column.Password)].ToStr()).Output :
+                                    EncryptionHelper.TryDecrypt(row[nameof(Column.Password)].ToStr()).Output;
+                            }
+                            foreach (DataRow row in Setting.MappedPasswords.Rows) {
+                                row[nameof(Column.Password)] = enabled ?
+                                    EncryptionHelper.TryEncrypt(row[nameof(Column.Password)].ToStr()).Output :
+                                    EncryptionHelper.TryDecrypt(row[nameof(Column.Password)].ToStr()).Output;
+                            }
+                            Setting.SaveConfigs();
+                        }
+                    }.ShowDialog();
+                }
+                break;
             }
         }
 
@@ -215,7 +252,7 @@ namespace ZipImageViewer
             }
             LoadHelper.LoadThrottle.Dispose();
 
-            Setting.SaveConfigToFile();
+            Setting.SaveConfigs();
 
             Setting.StaticPropertyChanged -= Setting_StaticPropertyChanged;
 

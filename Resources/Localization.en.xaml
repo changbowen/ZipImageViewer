@@ -50,6 +50,7 @@
     
     <sys:String x:Key="ttl_None">None</sys:String>
     <sys:String x:Key="ttl_Random">Random</sys:String>
+    <sys:String x:Key="ttl_ZoomFade">Zoom + Fade</sys:String>
     <sys:String x:Key="ttl_ZoomFadeBlur">Zoom + Fade + Blur</sys:String>
     <sys:String x:Key="ttl_Fade">Fade</sys:String>
     <sys:String x:Key="ttl_HorizontalSwipe">Horizontal Swipe</sys:String>
@@ -71,14 +72,19 @@
     <sys:String x:Key="ttl_New_0">New {0}</sys:String>
     <sys:String x:Key="ttl_Confirm_0">Confirm {0}</sys:String>
     <sys:String x:Key="ttl_Change_0">Change {0}</sys:String>
-    <Span x:Key="spn_MasterPasswordTip">The master password is used for encrypting saved passwords.</Span>
+    <sys:String x:Key="ttl_Processing_0">Processing {0}...</sys:String>
+    <sys:String x:Key="msg_IncorrectPassword">The password you provided was incorrect.</sys:String>
+    <sys:String x:Key="msg_MismatchPassword">The passwords you provided did not match.</sys:String>
+    <Span x:Key="spn_MasterPasswordTip">
+        The master password is used for encrypting saved passwords.<LineBreak/>
+        <Bold>Do not lose the master password otherwise the saved passwords will not be recoverable!</Bold>
+    </Span>
     <sys:String x:Key="ttl_SavedPasswords">Saved Passwords</sys:String>
     <sys:String x:Key="ttl_FallbackPasswords">Fallback Passwords</sys:String>
     <sys:String x:Key="ttl_MappedPasswords">Mapped Passwords</sys:String>
     <Span x:Key="spn_SavedPasswordsTip">
         Saved passwords for zipped files.<LineBreak/>
-        In the configuration file, fallback passwords are saved one on each line, with the below formats:<LineBreak/>
-        <Bold>password</Bold> =
+        Fallback Passwords are used on password-protected archive files. Matched passwords will be saved in Mapped Passwords.
     </Span>
     <sys:String x:Key="ttl_CustomCommands">Custom Commands</sys:String>
     <sys:String x:Key="ttl_Name">Name</sys:String>

@@ -99,8 +99,8 @@ namespace ZipImageViewer
             var success = false;
             switch (trial) {
                 //first check if there is a match in saved passwords
-                case 0 when Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow row:
-                    options.Password = new EncryptionHelper.Password((string)row[nameof(Column.Password)]);
+                case 0 when Setting.MappedPasswords.Rows.Find(options.FilePath) is DataRow mp:
+                    options.Password = new EncryptionHelper.Password(mp[nameof(Column.Password)].ToStr());
                     success = extractZip(options, objInfo, done, tknSrc);
                     break;
                 //then try no password
@@ -111,7 +111,7 @@ namespace ZipImageViewer
                 //then try all saved passwords with no filename
                 case 2:
                     foreach (DataRow fp in Setting.FallbackPasswords.Rows) {
-                        options.Password = new EncryptionHelper.Password((string)fp[nameof(Column.Password)]);
+                        options.Password = new EncryptionHelper.Password(fp[nameof(Column.Password)].ToStr());
                         success = extractZip(options, objInfo, done, tknSrc);
                         if (success) break;
                     }
@@ -133,8 +133,8 @@ namespace ZipImageViewer
                                 success = extractZip(options, objInfo, done, tknSrc);
                                 if (success) {
                                     //make sure the password is saved when task is cancelled
-                                    Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), options.Password.Encrypted);
-                                    if (isFb) Setting.FallbackPasswords.UpdateDataTable(options.Password.Hash, nameof(Column.Password), options.Password.Encrypted);
+                                    Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), options.Password.SafeValue);
+                                    if (isFb) Setting.FallbackPasswords.UpdateDataTable(options.Password.Hash, nameof(Column.Password), options.Password.SafeValue);
                                     break;
                                 }
                             }
@@ -158,7 +158,7 @@ namespace ZipImageViewer
             if (tknSrc?.IsCancellationRequested == true) return success;
             SevenZipExtractor ext = null;
             try {
-                var clearPwd = options.Password.Decrypt();
+                var clearPwd = options.Password.Decrypted;
                 ext = clearPwd?.Length > 0 ? new SevenZipExtractor(options.FilePath, clearPwd) :
                                              new SevenZipExtractor(options.FilePath);
                 //check for multi-volume archives (nope doesnt work)
@@ -240,7 +240,7 @@ namespace ZipImageViewer
 
                 //save password for the future
                 if (fromDisk && clearPwd?.Length > 0) {
-                    Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), options.Password.Encrypted);
+                    Setting.MappedPasswords.UpdateDataTable(options.FilePath, nameof(Column.Password), options.Password.SafeValue);
                 }
 
                 return true; //it is considered successful if the code reaches here

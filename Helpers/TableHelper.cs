@@ -50,16 +50,16 @@ namespace ZipImageViewer
         /// <summary>
         /// Encrypt password values if not already.
         /// </summary>
-        public static void EncryptPassword(object sender, DataColumnChangeEventArgs e) {
+        public static void UpdatePasswordHash(object sender, DataColumnChangeEventArgs e) {
             //if (!(DataRowAction.Add | DataRowAction.Change | DataRowAction.ChangeCurrentAndOriginal | DataRowAction.ChangeOriginal).HasFlag(e.Action)) return;
-            if (e.Column.ColumnName != nameof(Column.Password)) return;
+            if (e.Column.ColumnName != nameof(Column.Password) || !e.Row.Table.Columns.Contains(nameof(Column.PasswordHash)) || !(e.ProposedValue is string rawPwd)) return;
 
-            var pwd = new EncryptionHelper.Password(e.ProposedValue as string);
-            if (!pwd.WasEncrypted) //encrypt if not already by changing proposedvalue
-                e.ProposedValue = pwd.Encrypted;
-            if (e.Row.Table.Columns.Contains(nameof(Column.PasswordHash)) &&
-                e.Row[nameof(Column.PasswordHash)].ToString() != pwd.Hash) //update hash in case of password changes
-                e.Row[nameof(Column.PasswordHash)] = pwd.Hash;
+            var pwdHash = EncryptionHelper.GetHash(EncryptionHelper.TryDecrypt(rawPwd).Output);
+            if (pwdHash == null) return;
+            //if (!pwd.WasEncrypted) //assume input is encrypted already
+            //    e.ProposedValue = pwd.Encrypted;
+            if (e.Row[nameof(Column.PasswordHash)].ToString() != pwdHash) //update hash when password changes
+                e.Row[nameof(Column.PasswordHash)] = pwdHash;
         }
     }
 }

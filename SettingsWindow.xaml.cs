@@ -35,8 +35,9 @@ namespace ZipImageViewer
 
         private void SettingsWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             try {
+                Setting.FallbackPasswords.AcceptChanges();
                 Setting.MappedPasswords.AcceptChanges();
-                Setting.SaveConfigToFile();
+                Setting.SaveConfigs();
             }
             catch (Exception ex) {
                 MessageBox.Show(ex.Message);
@@ -44,18 +45,18 @@ namespace ZipImageViewer
         }
 
         private void Btn_ChgMstPwd_Click(object sender, RoutedEventArgs e) {
-            var (answer, curPwd, newPwd, cfmPwd) = InputWindow.PromptForPasswordChange();
-            if (!answer) return;
-            if (curPwd != Setting.MasterPassword) {
-                MessageBox.Show("Incorrect password!");
-                return;
-            }
-            if (newPwd != cfmPwd) {
-                MessageBox.Show("Mismatch passwords!");
-                return;
-            }
-            foreach (DataRow row in Setting.FallbackPasswords.Rows) {
-                row[nameof(Column.Password)] = EncryptionHelper.TryDecrypt((string)row[nameof(Column.Password)])
+            bool showIncorrect = false, showMismatch = false;
+            for (int i = 0; i < 10; i++) {
+                var (answer, curPwd, newPwd, cfmPwd) = InputWindow.PromptForPasswordChange(true, showIncorrect, showMismatch);
+                if (!answer) return;
+                showIncorrect = false;
+                showMismatch = false;
+                if (curPwd != Setting.MasterPassword) showIncorrect = true;
+                else if (newPwd != cfmPwd) showMismatch = true;
+                else {
+                    Setting.ChangeMasterPassword(newPwd, curPwd);
+                    break;
+                }
             }
         }
 

@@ -18,37 +18,47 @@ namespace ZipImageViewer
 
         public struct Password
         {
-            private readonly string encryptedRaw;
+            private readonly string encrypted;
+            private readonly string decrypted;
+            
             /// <summary>
             /// The encrypted password containing the <see cref="CipherEnd"/>.
             /// </summary>
-            public string Encrypted => encryptedRaw == null ? null : CipherEnd + encryptedRaw + CipherEnd;
+            public string Encrypted => encrypted == null ? null : CipherEnd + encrypted + CipherEnd;
+            public string Decrypted => decrypted ?? (encrypted == null ? null : Decrypt(encrypted, Setting.MasterPassword));
+
+            /// <summary>
+            /// Returns the clear text if <see cref="Password"/> is initialized with it. Otherwise the encrypted value.
+            /// This is the value to be used for storage.
+            /// </summary>
+            public string SafeValue => decrypted ?? Encrypted;
 
             private string hash;
             public string Hash {
                 get {
-                    if (hash == null && encryptedRaw != null)
-                        hash = GetHash(EncryptionHelper.Decrypt(encryptedRaw));
+                    if (hash == null) hash = GetHash(Decrypted);
                     return hash;
                 }
             }
 
-            /// <summary>
-            /// Indicate whether the input text value is already encrypted.
-            /// </summary>
-            public readonly bool WasEncrypted;
-
-            public string Decrypt() => encryptedRaw == null ? null : EncryptionHelper.Decrypt(encryptedRaw);
+            public bool WasEncrypted { get; private set; }
 
             /// <summary>
             /// <paramref name="text"/> can be encrypted or unencrypted password;
             /// </summary>
             public Password(string text) {
-                encryptedRaw = null;
+                encrypted = null;
+                decrypted = null;
                 hash = null;
                 WasEncrypted = false;
-                if (text == null) return;
-                encryptedRaw = Setting.EncryptPasswords ? TryEncrypt(text, out WasEncrypted, true) : text;
+                if (text == null) {
+                    System.Diagnostics.Debug.Assert(text != null, "Input password is null.");
+                    return;
+                }
+                if (Setting.EncryptPasswords == true)
+                    (encrypted, WasEncrypted) = TryEncrypt(text, true);
+                else
+                    decrypted = text;
                 if (!WasEncrypted) hash = GetHash(text);
             }
         }
@@ -73,38 +83,47 @@ namespace ZipImageViewer
         /// <para>Encrypt the text if it is not identified as already encrypted. Otherwise return the original value.</para>
         /// <para>To exclude <see cref="CipherEnd"/> from the returned string, set <paramref name="raw"/> to true.</para>
         /// </summary>
-        public static string TryEncrypt(string text, out bool wasEncrypted, bool raw = false, string passPhrase = null) {
-            wasEncrypted = IsEncrypted(text);
-            if (text == null) return null;
-            if (wasEncrypted)
-                return raw ? text.Remove(text.Length - CipherEnd.Length).Remove(0, CipherEnd.Length) : text;
-            else
-                return raw ? Encrypt(text, passPhrase) : CipherEnd + Encrypt(text, passPhrase) + CipherEnd;
+        public static (string Output, bool WasEncrypted) TryEncrypt(string text, bool raw = false, string passPhrase = null) {
+            if (text == null) return (null, false);
+            var wasEnc = IsEncrypted(text);
+            string output;
+            if (wasEnc)
+                output = raw ? text.Remove(text.Length - CipherEnd.Length).Remove(0, CipherEnd.Length) : text;
+            else {
+                var enc = Encrypt(text, passPhrase ?? Setting.MasterPassword);
+                output = raw ? enc : CipherEnd + enc + CipherEnd;
+            }
+            return (output, wasEnc);
         }
 
         /// <summary>
         /// Decrypt the text if it is identified as encrypted. Otherwise return the original value.
         /// </summary>
-        public static string TryDecrypt(string text, out bool wasEncrypted, string passPhrase = null) {
-            wasEncrypted = IsEncrypted(text);
-            if (text == null) return null;
-            if (wasEncrypted)
-                return Decrypt(text.Remove(text.Length - CipherEnd.Length).Remove(0, CipherEnd.Length), passPhrase);
+        public static (string Output, bool WasEncrypted) TryDecrypt(string text, string passPhrase = null) {
+            if (text == null) return (null, false);
+            var wasEnc = IsEncrypted(text);
+            string output;
+            if (wasEnc)
+                output = Decrypt(text.Remove(text.Length - CipherEnd.Length).Remove(0, CipherEnd.Length), passPhrase ?? Setting.MasterPassword);
             else
-                return text;
+                output = text;
+            return (output, wasEnc);
         }
 
-        /// <summary>
-        /// Checks for <see cref="Setting.MasterPassword"/> if <paramref name="passPhrase"/> is null.
-        /// If fails to get a valid <paramref name="passPhrase"/>, returns <paramref name="inputText"/>.
-        /// </summary>
-        private static string Encrypt(string inputText, string passPhrase = null) {
-            if (inputText == null) return null;
-            if (passPhrase == null) {
-                var masterPwd = Setting.MasterPassword;
-                if (masterPwd == null) return inputText;
-                else passPhrase = masterPwd;
-            }
+        public static (string Output, bool WasEncrypted) TryReEncrypt(string text, string oldPassPhrase, string newPassPhrase = null, bool raw = false) {
+            if (text == null || oldPassPhrase == null) return (null, false);
+            var wasEnc = IsEncrypted(text);
+            string output;
+            if (wasEnc)
+                output = Decrypt(text.Remove(text.Length - CipherEnd.Length).Remove(0, CipherEnd.Length), oldPassPhrase);
+            else
+                output = text;
+            output = Encrypt(output, newPassPhrase ?? Setting.MasterPassword);
+            return (raw ? output : CipherEnd + output + CipherEnd, wasEnc);
+        }
+
+        private static string Encrypt(string inputText, string passPhrase) {
+            if (inputText == null || passPhrase == null) return null;
 
             // Salt and IV is randomly generated each time, but is preprended to encrypted cipher text
             // so that the same Salt and IV values can be used when decrypting.  
@@ -137,16 +156,10 @@ namespace ZipImageViewer
         }
 
         /// <summary>
-        /// Returns null when the decryption fails. Checks for <see cref="Setting.MasterPassword"/> if <paramref name="passPhrase"/> is null.
-        /// If fails to get a valid <paramref name="passPhrase"/>, returns <paramref name="inputText"/>.
+        /// Returns null when the decryption fails.
         /// </summary>
-        private static string Decrypt(string inputText, string passPhrase = null) {
-            if (inputText == null) return null;
-            if (passPhrase == null) {
-                var masterPwd = Setting.MasterPassword;
-                if (masterPwd == null) return inputText;
-                else passPhrase = masterPwd;
-            }
+        private static string Decrypt(string inputText, string passPhrase) {
+            if (inputText == null || passPhrase == null) return null;
 
             try {
                 // Get the complete stream of bytes that represent:

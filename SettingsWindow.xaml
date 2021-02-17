@@ -12,6 +12,7 @@
             <Style TargetType="ScrollBar" BasedOn="{StaticResource AppleStyleScrollBar}"/>
             <local:EncryptionConverter x:Key="EncryptionConverter"/>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <local:NullableBoolConverter x:Key="NullableBoolConverter"/>
         </ScrollViewer.Resources>
         <local:PaddedGrid Padding="4" VerticalChildrenAlignment="Stretch" HorizontalChildrenAlignment="Stretch">
             <local:PaddedGrid.ColumnDefinitions>
@@ -202,7 +203,7 @@
                     <Button DockPanel.Dock="Left" Margin="8 0 0 0" Content="{StaticResource ttl_Password}" ContentStringFormat="{StaticResource ttl_Update_0}" VerticalAlignment="Center" Click="Btn_ChgMstPwd_Click"
                             Visibility="{Binding Source={x:Static local:App.Setting}, Path=EncryptPasswords, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     <CheckBox Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
-                              IsChecked="{Binding Source={x:Static local:App.Setting}, Path=EncryptPasswords}"/>
+                              IsChecked="{Binding Source={x:Static local:App.Setting}, Path=EncryptPasswords, Converter={StaticResource NullableBoolConverter}}"/>
                 </DockPanel>
             </Border>
             <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">

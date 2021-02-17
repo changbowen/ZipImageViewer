@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using static ZipImageViewer.Helpers;
 
 namespace ZipImageViewer
@@ -35,20 +37,27 @@ namespace ZipImageViewer
 
 
         public readonly KeyedCol<string, dynamic> Fields;
+        public readonly Action<InputWindow> LoadedCallback;
 
-        public InputWindow(KeyedCol<string, dynamic> fields, bool okOnly = false) {
+        public InputWindow(KeyedCol<string, dynamic> fields, bool okOnly = false, Action<InputWindow> loaded = null) {
             InitializeComponent();
             if (okOnly) SP_OkCancel.Children.Remove(Btn_Cancel);
 
             Fields = fields;
+            LoadedCallback = loaded;
         }
 
         public override void OnApplyTemplate() {
             foreach (var field in Fields) {
+                if (field == null) continue;
                 ContentPanel.Children.Add(field.Control);
             }
 
             base.OnApplyTemplate();
+        }
+
+        private void InputWin_Loaded(object sender, RoutedEventArgs e) {
+            LoadedCallback?.Invoke(this);
         }
 
         private void Btn_OK_Click(object sender, RoutedEventArgs e) {
@@ -73,7 +82,7 @@ namespace ZipImageViewer
                     c.Margin = new Thickness(0,0,0,10d);
                 }, value: c => c.IsChecked),
                 new Field<TextBlock>(init: c => c.Text = GetRes("msg_FallbackPwdTip")),
-            });
+            }, loaded: w => FocusManager.SetFocusedElement(w.ContentPanel, w.Fields["PB_Password"].Control.Content));
 
             var result = (win.ShowDialog() == true, (string)win.Fields["PB_Password"].Value, (bool?)win.Fields["CB_Fallback"].Value == true);
             win.Fields.Clear();
@@ -81,33 +90,56 @@ namespace ZipImageViewer
             return result;
         }
 
-        public static (bool Answer, string CurrentPassword, string NewPassword, string ConfirmPassword) PromptForPasswordChange() {
-            var win = new InputWindow(new KeyedCol<string, dynamic>(f => f.Name) {
-                new Field<TextBlock>(init: c => c.Text = $"{GetRes("ttl_Current_0", GetRes("ttl_MasterPassword"))}"),
-                new Field<ContentControl, string>("CurrentPassword", init: c => {
-                    c.Content = new PasswordBox();
-                    c.Margin = new Thickness(0,5d,0,10d);
-                }, value: c => ((PasswordBox)c.Content).Password),
+        public static (bool Answer, string CurrentPassword, string NewPassword, string ConfirmPassword)
+            PromptForPasswordChange(bool showOldPassword = true, bool showIncorrectPassword = false, bool showMismatchPassword = false) {
+            var fields = new KeyedCol<string, dynamic>(f => f.Name) {
                 new Field<TextBlock>(init: c => c.Text = $"{GetRes("ttl_New_0", GetRes("ttl_Password"))}"),
                 new Field<ContentControl, string>("NewPassword", init: c => {
                     c.Content = new PasswordBox();
-                    c.Margin = new Thickness(0,5d,0,10d);
+                    c.Margin = new Thickness(0,5d,0,5d);
                 }, value: c => ((PasswordBox)c.Content).Password),
                 new Field<TextBlock>(init: c => c.Text = $"{GetRes("ttl_Confirm_0", GetRes("ttl_Password"))}"),
                 new Field<ContentControl, string>("ConfirmPassword", init: c => {
                     c.Content = new PasswordBox();
-                    c.Margin = new Thickness(0,5d,0,10d);
+                    c.Margin = new Thickness(0,5d,0,5d);
                 }, value: c => ((PasswordBox)c.Content).Password),
-            }) { Title = $"{GetRes("ttl_Change_0", GetRes("ttl_MasterPassword"))}" };
+            };
+            if (showOldPassword) {
+                fields.Insert(0, new Field<ContentControl, string>("CurrentPassword", init: c => {
+                    c.Content = new PasswordBox();
+                    c.Margin = new Thickness(0, 5d, 0, 5d);
+                }, value: c => ((PasswordBox)c.Content).Password));
+                fields.Insert(0, new Field<TextBlock>(init: c => c.Text = $"{GetRes("ttl_Current_0", GetRes("ttl_Password"))}"));
+            }
+            if (showIncorrectPassword) {
+                fields.Insert(2, new Field<TextBlock>(init: c => {
+                    c.Text = GetRes("msg_IncorrectPassword");
+                    c.Foreground = Brushes.Red;
+                    c.Margin = new Thickness(0, 0, 0, 5d);
+                }));
+            }
+            if (showMismatchPassword) {
+                fields.Add(new Field<TextBlock>(init: c => {
+                    c.Text = GetRes("msg_MismatchPassword");
+                    c.Foreground = Brushes.Red;
+                    c.Margin = new Thickness(0, 0, 0, 5d);
+                }));
+            }
+            var win = new InputWindow(fields, loaded: w => FocusManager.SetFocusedElement(w.ContentPanel, w.Fields[showOldPassword ? "CurrentPassword" : "NewPassword"].Control.Content)) {
+                Title = $"{GetRes("ttl_Change_0", GetRes("ttl_MasterPassword"))}"
+            };
 
-            var result = (win.ShowDialog() == true, (string)win.Fields["CurrentPassword"].Value, (string)win.Fields["NewPassword"].Value, (string)win.Fields["ConfirmPassword"].Value);
+            var result = (win.ShowDialog() == true,
+                showOldPassword ? (string)win.Fields["CurrentPassword"].Value : null,
+                (string)win.Fields["NewPassword"].Value,
+                (string)win.Fields["ConfirmPassword"].Value);
             win.Fields.Clear();
             win.Close();
             return result;
         }
 
-        public static (bool Answer, string MasterPassword) PromptForMasterPassword() {
-            var win = new InputWindow(new KeyedCol<string, dynamic>(f => f.Name) {
+        public static (bool Answer, string MasterPassword) PromptForMasterPassword(bool showIncorrectPassword = false) {
+            var win = new InputWindow(fields: new KeyedCol<string, dynamic>(f => f.Name) {
                 new Field<TextBlock>(init: c => {
                     c.Text = GetRes("ttl_MasterPassword");
                     c.Margin = new Thickness(0,0,0,10d);
@@ -115,12 +147,20 @@ namespace ZipImageViewer
                 new Field<ContentControl, string>("MasterPassword", init: c => {
                     c.Content = new PasswordBox();
                 }, value: c => ((PasswordBox)c.Content).Password),
-            });
+            }, loaded: w => FocusManager.SetFocusedElement(w.ContentPanel, w.Fields["MasterPassword"].Control.Content));
+            if (showIncorrectPassword) {
+                win.Fields.Add(new Field<TextBlock>(init: c => {
+                    c.Text = GetRes("msg_IncorrectPassword");
+                    c.Foreground = Brushes.Red;
+                    c.Margin = new Thickness(0, 10d, 0, 0);
+                }));
+            }
 
             var result = (win.ShowDialog() == true, (string)win.Fields["MasterPassword"].Value);
             win.Fields.Clear();
             win.Close();
             return result;
         }
+
     }
 }
