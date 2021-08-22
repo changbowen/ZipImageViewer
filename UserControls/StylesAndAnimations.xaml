@@ -49,8 +49,8 @@
         <DoubleAnimation To="0.2" Duration="0:0:0.3" EasingFunction="{StaticResource CE_EaseInOut}" />
     </Storyboard>
 
-    <DropShadowEffect x:Key="DS_Below" Direction="270" ShadowDepth="2" BlurRadius="5"
-                      Opacity="{Binding LiteMode, Source={x:Static local:App.Setting}, Mode=OneWay, Converter={StaticResource MathConverter}, ConverterParameter='x ? 0 : 0.8'}" />
+    <!--Use binding on Opacity cause memory leaks. Possible due to reasons mentioned in https://blog.ramondeklein.nl/2009/02/20/memory-leak-with-wpf-resources-in-rare-situations/-->
+    <DropShadowEffect x:Key="DS_Below" Direction="270" ShadowDepth="2" BlurRadius="5" Opacity="0.8"/>
 
     <Style x:Key="S_DropShadow" TargetType="FrameworkElement">
         <Style.Triggers>

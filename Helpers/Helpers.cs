@@ -410,7 +410,7 @@ namespace ZipImageViewer
         }
 
         public static void ShutdownCheck() {
-            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow || w is ViewWindow || w is SlideshowWindow) == 0)
+            if (Application.Current.Windows.Cast<Window>().Count(w => w is MainWindow || w is ViewWindow || w is SlideshowWindow || w is BlockWindow) == 0)
                 Application.Current.Shutdown();
         }
 

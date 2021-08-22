@@ -172,7 +172,7 @@ namespace ZipImageViewer
                 scaleToCanvas(0);
         }
 
-        private void CA_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
+        private void CA_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
             if (e.ChangedButton == MouseButton.Right || e.ChangedButton == MouseButton.Middle) {
                 Close();
                 e.Handled = true;
@@ -406,7 +406,7 @@ namespace ZipImageViewer
         }
 
 
-        private void DockPanel_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
+        private void DockPanel_PreviewMouseUp(object sender, MouseButtonEventArgs e) {
             if (e.ChangedButton != MouseButton.Left || !(sender is Panel panel)) return;
             switch (panel.Name) {
                 case nameof(DP_NavLeft):

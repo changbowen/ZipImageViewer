@@ -17,7 +17,6 @@
     </Window.Title>
     <Window.Resources>
         <local:CenterConverter x:Key="CenterConverter"/>
-        <local:MathMultiplyConverter x:Key="MathMultiplyConverter"/>
         <local:ResourceConverter x:Key="ResourceConverter"/>
 
         <DrawingBrush x:Key="BR_DarkCheckerboard" TileMode="Tile" Viewport="0,0,16,16" ViewportUnits="Absolute">
@@ -34,7 +33,7 @@
         <SolidColorBrush x:Key="BR_White" Color="White"/>
 
         <Style x:Key="NavPanelStyle" TargetType="Panel">
-            <EventSetter Event="PreviewMouseDown" Handler="DockPanel_PreviewMouseDown"/>
+            <EventSetter Event="PreviewMouseUp" Handler="DockPanel_PreviewMouseUp"/>
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Background" Value="#33AAAAAA" />
             <Setter Property="Panel.ZIndex" Value="10" />
@@ -61,7 +60,7 @@
 
     <Canvas x:Name="CA" Background="Transparent"
             PreviewMouseWheel="CA_PreviewMouseWheel"
-            PreviewMouseDown="CA_PreviewMouseDown">
+            PreviewMouseUp="CA_PreviewMouseUp">
         <DockPanel x:Name="DP_NavLeft" Style="{StaticResource NavPanelStyle}"
                    Width="{Binding ActualWidth, ElementName=CA, Converter={StaticResource MathMultiplyConverter}, ConverterParameter=0.1, Mode=OneWay}"
                    Height="{Binding ActualHeight,ElementName=CA, Mode=OneWay}"

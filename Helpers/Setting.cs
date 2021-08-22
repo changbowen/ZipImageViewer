@@ -97,7 +97,7 @@ namespace ZipImageViewer
         private static string sevenZipDllPath => Path.Combine(App.ExeDir, @"7z.dll");
 
 
-        private static string databaseDir = App.ExeDir;
+        private static string databaseDir = @".\";
         [AppConfig]
         public static string DatabaseDir {
             get => databaseDir;
