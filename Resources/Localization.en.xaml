@@ -46,6 +46,8 @@
     </Span>
     <sys:String x:Key="ttl_ReloadView">Reload View</sys:String>
     <sys:String x:Key="ttl_Move">Move</sys:String>
+    <sys:String x:Key="ttl_Change">Change</sys:String>
+    <sys:String x:Key="msg_FileExists_0">The target file already exists: {0}.</sys:String>
     <sys:String x:Key="ttl_Clean">Clean</sys:String>
     
     <sys:String x:Key="ttl_None">None</sys:String>
@@ -98,6 +100,7 @@
         <Bold>%FileSystemPath%</Bold> - Path to the current file or folder.
     </Span>
     <sys:String x:Key="msg_DbMovedSucc">Database files moved successfully.</sys:String>
+    <sys:String x:Key="msg_DbPathUpdated">Database path updated.</sys:String>
     <sys:String x:Key="ttl_OperationComplete">Operation Complete</sys:String>
     <sys:String x:Key="ttl_OperationFailed">Operation Failed</sys:String>
     <sys:String x:Key="msg_PleaseWait">Please wait...</sys:String>

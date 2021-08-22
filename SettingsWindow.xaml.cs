@@ -66,34 +66,42 @@ namespace ZipImageViewer
         }
 
         private async void Btn_Move_Click(object sender, RoutedEventArgs e) {
-            if (string.IsNullOrWhiteSpace(TB_DatabaseDir.Text) ||
-                TB_DatabaseDir.Text.Trim() == Setting.DatabaseDir) return;
-            
-            var targetDir = TB_DatabaseDir.Text;
-            DirectoryInfo dirInfo = null;
-            try { dirInfo = Directory.CreateDirectory(targetDir); } catch { }
-            if (dirInfo == null || !dirInfo.Exists) return;
+            if (string.IsNullOrWhiteSpace(TB_DatabaseDir.Text)) return;
+            var sourceDir = Path.GetFullPath(Setting.DatabaseDir).TrimEnd(Path.DirectorySeparatorChar);
+            var targetDir = TB_DatabaseDir.Text.Trim();
 
-            var btn = (Button)sender;
-            btn.IsEnabled = false;
-            try {
-                await Task.Run(() => {
-                    foreach (var table in Tables.Values) {
-                        if (!File.Exists(table.FullPath)) continue;
-                        lock (table.Lock) {
-                            var targetPath = Path.Combine(targetDir, table.FileName);
-                            File.Delete(targetPath);
-                            File.Move(table.FullPath, targetPath);
+            //try to move file if dir is not same
+            if (sourceDir != Path.GetFullPath(targetDir).TrimEnd(Path.DirectorySeparatorChar)) {
+                try {
+                    ((Button)sender).IsEnabled = false;
+
+                    Directory.CreateDirectory(targetDir);
+                    await Task.Run(() => {
+                        foreach (var table in Tables.Values) {
+                            if (!File.Exists(table.FullPath)) continue;
+                            lock (table.Lock) {
+                                var targetPath = Path.Combine(targetDir, table.FileName);
+                                if (File.Exists(targetPath)) throw new Exception(GetRes("msg_File_0_Exists", targetPath));
+                                File.Move(table.FullPath, targetPath);
+                            }
                         }
-                    }
-                });
-                Setting.DatabaseDir = targetDir;
-                MessageBox.Show(GetRes("msg_DbMovedSucc"), GetRes("ttl_OperationComplete"), MessageBoxButton.OK, MessageBoxImage.Information);
+                    });
+
+                    MessageBox.Show(GetRes("msg_DbMovedSucc"), GetRes("ttl_OperationComplete"), MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message, GetRes("ttl_OperationFailed"), MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                finally {
+                    ((Button)sender).IsEnabled = true;
+                }
             }
-            catch (Exception ex) {
-                MessageBox.Show(ex.Message, GetRes("ttl_OperationFailed"), MessageBoxButton.OK, MessageBoxImage.Error);
+            else {
+                MessageBox.Show(GetRes("msg_DbPathUpdated"), GetRes("ttl_OperationComplete"), MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            btn.IsEnabled = true;
+
+            Setting.DatabaseDir = targetDir;
         }
 
         private void Btn_Clean_Click(object sender, RoutedEventArgs e) {

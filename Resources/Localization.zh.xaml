@@ -46,6 +46,8 @@
     </Span>
     <sys:String x:Key="ttl_ReloadView">重新载入视图</sys:String>
     <sys:String x:Key="ttl_Move">移动</sys:String>
+    <sys:String x:Key="ttl_Change">更改</sys:String>
+    <sys:String x:Key="msg_FileExists_0">目标文件已存在：{0}。</sys:String>
     <sys:String x:Key="ttl_Clean">清空</sys:String>
 
     <sys:String x:Key="ttl_None">无</sys:String>
@@ -98,6 +100,7 @@
         <Bold>%FileSystemPath%</Bold> - 当前文件或目录的路径
     </Span>
     <sys:String x:Key="msg_DbMovedSucc">数据库文件移动完成。</sys:String>
+    <sys:String x:Key="msg_DbPathUpdated">数据库路径已更新。</sys:String>
     <sys:String x:Key="ttl_OperationComplete">操作完成</sys:String>
     <sys:String x:Key="ttl_OperationFailed">操作失败</sys:String>
     <sys:String x:Key="msg_PleaseWait">请稍后...</sys:String>

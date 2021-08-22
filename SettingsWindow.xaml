@@ -101,7 +101,7 @@
                 <StackPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_DatabaseDir}"/>
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Margin="8 0 0 0" Content="{StaticResource ttl_Move}" VerticalAlignment="Center" Click="Btn_Move_Click"/>
+                        <Button DockPanel.Dock="Right" Margin="8 0 0 0" Content="{StaticResource ttl_Change}" VerticalAlignment="Center" Click="Btn_Move_Click"/>
                         <ContentControl>
                             <TextBox x:Name="TB_DatabaseDir" Text="{Binding Source={x:Static local:App.Setting}, Path=DatabaseDir, Mode=OneWay}"/>
                         </ContentControl>
