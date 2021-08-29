@@ -81,7 +81,7 @@ namespace ZipImageViewer
                             if (!File.Exists(table.FullPath)) continue;
                             lock (table.Lock) {
                                 var targetPath = Path.Combine(targetDir, table.FileName);
-                                if (File.Exists(targetPath)) throw new Exception(GetRes("msg_File_0_Exists", targetPath));
+                                if (File.Exists(targetPath)) throw new Exception(GetRes("msg_FileExists_0", targetPath));
                                 File.Move(table.FullPath, targetPath);
                             }
                         }
