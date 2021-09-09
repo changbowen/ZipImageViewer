@@ -22,8 +22,13 @@ Need 64bit Windows and .Net Framework 4.7.2 (included in Windows 10 April 2018 U
 - A slideshow feature with 3 transition effects.
 - English and Simplified Chinese UI language.
 
-#### Using Fallback Passwords
+### Using Fallback Passwords
 ![Fallback Passwords](https://github.com/changbowen/Misc/raw/master/ZipImageViewer/fallback_passwords.gif)
+
+### Command Line Arguments
+To open folders or files at startup, pass the path as an argument to the executable. E.g. `ZipImageViewer.exe "C:\somefolderorfile"`
+
+To run slideshow at startup, include `-slideshow` as an argument. E.g. `ZipImageViewer.exe -slideshow "C:\somefolder"`
 
 ## What's Wrong with Photos
 **Be sure to scale the page properly to see the difference.**
