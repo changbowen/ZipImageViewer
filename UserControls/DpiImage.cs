@@ -19,7 +19,7 @@ namespace ZipImageViewer
         /// </summary>
         public Size RealSize { get; set; }
 
-        public bool IsRealSize => RealSize.Width.Equals(ActualWidth) && RealSize.Height.Equals(ActualHeight);
+        public bool IsRealSize => RealSize.Width.Equals(Math.Round(ActualWidth, 3)) && RealSize.Height.Equals(Math.Round(ActualHeight, 3));
 
         public double Scale => Width / RealSize.Width;
 
@@ -59,8 +59,7 @@ namespace ZipImageViewer
             //new .Net implementation (v4.6.2+)
             var dpiScale = VisualTreeHelper.GetDpi(this);
             DpiMultiplier = new Point(1d / dpiScale.DpiScaleX, 1d / dpiScale.DpiScaleY);
-            RealSize = new Size(Math.Round(size.Width * DpiMultiplier.X, 3),
-                                Math.Round(size.Height * DpiMultiplier.Y, 3));
+            RealSize = new Size(Math.Round(size.Width * DpiMultiplier.X, 3), Math.Round(size.Height * DpiMultiplier.Y, 3));
 
 //#if DEBUG
 //            Console.WriteLine($"{nameof(RealSize)}: {RealSize}; Scale: {DpiMultiplier.X};");
