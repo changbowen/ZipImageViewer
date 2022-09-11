@@ -23,6 +23,8 @@ namespace ZipImageViewer
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public event EventHandler<(string Path, short? Direction)> Navigate;
+
         public ObservableKeyedCollection<string, ObjectInfo> ObjectList { get; } = new ObservableKeyedCollection<string, ObjectInfo>(o => o.VirtualPath);
 
         private DpiScale DpiScale;
@@ -129,7 +131,8 @@ namespace ZipImageViewer
         {
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (paths == null || paths.Length == 0) return;
-            
+
+            Navigate?.Invoke(this, (paths[0], null));
             Task.Run(() => LoadPath(paths[0]));
         }
 
@@ -144,20 +147,27 @@ namespace ZipImageViewer
             }
         }
 
-        private void TV1_MouseDown(object sender, MouseButtonEventArgs e) {
+        private void TV1_Click(object sender, MouseButtonEventArgs e) {
             if (!e.Source.Equals(sender)) return;
             switch (e.ChangedButton) {
-                case MouseButton.Left when e.ClickCount == 2:
-                    openFolderPrompt();
+                case MouseButton.Right:
+                    var parentPath = Path.GetDirectoryName(CurrentPath);
+                    Navigate?.Invoke(this, (parentPath, -1));
+                    Task.Run(() => LoadPath(parentPath));
                     e.Handled = true;
                     break;
-                case MouseButton.Right when e.ClickCount == 1:
-                    Nav_Up(null, null);
-                    e.Handled = true;
-                    break;
-                case MouseButton.Middle when e.ClickCount == 1:
+                case MouseButton.Middle:
                     Close();
                     break;
+            }
+        }
+
+        private void TV1_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (!e.Source.Equals(sender)) return;
+            if (e.ChangedButton == MouseButton.Left) {
+                openFolderPrompt();
+                e.Handled = true;
             }
         }
 
@@ -167,7 +177,10 @@ namespace ZipImageViewer
         #region Private Helper Methods
 
         private void openFolderPrompt() {
-            OpenFolderDialog(this, path => Task.Run(() => LoadPath(path)));
+            OpenFolderDialog(this, path => {
+                Navigate?.Invoke(this, (path, null));
+                Task.Run(() => LoadPath(path));
+            });
         }
 
         /// <summary>
@@ -302,6 +315,8 @@ namespace ZipImageViewer
             var objInfo = tn.ObjectInfo;
             switch (e.ChangedButton) {
                 case MouseButton.Left:
+                    if (objInfo.IsContainer)
+                        Navigate?.Invoke(this, (objInfo.FileSystemPath, 1));
                     Task.Run(() => LoadPath(objInfo));
                     break;
                 case MouseButton.Right:
@@ -314,10 +329,6 @@ namespace ZipImageViewer
                     ContextMenuWindow.Cmd_OpenInNewWindow(objInfo, this);
                     break;
             }
-        }
-
-        private void Nav_Up(object sender, RoutedEventArgs e) {
-            Task.Run(() => LoadPath(Path.GetDirectoryName(CurrentPath)));
         }
 
         private void Sidebar_Click(object sender, MouseButtonEventArgs e) {

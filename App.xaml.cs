@@ -98,9 +98,15 @@ namespace ZipImageViewer
                         var viewWin = new ViewWindow(objInfo.ContainerPath, objInfo.FileName);
                         viewWin.Closing += (sender1, e1) => {
                             //load mainwindow
-                            NormalStart(initialPath);
+                            PostInit(initialPath);
                         };
                         viewWin.Show();
+                        return;
+                    }
+                    else {
+                        var mainWin = new MainWindow() { InitialPath = initialPath };
+                        mainWin.Navigate += postInitOnce;
+                        mainWin.Show();
                         return;
                     }
                 }
@@ -111,7 +117,15 @@ namespace ZipImageViewer
                 Current.Shutdown();
             }
 
-            NormalStart(initialPath);
+            PostInit(initialPath);
+        }
+
+        private void postInitOnce(object sender, (string Path, short? Direction) e)
+        {
+            if (sender is MainWindow mainWin) {
+                PostInit(createMainWindow: false);
+                mainWin.Navigate -= postInitOnce;
+            }
         }
 
         private void Setting_StaticPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
@@ -250,24 +264,29 @@ $@"delete from {table.Name} where rowid in
             fa_image = GetFaIcon(EFontAwesomeIcon.Solid_FileImage, fa_brush);
         }
 
-        private void NormalStart(string initialPath)
+        private void PostInit(string initialPath = null, bool createMainWindow = true, bool checkDB = true, bool checkUpdate = true)
         {
+            if (!createMainWindow && !checkDB && !checkUpdate) return;
+
             //normal start and load MainWindow
             var bw = new BlockWindow(autoClose: true) { MessageTitle = $"{GetRes("ttl_AppStarting")}..." };
             bw.TB_Message.HorizontalAlignment = HorizontalAlignment.Center;
             bw.TB_Message.VerticalAlignment = VerticalAlignment.Center;
             bw.Work = () => {
                 try {
-                    //make sure thumbs db is correct
-                    Dispatcher.Invoke(() => bw.MessageBody = $"{GetRes("ttl_Checking")} database...");
-                    CheckThumbsDB();
-
-                    Dispatcher.Invoke(() => {
+                    if (checkDB) {
+                        //make sure thumbs db is correct
+                        Dispatcher.Invoke(() => bw.MessageBody = $"{GetRes("ttl_Checking")} database...");
+                        CheckThumbsDB();
+                    }
+                    
+                    if (createMainWindow) Dispatcher.Invoke(() => {
                         //show mainwindow if no cmdline args
                         new MainWindow() { InitialPath = initialPath }.Show();
                     });
+                    
 
-                    Task.Run(() => {
+                    if (checkUpdate) Task.Run(() => {
                         //check for updates
                         var _ = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
                         var localVer = new Version(_.Major, _.Minor, _.Build);

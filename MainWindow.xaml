@@ -19,7 +19,7 @@
         
         <DataTemplate x:Key="ThumbDataTemplate" DataType="{x:Type local:ObjectInfo}">
             <StackPanel x:Name="SP1" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" UseLayoutRounding="True">
-                <local:Thumbnail x:Name="TN1" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1" PreviewMouseDown="TN1_Click"
+                <local:Thumbnail x:Name="TN1" RenderTransformOrigin="0.5 0.5" Panel.ZIndex="1" PreviewMouseUp="TN1_Click"
                                  ObjectInfo="{Binding Mode=OneTime}" Margin="10" 
                                  Width="{Binding ElementName=MainWin, Path=ThumbRealWidth, Mode=OneWay}"
                                  Height="{Binding ElementName=MainWin, Path=ThumbRealHeight, Mode=OneWay}">
@@ -86,7 +86,7 @@
                 </Border.Effect>
                 <Border.Resources>
                     <Style TargetType="fa:FontAwesome" BasedOn="{StaticResource S_DropShadow}">
-                        <EventSetter Event="MouseDown" Handler="Sidebar_Click"/>
+                        <EventSetter Event="MouseUp" Handler="Sidebar_Click"/>
                         <Setter Property="Width" Value="48"/>
                         <Setter Property="FontSize" Value="42"/>
                         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
@@ -136,7 +136,7 @@
             </Border>
         </Border>
 
-        <vir:VirtualizingItemsControl x:Name="TV1" MouseDown="TV1_MouseDown"
+        <vir:VirtualizingItemsControl x:Name="TV1" MouseUp="TV1_Click" MouseDoubleClick="TV1_DoubleClick"
                                       ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
                                       ItemsSource="{Binding Source={StaticResource ObjectListViewSource}, Mode=OneTime}"
                                       ItemTemplate="{StaticResource ThumbDataTemplate}">
