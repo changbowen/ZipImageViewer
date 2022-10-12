@@ -55,8 +55,12 @@ namespace ZipImageViewer
         public MainWindow()
         {
             InitializeComponent();
-            Width = Setting.LastWindowSize.Width;
-            Height = Setting.LastWindowSize.Height;
+            if (double.IsNaN(Setting.LastWindowSize.Width) || double.IsNaN(Setting.LastWindowSize.Height))
+                WindowState = WindowState.Maximized;
+            else {
+                Width = Setting.LastWindowSize.Width;
+                Height = Setting.LastWindowSize.Height;
+            }
         }
 
 
@@ -102,9 +106,9 @@ namespace ZipImageViewer
             Dispatcher.Invoke(() => ObjectList.Clear());
 
             Setting.LastPath = CurrentPath;
-            if (WindowState != WindowState.Maximized) {
-                Setting.LastWindowSize = new Size(Width, Height);
-            }
+            Setting.LastWindowSize = WindowState == WindowState.Maximized ?
+                new Size(double.NaN, double.NaN) :
+                new Size(Width, Height);
 
             //now really close
             reallyClose = true;
