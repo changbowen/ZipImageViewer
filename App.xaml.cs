@@ -20,6 +20,14 @@ namespace ZipImageViewer
     {
         public static readonly string ExePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
         public static readonly string ExeDir = Path.GetDirectoryName(ExePath);
+        public static string BuildConfig { get {
+#if DEBUG
+                return "Debug";
+#else
+                return "Release";
+#endif
+        } }
+        public static Version Version => System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         public static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] {
                 ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".gif", ".bmp", ".ico", ".dds", ".jxr", ".hdp", ".wdp"
@@ -288,8 +296,7 @@ $@"delete from {table.Name} where rowid in
 
                     if (checkUpdate) Task.Run(() => {
                         //check for updates
-                        var _ = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                        var localVer = new Version(_.Major, _.Minor, _.Build);
+                        var localVer = Version;
                         var req = (HttpWebRequest)WebRequest.Create(@"https://api.github.com/repos/changbowen/zipimageviewer/releases/latest");
                         req.ContentType = @"application/json; charset=utf-8";
                         req.UserAgent = nameof(ZipImageViewer);
@@ -300,8 +307,7 @@ $@"delete from {table.Name} where rowid in
                                 var jObj = Newtonsoft.Json.Linq.JObject.Parse(reader.ReadToEnd());
                                 string tag_name = @"tag_name";
                                 if (!jObj.ContainsKey(tag_name)) return;
-                                _ = Version.Parse(jObj[tag_name].ToString().TrimStart('v'));
-                                var remoteVer = new Version(_.Major, _.Minor, _.Build);
+                                var remoteVer = Version.Parse(jObj[tag_name].ToString().TrimStart('v'));
                                 if (localVer < remoteVer && MessageBox.Show(GetRes(@"msg_NewVersionPrompt", localVer.ToString(3), remoteVer.ToString(3)), string.Empty,
                                     MessageBoxButton.OKCancel, MessageBoxImage.Information) == MessageBoxResult.OK) {
                                     Helpers.Run(@"explorer", @"https://github.com/changbowen/ZipImageViewer/releases");

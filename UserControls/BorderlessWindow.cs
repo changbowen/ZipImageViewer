@@ -7,6 +7,15 @@ namespace ZipImageViewer
 {
     public class BorderlessWindow : Window
     {
+        public FrameworkElement RightTitle
+        {
+            get { return (FrameworkElement)GetValue(RightTitleProperty); }
+            set { SetValue(RightTitleProperty, value); }
+        }
+        public static readonly DependencyProperty RightTitleProperty =
+            DependencyProperty.Register("RightTitle", typeof(FrameworkElement), typeof(BorderlessWindow), new PropertyMetadata(null));
+
+
         public Visibility ButtonCloseVisibility {
             get { return (Visibility)GetValue(ButtonCloseVisibilityProperty); }
             set { SetValue(ButtonCloseVisibilityProperty, value); }

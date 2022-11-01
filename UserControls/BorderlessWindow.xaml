@@ -49,6 +49,9 @@
                                 <TextBlock x:Name="titleText" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="8 0 0 0"
                                            Text="{TemplateBinding Title}" Foreground="{TemplateBinding Foreground}" Visibility="{TemplateBinding TitleVisibility}"
                                            Effect="{StaticResource DS_Below}"/>
+                                
+                                <!--right aligned title content-->
+                                <ContentPresenter Margin="0,0,8,0" VerticalAlignment="Center" DockPanel.Dock="Right" Content="{TemplateBinding RightTitle}"/>
                             </DockPanel>
                         </Border>
 

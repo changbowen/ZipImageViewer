@@ -7,6 +7,16 @@
         Width="850" Height="600" Icon="Resources/ZipImageViewer.ico"
         Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource ForegroundBrush}" WindowStartupLocation="CenterOwner"
         Title="{StaticResource ttl_Settings}" UseLayoutRounding="True" Loaded="SettingsWin_Loaded" Closing="SettingsWin_Closing" PreviewKeyDown="SettingsWin_PreviewKeyDown">
+    <local:BorderlessWindow.RightTitle>
+        <TextBlock Foreground="Gray" FontWeight="Bold" Effect="{StaticResource DS_Below}">
+            <TextBlock.Text>
+                <MultiBinding StringFormat="{}{0} {1}" Mode="OneTime">
+                    <Binding Source="{x:Static local:App.BuildConfig}" Mode="OneTime"/>
+                    <Binding Source="{x:Static local:App.Version}" Mode="OneTime"/>
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
+    </local:BorderlessWindow.RightTitle>
     <ScrollViewer>
         <ScrollViewer.Resources>
             <Style TargetType="ScrollBar" BasedOn="{StaticResource AppleStyleScrollBar}"/>
