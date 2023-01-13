@@ -123,6 +123,7 @@
     <sys:String x:Key="ttl_Cancel">取消</sys:String>
     <sys:String x:Key="ttl_RandomOrder">随机顺序</sys:String>
     <sys:String x:Key="ttl_Transition">过渡效果</sys:String>
+    <sys:String x:Key="ttl_TransitionDelay">过渡效果延迟</sys:String>
     <sys:String x:Key="ttl_ResolutionScale">分辨率比例</sys:String>
     <sys:String x:Key="ttl_ImageDuration">图像时长</sys:String>
     <sys:String x:Key="ttl_FadeInDuration">渐入时长</sys:String>

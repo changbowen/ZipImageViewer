@@ -80,6 +80,14 @@
                 </Border>
                 <Border>
                     <DockPanel>
+                        <TextBlock Text="{StaticResource ttl_TransitionDelay}" Style="{StaticResource HeaderStyle}"/>
+                        <ContentControl>
+                            <TextBox Text="{Binding SlideAnimConfig.TransitionDelay, Source={x:Static local:App.Setting}}"/>
+                        </ContentControl>
+                    </DockPanel>
+                </Border>
+                <Border>
+                    <DockPanel>
                         <TextBlock Text="{StaticResource ttl_ResolutionScale}" Style="{StaticResource HeaderStyle}"/>
                         <ContentControl>
                             <TextBox Text="{Binding SlideAnimConfig.ResolutionScale, Source={x:Static local:App.Setting}}"/>

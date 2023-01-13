@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -36,6 +37,17 @@ namespace ZipImageViewer
                     if (transition == value) return;
                     transition = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Transition)));
+                }
+            }
+
+            private TimeSpan transitionDelay = TimeSpan.Zero;
+            public TimeSpan TransitionDelay
+            {
+                get => transitionDelay;
+                set {
+                    if (transitionDelay == value) return;
+                    transitionDelay = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TransitionDelay)));
                 }
             }
 
@@ -206,6 +218,9 @@ namespace ZipImageViewer
         private static readonly CubicEase easeIn = new CubicEase() { EasingMode = EasingMode.EaseIn };
         private static readonly CubicEase easeInOut = new CubicEase() { EasingMode = EasingMode.EaseInOut };
 
+        /// <summary>
+        /// Returns the time until the next instance should be started.
+        /// </summary>
         public static TimeSpan AnimateImage(DpiImage tgtImg, Size frameSize, SlideAnimConfig cfg) {
             //fade
             var animFade = new DoubleAnimationUsingKeyFrames();
@@ -240,19 +255,15 @@ namespace ZipImageViewer
                     break;
             }
 
-            return cfg.Time_FadeOutBegin.TimeSpan;
+            return cfg.Time_FadeOutBegin.TimeSpan.Add(cfg.TransitionDelay);
         }
 
-
-        /// <summary>
-        /// Returns the time until the next instance should be started.
-        /// </summary>
         private static void Anim_KBE(DpiImage tgtImg, Size frameSize, SlideAnimConfig cfg) {
             var zoomIn = ran.Next(2) == 0;
             var panDirPri = ran.Next(2) == 0;//primary axis pan direction
             var imageDur = new Duration(cfg.ImageDuration);
 
-            //zoon animation
+            //zoom animation
             var animZoom = zoomIn ? new DoubleAnimation(1d, 1.2d, imageDur) : new DoubleAnimation(1.2d, 1d, imageDur);
             
             //pan animation

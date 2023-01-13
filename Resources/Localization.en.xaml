@@ -123,6 +123,7 @@
     <sys:String x:Key="ttl_Cancel">Cancel</sys:String>
     <sys:String x:Key="ttl_RandomOrder">Random Order</sys:String>
     <sys:String x:Key="ttl_Transition">Transition</sys:String>
+    <sys:String x:Key="ttl_TransitionDelay">Transition Delay</sys:String>
     <sys:String x:Key="ttl_ResolutionScale">Resolution Scale</sys:String>
     <sys:String x:Key="ttl_ImageDuration">Image Duration</sys:String>
     <sys:String x:Key="ttl_FadeInDuration">Fade In Duration</sys:String>

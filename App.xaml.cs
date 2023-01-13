@@ -30,7 +30,7 @@ namespace ZipImageViewer
         public static Version Version => System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         public static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] {
-                ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".gif", ".bmp", ".ico", ".dds", ".jxr", ".hdp", ".wdp"
+                ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".gif", ".bmp", ".ico", ".dds", ".jxr", ".hdp", ".wdp", ".heic", "heif"
             });
         public static readonly HashSet<string> ZipExtensions =
             new HashSet<string>(new[] {
