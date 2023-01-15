@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZipImageViewer" Background="Black" Foreground="{StaticResource ForegroundBrush}" Padding="0"
         mc:Ignorable="d" Height="600" Width="800" Loaded="SlideWin_Loaded" Closing="SlideWin_Closing" Closed="SlideWin_Closed">
-    <Canvas x:Name="canvas">
+    <Canvas x:Name="canvas" Cursor="None">
         <Canvas.Resources>
             <Style TargetType="local:DpiImage">
                 <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality"/>
@@ -22,7 +22,7 @@
             <Style TargetType="ContentControl" BasedOn="{StaticResource RoundContentControlBaseStyle}"/>
         </Canvas.Resources>
 
-        <Border x:Name="B_ControlPanel" Canvas.Top="40" Canvas.Right="10" CornerRadius="4" Background="Transparent"
+        <Border x:Name="B_ControlPanel" Canvas.Top="40" Canvas.Right="10" CornerRadius="4" Background="Transparent" Cursor="Arrow"
                 Panel.ZIndex="99" MinWidth="260" MinHeight="260" MouseLeave="B_ControlPanel_MouseLeave">
             <Border.Style>
                 <Style TargetType="Border">

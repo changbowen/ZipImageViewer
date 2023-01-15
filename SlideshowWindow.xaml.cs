@@ -106,9 +106,13 @@ namespace ZipImageViewer
 
             //start
             AnimTick(null, null);
+
+            //prevent screen off and sleep
+            NativeHelpers.SetPowerState(2);
         }
 
         private void SlideWin_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+            NativeHelpers.SetPowerState(0);
             animConfig.PropertyChanged -= AnimConfig_PropertyChanged;
             animTimer.Stop();
             Topmost = false;

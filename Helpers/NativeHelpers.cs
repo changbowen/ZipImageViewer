@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.WindowsAPICodePack.ApplicationServices;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -164,6 +165,36 @@ namespace ZipImageViewer
         private const uint SHGFI_SHELLICONSIZE = 0x000000004;     // get shell size icon
         private const uint SHGFI_PIDL = 0x000000008;     // pszPath is a pidl
         private const uint SHGFI_USEFILEATTRIBUTES = 0x000000010;     // use passed dwFileAttribute
+        #endregion
+
+        #region Prevent Sleep
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
+
+        [Flags]
+        private enum EXECUTION_STATE : uint
+        {
+            ES_AWAYMODE_REQUIRED = 0x00000040,
+            ES_CONTINUOUS = 0x80000000,
+            ES_DISPLAY_REQUIRED = 0x00000002,
+            ES_SYSTEM_REQUIRED = 0x00000001
+        }
+
+        /// <summary>
+        /// Prevent turning screen off and / or sleeping.
+        /// </summary>
+        /// <param name="level">Set to 2 to configure both ES_DISPLAY_REQUIRED and ES_SYSTEM_REQUIRED flags.
+        /// Set to 1 to configure ES_SYSTEM_REQUIRED flag only.
+        /// Set to 0 to clear previous configs.</param>
+        public static void SetPowerState(int level = 0)
+        {
+            if (level > 1)
+                SetThreadExecutionState(EXECUTION_STATE.ES_DISPLAY_REQUIRED | EXECUTION_STATE.ES_SYSTEM_REQUIRED | EXECUTION_STATE.ES_CONTINUOUS);
+            else if (level == 1)
+                SetThreadExecutionState(EXECUTION_STATE.ES_SYSTEM_REQUIRED | EXECUTION_STATE.ES_CONTINUOUS);
+            else
+                SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS);
+        }
         #endregion
     }
 }
