@@ -456,7 +456,7 @@ namespace ZipImageViewer
         }
 
         public static ImageSource GetFaIcon(FontAwesome5.EFontAwesomeIcon icon, Brush brush = null) {
-            return FontAwesome5.ImageAwesome.CreateImageSource(icon, brush ?? GetRes<Brush>(@"ForegroundBrush"));
+            return FontAwesome5.Extensions.EFontAwesomeIconsExtensions.CreateImageSource(icon, brush ?? GetRes<Brush>(@"ForegroundBrush"));
         }
 
         /// <summary>

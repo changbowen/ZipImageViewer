@@ -177,10 +177,12 @@ namespace ZipImageViewer
                 else
                     toDo = ext.ArchiveFileData
                         .Where(d => !d.IsDirectory && GetFileType(d.FileName) == FileFlags.Image)
-                        .Select(d => d.FileName).ToArray();
+                        .Select(d => d.FileName).ToArray(); //will throw when "encrypt file name" is set in archive
 
                 //for archives with encrypted file names, ext.ArchiveFileData will be empty.
-                if (toDo == null || toDo.Length == 0) return false;
+                //toDo will still contain file names in encrypted archives when file names are not encrypted.
+                if (toDo == null) return false;
+                if (toDo.Length == 0) return true;
 
                 //update objInfo
                 objInfo.SourcePaths = toDo;
@@ -485,6 +487,21 @@ namespace ZipImageViewer
                 new SizeInt(frame.PixelHeight, frame.PixelWidth) :
                 new SizeInt(frame.PixelWidth, frame.PixelHeight);
         }
+
+        //load image using Magick (abandoning due to lack of options)
+        //public static BitmapSource GetImageSourceM(Stream stream, SizeInt decodeSize = default)
+        //{
+        //    BitmapSource bs;
+        //    stream.Position = 0;
+        //    using (var mi = new MagickImage(stream)) { // no way to set "decode width" = slow on large images
+        //        if (decodeSize.Width > 0 || decodeSize.Height > 0)
+        //            mi.Resize(decodeSize.Width, decodeSize.Height);
+        //        mi.Thumbnail(decodeSize.Width, decodeSize.Height); // unable to control the quality in either
+        //        bs = mi.ToBitmapSource();
+        //    }
+        //    bs.Freeze();
+        //    return bs;
+        //}
 
         /// <summary>
         /// <para>Decode image from stream (FileStream when loading from file or MemoryStream when loading from archive.</para>

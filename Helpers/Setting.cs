@@ -94,7 +94,7 @@ namespace ZipImageViewer
 
         public static string FilePath => Path.Combine(App.ExeDir, @"config.ini");
 
-        private static string sevenZipDllPath => Path.Combine(App.ExeDir, @"7z.dll");
+        private static string sevenZipDllPath => Path.Combine(App.ExeDir, $@"7z_{(Environment.Is64BitProcess ? @"x64" : @"x86")}.dll");
 
 
         private static string databaseDir = @".\";

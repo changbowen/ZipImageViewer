@@ -51,12 +51,16 @@
                     <Setter Property="Height" Value="16"/>
                     <Setter Property="Foreground" Value="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
                 </Style>
-                <Style TargetType="TextBlock">
+                <Style TargetType="TextBox">
                     <Setter Property="FontSize" Value="10"/>
                     <Setter Property="FontWeight" Value="DemiBold"/>
                     <Setter Property="VerticalAlignment" Value="Center"/>
                     <Setter Property="MaxWidth" Value="220"/>
                     <Setter Property="TextWrapping" Value="Wrap"/>
+                    <Setter Property="Foreground" Value="{Binding Foreground, ElementName=CTMWin, Mode=OneTime}"/>
+                    <Setter Property="Background" Value="{x:Null}"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="IsReadOnly" Value="True"/>
                 </Style>
                 <Style TargetType="Border">
                     <Setter Property="Padding" Value="4"/>
@@ -89,62 +93,62 @@
             <DockPanel DataContext="{Binding ObjectInfo.FileName, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Regular_File"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay}"/>
+                    <TextBox Text="{Binding Mode=OneWay}"/>
                 </Border>
             </DockPanel>
             <DockPanel DataContext="{Binding ObjectInfo.FileSystemPath, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Regular_Save"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay}"/>
+                    <TextBox Text="{Binding Mode=OneWay}"/>
                 </Border>
             </DockPanel>
             <DockPanel DataContext="{Binding ObjectInfo.Comments, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Solid_InfoCircle"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay}"/>
+                    <TextBox Text="{Binding Mode=OneWay}"/>
                 </Border>
             </DockPanel>
 
             <DockPanel DataContext="{Binding ImageInfo.FileSize, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Regular_Hdd"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource FileSizeHumanConverter}}"/>
+                    <TextBox Text="{Binding Mode=OneWay, Converter={StaticResource FileSizeHumanConverter}}"/>
                 </Border>
             </DockPanel>
             <DockPanel DataContext="{Binding ImageInfo.Dimensions, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Solid_RulerCombined"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource DrawingSizeStringConverter}}"/>
+                    <TextBox Text="{Binding Mode=OneWay, Converter={StaticResource DrawingSizeStringConverter}}"/>
                 </Border>
             </DockPanel>
             <DockPanel DataContext="{Binding ImageInfo.Created, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Regular_CalendarPlus"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay, StringFormat={StaticResource txt_CreatedTimeStrFmt}}"/>
+                    <TextBox Text="{Binding Mode=OneWay, StringFormat={StaticResource txt_CreatedTimeStrFmt}}"/>
                 </Border>
             </DockPanel>
             <DockPanel DataContext="{Binding ImageInfo.Modified, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Regular_CalendarCheck"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay, StringFormat={StaticResource txt_ModifiedTimeStrFmt}}"/>
+                    <TextBox Text="{Binding Mode=OneWay, StringFormat={StaticResource txt_ModifiedTimeStrFmt}}"/>
                 </Border>
             </DockPanel>
             <DockPanel DataContext="{Binding ImageInfo.Meta_DateTaken, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Solid_Camera"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay, StringFormat={StaticResource txt_DateTakenStrFmt}}"/>
+                    <TextBox Text="{Binding Mode=OneWay, StringFormat={StaticResource txt_DateTakenStrFmt}}"/>
                 </Border>
             </DockPanel>
             <DockPanel DataContext="{Binding ImageInfo.Meta_Camera, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Solid_Camera"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay}"/>
+                    <TextBox Text="{Binding Mode=OneWay}"/>
                 </Border>
             </DockPanel>
             <DockPanel DataContext="{Binding ImageInfo.Meta_ApplicationName, ElementName=CTMWin, Mode=OneWay}">
                 <fa:ImageAwesome Icon="Solid_Camera"/>
                 <Border>
-                    <TextBlock Text="{Binding Mode=OneWay}"/>
+                    <TextBox Text="{Binding Mode=OneWay}"/>
                 </Border>
             </DockPanel>
         </StackPanel>
