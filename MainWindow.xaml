@@ -138,6 +138,7 @@
 
         <vir:VirtualizingItemsControl x:Name="TV1" MouseUp="TV1_Click" MouseDoubleClick="TV1_DoubleClick"
                                       ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.PanningMode="VerticalOnly"
                                       ItemsSource="{Binding Source={StaticResource ObjectListViewSource}, Mode=OneTime}"
                                       ItemTemplate="{StaticResource ThumbDataTemplate}">
             <vir:VirtualizingItemsControl.Resources>
