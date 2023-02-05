@@ -136,6 +136,9 @@ namespace ZipImageViewer
 
             //loop
             try {
+                //avoid sleep
+                NativeHelpers.SetPowerState(1);
+
                 if (threadCount == 1) {
                     foreach (var objInfo in infos) {
                         if (tknSrc?.IsCancellationRequested == true) break;
@@ -160,6 +163,7 @@ namespace ZipImageViewer
                 tknSrcLocal = null;
                 tknSrc = null;
                 Monitor.Exit(tknLock);
+                NativeHelpers.SetPowerState(0);
             }
         }
     }
