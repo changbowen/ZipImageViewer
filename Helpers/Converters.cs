@@ -102,8 +102,8 @@ namespace ZipImageViewer
     public class MathMultiplyConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            if (!(value is double)) value = System.Convert.ToDouble(value);
-            if (!(parameter is double)) parameter = System.Convert.ToDouble(parameter);
+            if (!(value is double)) value = System.Convert.ToDouble(value, culture);
+            if (!(parameter is double)) parameter = System.Convert.ToDouble(parameter, culture);
             return (double)value * (double)parameter;
         }
 
@@ -115,7 +115,7 @@ namespace ZipImageViewer
     public class ThicknessMultiplyConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            var val = System.Convert.ToDouble(value);
+            var val = System.Convert.ToDouble(value, culture);
             var paras = (parameter as string)?.Split(',', ' ');
             if (paras?.Length == 4)
                 return new Thickness(val * double.Parse(paras[0]),
