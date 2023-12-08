@@ -16,6 +16,13 @@
     <sys:String x:Key="ttl_ThumbnailFormat">Thumbnail Format</sys:String>
     <sys:String x:Key="ttl_ThumbSwapDelayMultiplier">Thumbnail Swap Delay Multiplier</sys:String>
     <sys:String x:Key="msg_ThumbSwapDelayMultiplierTip">The delay of thumbnail change on folders and archives. Higher value results in longer delay.</sys:String>
+    <sys:String x:Key="ttl_CustomImageExt">Custom Image Extensions</sys:String>
+    <Span x:Key="spn_CustomImageExt">
+        Space-separated list of additional image extensions to load as images.
+        Whether the additional formats can be loaded depends on the operating system support.
+        Restart the program for this setting to take effect.<LineBreak/>
+        For example: .abc .def .ghi
+    </Span>
     <sys:String x:Key="ttl_DatabaseDir">Database Directory</sys:String>
     <sys:String x:Key="msg_DatabaseDirTip">The folder to save the all database files (thumbnail cache etc.).</sys:String>
     <sys:String x:Key="ttl_ThumbDbSize">Thumbnail Cache Size (Current: {0})</sys:String>

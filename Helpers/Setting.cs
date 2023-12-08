@@ -97,6 +97,18 @@ namespace ZipImageViewer
         private static string sevenZipDllPath => Path.Combine(App.ExeDir, $@"7z_{(Environment.Is64BitProcess ? @"x64" : @"x86")}.dll");
 
 
+        private static string customImageExt = string.Empty;
+        [AppConfig]
+        public static string CustomImageExt
+        {
+            get => customImageExt;
+            set {
+                if (customImageExt == value) return;
+                customImageExt = value;
+                OnStaticPropertyChanged(nameof(CustomImageExt));
+            }
+        }
+
         private static string databaseDir = @".\";
         [AppConfig]
         public static string DatabaseDir {

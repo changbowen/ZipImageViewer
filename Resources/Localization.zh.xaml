@@ -16,6 +16,13 @@
     <sys:String x:Key="ttl_ThumbnailFormat">缩略图格式</sys:String>
     <sys:String x:Key="ttl_ThumbSwapDelayMultiplier">缩略图切换延迟速率</sys:String>
     <sys:String x:Key="msg_ThumbSwapDelayMultiplierTip">目录和压缩文件缩略图的切换延迟。数值越高延迟越高。</sys:String>
+    <sys:String x:Key="ttl_CustomImageExt">自定义图片扩展名</sys:String>
+    <Span x:Key="spn_CustomImageExt">
+        定义要作为图像加载的文件扩展名，以空格分隔。
+        图片格式是否支持取决于操作系统。
+        需要重启程序生效。<LineBreak/>
+        例如：.abc .def .ghi
+    </Span>
     <sys:String x:Key="ttl_DatabaseDir">数据库目录</sys:String>
     <sys:String x:Key="msg_DatabaseDirTip">存放数据库文件（缩略图缓存数据库等）的目录</sys:String>
     <sys:String x:Key="ttl_ThumbDbSize">缩略图缓存大小 （当前: {0}）</sys:String>

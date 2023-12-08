@@ -148,6 +148,9 @@ namespace ZipImageViewer
                 case Key.PageUp:
                     virWrapPanel.ScrollOwner.PageUp();
                     break;
+                case Key.F5:
+                    Task.Run(() => LoadPath(CurrentPath));
+                    break;
             }
         }
 

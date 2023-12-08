@@ -39,6 +39,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="3*"/>
                 <RowDefinition Height="2*"/>
                 <RowDefinition Height="Auto"/>
@@ -109,6 +110,18 @@
 
             <Border Grid.Row="2">
                 <StackPanel>
+                    <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_CustomImageExt}"/>
+                    <ContentControl>
+                        <TextBox x:Name="TB_CustomImageExt" Text="{Binding Source={x:Static local:App.Setting}, Path=CustomImageExt}"/>
+                    </ContentControl>
+                </StackPanel>
+            </Border>
+            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+                <StaticResource ResourceKey="spn_CustomImageExt"/>
+            </TextBlock>
+
+            <Border Grid.Row="3">
+                <StackPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_DatabaseDir}"/>
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Margin="8 0 0 0" Content="{StaticResource ttl_Change}" VerticalAlignment="Center" Click="Btn_Move_Click"/>
@@ -118,9 +131,9 @@
                     </DockPanel>
                 </StackPanel>
             </Border>
-            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_DatabaseDirTip}"/>
+            <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_DatabaseDirTip}"/>
 
-            <Border Grid.Row="3">
+            <Border Grid.Row="4">
                 <DockPanel>
                     <Button DockPanel.Dock="Right" Margin="8 0 0 0" VerticalAlignment="Top" Content="{StaticResource ttl_Clean}" Click="Btn_Clean_Click"/>
 
@@ -146,18 +159,18 @@
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ThumbDbSizeTip}"/>
+            <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ThumbDbSizeTip}"/>
 
-            <Border Grid.Row="4">
+            <Border Grid.Row="5">
                 <DockPanel LastChildFill="False">
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_LiteMode}" Margin="0" VerticalAlignment="Center"/>
                     <CheckBox Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
                               IsChecked="{Binding Source={x:Static local:App.Setting}, Path=LiteMode}"/>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_LiteModeTip}"/>
+            <TextBlock Grid.Row="5" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_LiteModeTip}"/>
 
-            <Border Grid.Row="5">
+            <Border Grid.Row="6">
                 <DockPanel LastChildFill="False">
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ViewerBackground}" Margin="0" VerticalAlignment="Center"/>
                     <ContentControl DockPanel.Dock="Right">
@@ -168,7 +181,7 @@
                 </DockPanel>
             </Border>
 
-            <Border Grid.Row="6">
+            <Border Grid.Row="7">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
@@ -196,18 +209,18 @@
                     </StackPanel>
                 </Grid>
             </Border>
-            <TextBlock Grid.Row="6" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ViewerTransitionTip}"/>
+            <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ViewerTransitionTip}"/>
 
-            <Border Grid.Row="7">
+            <Border Grid.Row="8">
                 <DockPanel LastChildFill="False">
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_ExpMenuSlideshow}" Margin="0" VerticalAlignment="Center"/>
                     <CheckBox Width="48" Height="24" VerticalAlignment="Center" DockPanel.Dock="Right"
                               IsChecked="{Binding Source={x:Static local:App.Setting}, Path=ExpMenuSlideshow}"/>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ExpMenuSlideshow}"/>
+            <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}" Text="{StaticResource msg_ExpMenuSlideshow}"/>
 
-            <Border Grid.Row="8">
+            <Border Grid.Row="9">
                 <DockPanel LastChildFill="False">
                     <TextBlock Style="{StaticResource HeaderTextStyle}" Text="{StaticResource ttl_MasterPassword}" Margin="0" VerticalAlignment="Center"/>
                     <Button DockPanel.Dock="Left" Margin="8 0 0 0" Content="{StaticResource ttl_Password}" ContentStringFormat="{StaticResource ttl_Update_0}" VerticalAlignment="Center" Click="Btn_ChgMstPwd_Click"
@@ -216,11 +229,11 @@
                               IsChecked="{Binding Source={x:Static local:App.Setting}, Path=EncryptPasswords, Converter={StaticResource NullableBoolConverter}}"/>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="9" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_MasterPasswordTip"/>
             </TextBlock>
 
-            <Border Grid.Row="9">
+            <Border Grid.Row="10">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_SavedPasswords}"/>
                     <TabControl>
@@ -248,11 +261,11 @@
                     </TabControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="9" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="10" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_SavedPasswordsTip"/>
             </TextBlock>
 
-            <Border Grid.Row="10" Margin="8 4 8 8">
+            <Border Grid.Row="11" Margin="8 4 8 8">
                 <DockPanel>
                     <TextBlock Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top" Text="{StaticResource ttl_CustomCommands}"/>
                     <ContentControl HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
@@ -268,11 +281,11 @@
                     </ContentControl>
                 </DockPanel>
             </Border>
-            <TextBlock Grid.Row="10" Grid.Column="1" Style="{StaticResource TipTextStyle}">
+            <TextBlock Grid.Row="11" Grid.Column="1" Style="{StaticResource TipTextStyle}">
                 <StaticResource ResourceKey="spn_CustomCommandsTip"/>
             </TextBlock>
 
-            <TextBlock Grid.Row="11" Grid.ColumnSpan="2">
+            <TextBlock Grid.Row="12" Grid.ColumnSpan="2">
                 <StaticResource ResourceKey="spn_About"/>
             </TextBlock>
         </local:PaddedGrid>
